@@ -15,6 +15,7 @@ model User {
   createdAt DateTime @default(now())
 
   rideRequests RideRequest[]
+  tripUsers    TripUser[]
 }
 
 model RideRequest {
@@ -30,7 +31,9 @@ model RideRequest {
   pendingCycles  Int      @default(0)
   createdAt      DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
+  tripUsers  TripUser[]
+  tripStops  TripStop[]
 }
 
 model Trip {
@@ -41,6 +44,9 @@ model Trip {
   detourRatio          Float
   createdAt            DateTime @default(now())
   completedAt          DateTime?
+
+  tripUsers TripUser[]
+  tripStops TripStop[]
 }
 
 model TripUser {
@@ -49,16 +55,38 @@ model TripUser {
   userId         String
   rideRequestId  String @unique
   fareShare      Float
+
+  trip         Trip        @relation(fields: [tripId], references: [id])
+  user         User        @relation(fields: [userId], references: [id])
+  rideRequest  RideRequest @relation(fields: [rideRequestId], references: [id])
 }
 
 model TripStop {
-  id                           String @id @default(uuid())
-  tripId                       String
-  stopOrder                    Int
-  type                         String
-  lat                          Float
-  lng                          Float
-  rideRequestId                String
-  segmentDistKm                Float
-  activePassengersOnSegment    Int
+  id                        String @id @default(uuid())
+  tripId                    String
+  stopOrder                 Int
+  type                      String
+  lat                       Float
+  lng                       Float
+  rideRequestId             String
+  segmentDistKm             Float
+  activePassengersOnSegment Int
+
+  trip         Trip        @relation(fields: [tripId], references: [id])
+  rideRequest  RideRequest @relation(fields: [rideRequestId], references: [id])
+}
+
+model MatchCycleLog {
+  id                       String   @id @default(uuid())
+  runAt                    DateTime @default(now())
+  triggerType              String
+  pendingCountStart        Int
+  tripsCreated             Int      @default(0)
+  usersMatched             Int      @default(0)
+  usersStillPending        Int      @default(0)
+  autoCancelledCount       Int      @default(0)
+  pairsRejectedDirection   Int      @default(0)
+  pairsRejectedDetour      Int      @default(0)
+  durationMs               Int
+  errorMessage             String?
 }

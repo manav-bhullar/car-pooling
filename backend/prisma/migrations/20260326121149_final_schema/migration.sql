@@ -65,6 +65,24 @@ CREATE TABLE "TripStop" (
     CONSTRAINT "TripStop_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "MatchCycleLog" (
+    "id" TEXT NOT NULL,
+    "runAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "triggerType" TEXT NOT NULL,
+    "pendingCountStart" INTEGER NOT NULL,
+    "tripsCreated" INTEGER NOT NULL DEFAULT 0,
+    "usersMatched" INTEGER NOT NULL DEFAULT 0,
+    "usersStillPending" INTEGER NOT NULL DEFAULT 0,
+    "autoCancelledCount" INTEGER NOT NULL DEFAULT 0,
+    "pairsRejectedDirection" INTEGER NOT NULL DEFAULT 0,
+    "pairsRejectedDetour" INTEGER NOT NULL DEFAULT 0,
+    "durationMs" INTEGER NOT NULL,
+    "errorMessage" TEXT,
+
+    CONSTRAINT "MatchCycleLog_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -73,3 +91,18 @@ CREATE UNIQUE INDEX "TripUser_rideRequestId_key" ON "TripUser"("rideRequestId");
 
 -- AddForeignKey
 ALTER TABLE "RideRequest" ADD CONSTRAINT "RideRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TripUser" ADD CONSTRAINT "TripUser_tripId_fkey" FOREIGN KEY ("tripId") REFERENCES "Trip"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TripUser" ADD CONSTRAINT "TripUser_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TripUser" ADD CONSTRAINT "TripUser_rideRequestId_fkey" FOREIGN KEY ("rideRequestId") REFERENCES "RideRequest"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TripStop" ADD CONSTRAINT "TripStop_tripId_fkey" FOREIGN KEY ("tripId") REFERENCES "Trip"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TripStop" ADD CONSTRAINT "TripStop_rideRequestId_fkey" FOREIGN KEY ("rideRequestId") REFERENCES "RideRequest"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
