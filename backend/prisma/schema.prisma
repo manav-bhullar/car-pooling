@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  createdAt DateTime @default(now())
+
+  rideRequests RideRequest[]
+}
+
+model RideRequest {
+  id             String   @id @default(uuid())
+  userId         String
+  pickupLat      Float
+  pickupLng      Float
+  dropLat        Float
+  dropLng        Float
+  preferredTime  DateTime
+  requestTime    DateTime @default(now())
+  status         String   @default("PENDING")
+  pendingCycles  Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Trip {
+  id                   String   @id @default(uuid())
+  status               String   @default("ACTIVE")
+  totalDistanceKm      Float
+  estimatedEtaMinutes  Int
+  detourRatio          Float
+  createdAt            DateTime @default(now())
+  completedAt          DateTime?
+}
+
+model TripUser {
+  id             String @id @default(uuid())
+  tripId         String
+  userId         String
+  rideRequestId  String @unique
+  fareShare      Float
+}
+
+model TripStop {
+  id                           String @id @default(uuid())
+  tripId                       String
+  stopOrder                    Int
+  type                         String
+  lat                          Float
+  lng                          Float
+  rideRequestId                String
+  segmentDistKm                Float
+  activePassengersOnSegment    Int
+}
