@@ -1,6 +1,6 @@
-const service  = require('./rideRequest.service');
-const {success, error} = require('../../utlis/response');
-const {validateCreateRideRequest} = require('./rideRequest.validation');
+const service = require('./rideRequest.service');
+const { success, error } = require('../../utils/response');
+const { validateCreateRideRequest } = require('./rideRequest.validator');
 
 exports.create = async(req, res) =>{
     try{

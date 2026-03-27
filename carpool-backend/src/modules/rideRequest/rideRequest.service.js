@@ -1,4 +1,4 @@
-const prisma = require('../../prisma/prismaClient');
+const prisma = require('../../prisma/client');
 
 exports.createRideRequest = async(userId, data) => {
     const existing = await prisma.rideRequest.findFirst({
