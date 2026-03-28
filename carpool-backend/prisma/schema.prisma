@@ -30,3 +30,48 @@ model RideRequest {
 
   user User @relation(fields: [userId], references: [id])
 }
+
+model Trip {
+  id                   String   @id @default(uuid())
+  status               String
+  totalDistanceKm      Float
+  estimatedEtaMinutes  Int
+  detourRatio          Float
+  createdAt            DateTime @default(now())
+  completedAt          DateTime?
+}
+
+model TripUser {
+  id              String @id @default(uuid())
+  tripId          String
+  userId          String
+  rideRequestId   String @unique
+  fareShare       Float
+}
+
+model TripStop {
+  id                           String @id @default(uuid())
+  tripId                       String
+  stopOrder                    Int
+  type                         String
+  lat                          Float
+  lng                          Float
+  rideRequestId                String
+  segmentDistKm                Float
+  activePassengersOnSegment    Int
+}
+
+model MatchCycleLog {
+  id                      String   @id @default(uuid())
+  runAt                   DateTime @default(now())
+  triggerType             String
+  pendingCountStart       Int
+  tripsCreated            Int
+  usersMatched            Int
+  usersStillPending       Int
+  autoCancelledCount      Int
+  pairsRejectedDirection  Int
+  pairsRejectedDetour     Int
+  durationMs              Int
+  errorMessage            String?
+}
