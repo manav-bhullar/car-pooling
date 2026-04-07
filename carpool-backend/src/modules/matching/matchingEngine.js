@@ -16,7 +16,8 @@ function generatePairs(requests) {
 
       const score = scorePair(a, b);
 
-      if (score !== null) {
+      // Validate score is a number (not null, NaN, or Infinity)
+      if (score !== null && Number.isFinite(score)) {
         pairs.push({
           users: [a, b],
           score,
@@ -113,8 +114,8 @@ function runMatchingBatch(requests) {
       best.route = route;
     }
 
-    // Ensure score is always present (defensive)
-    if (best.score === null || best.score === undefined) {
+    // Ensure score is always valid (not null, NaN, or Infinity)
+    if (!Number.isFinite(best.score)) {
       continue;
     }
 

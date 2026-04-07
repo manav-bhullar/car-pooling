@@ -17,14 +17,12 @@ const MAX_DIR_DIFF = 60;
 function scorePair(a, b) {
   // --- HARD FILTER 1: direction ---
   if (!directionCompatible(a, b)) {
-    console.log(`[SCORE] Pair ${a.id}+${b.id} rejected: direction incompatible`);
     return null;
   }
 
   // --- HARD FILTER 2: detour ---
   const detourRatio = fastDetourEstimate(a, b);
   if (detourRatio > MAX_DETOUR) {
-    console.log(`[SCORE] Pair ${a.id}+${b.id} rejected: detour ${detourRatio} > ${MAX_DETOUR}`);
     return null;
   }
 
@@ -61,17 +59,13 @@ function scorePair(a, b) {
   const directionScore = Math.max(0, 1 - (diff / MAX_DIR_DIFF));
 
   // --- FINAL WEIGHTED SCORE ---
-  const finalScore = (
+  return (
     0.25 * pickupScore +
     0.20 * dropScore +
     0.30 * detourScore +
     0.15 * timeScore +
     0.10 * directionScore
   );
-
-  console.log(`[SCORE] Pair ${a.id}+${b.id} = ${finalScore.toFixed(3)}`);
-
-  return finalScore;
 }
 
 module.exports = {
