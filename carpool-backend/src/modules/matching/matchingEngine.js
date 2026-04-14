@@ -90,10 +90,15 @@ function tryFormGroup(pair, allRequests, usedIds) {
  * match = { users: [{userId, rideRequestId}, ...], route: {...}, detourRatio: ... }
  */
 function transformMatchOutput(rawMatch) {
-  // Transform users array
+  // Transform users array and include coordinates so downstream
+  // code (buildTripStops) can compute distances correctly.
   const users = rawMatch.users.map(request => ({
     userId: request.userId,
     rideRequestId: request.id,
+    pickupLat: request.pickupLat,
+    pickupLng: request.pickupLng,
+    dropLat: request.dropLat,
+    dropLng: request.dropLng,
   }));
 
   console.log("transformMatchOutput RAW ROUTE:", rawMatch.route);
