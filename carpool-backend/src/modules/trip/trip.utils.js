@@ -1,21 +1,24 @@
 const { haversine } = require("../matching/utils");
 
 function buildTripStops(users, orderedIndices) {
-  console.log("BUILD INPUT:", {
-    users: users.map(u => ({ userId: u.userId, rideRequestId: u.rideRequestId })),
-    orderedIndices,
-  });
+  // Input validation performed above; avoid noisy logs in scheduler
 
   if (!orderedIndices || orderedIndices.length === 0) {
-    console.warn("buildTripStops called with empty orderedIndices");
+    throw new Error("Invalid route: orderedIndices missing or empty");
   }
 
-  if (orderedIndices && orderedIndices.length !== users.length * 2) {
-    console.warn(`buildTripStops mismatch: orderedIndices.length=${orderedIndices.length}, expected=${users.length * 2}`);
+  if (orderedIndices.length !== users.length * 2) {
+    throw new Error(`Invalid route: incorrect number of stops. orderedIndices.length=${orderedIndices.length}, expected=${users.length * 2}`);
   }
 
   const n = users.length;
+  const maxIndex = users.length * 2 - 1;
 
+for (const idx of orderedIndices) {
+  if (idx < 0 || idx > maxIndex) {
+    throw new Error(`Invalid route: index out of bounds (${idx})`);
+  }
+}
   const coords = [
     ...users.map(u => [u.pickupLat, u.pickupLng]),
     ...users.map(u => [u.dropLat, u.dropLng]),

@@ -10,12 +10,13 @@ const { buildTripStops } = require("./trip.utils");
  */
 async function createTripFromMatch(match, tx = null) {
   const { users, route, detourRatio } = match;
-  console.log("MATCH ROUTE:", route);
-  console.log("ORDERED INDICES:", route ? route.orderedIndices : undefined);
-  console.log("USERS:", users);
+  // Validation: ensure orderedIndices contract satisfied
+  if (!route || !route.orderedIndices) {
+    throw new Error('Invalid match: route.orderedIndices missing');
+  }
 
-  if (route && route.orderedIndices && route.orderedIndices.length !== users.length * 2) {
-    console.warn(`Mismatch: orderedIndices.length=${route.orderedIndices.length} expected=${users.length * 2}`);
+  if (route.orderedIndices.length !== users.length * 2) {
+    throw new Error(`Invalid match: orderedIndices.length=${route.orderedIndices.length} expected=${users.length * 2}`);
   }
 
   if (!users || users.length < 2) {

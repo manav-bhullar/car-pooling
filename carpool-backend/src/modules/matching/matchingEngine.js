@@ -101,8 +101,7 @@ function transformMatchOutput(rawMatch) {
     dropLng: request.dropLng,
   }));
 
-  console.log("transformMatchOutput RAW ROUTE:", rawMatch.route);
-  console.log("transformMatchOutput orderedIndices:", rawMatch.route ? rawMatch.route.orderedIndices : undefined);
+  // debug logs removed - transformMatchOutput is now silent in production
 
   // Transform route sequence: replace userId with rideRequestId
   const sequence = rawMatch.route.sequence.map(stop => {
