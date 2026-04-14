@@ -96,6 +96,9 @@ function transformMatchOutput(rawMatch) {
     rideRequestId: request.id,
   }));
 
+  console.log("transformMatchOutput RAW ROUTE:", rawMatch.route);
+  console.log("transformMatchOutput orderedIndices:", rawMatch.route ? rawMatch.route.orderedIndices : undefined);
+
   // Transform route sequence: replace userId with rideRequestId
   const sequence = rawMatch.route.sequence.map(stop => {
     // Find the request with this userId to get rideRequestId
@@ -115,7 +118,8 @@ function transformMatchOutput(rawMatch) {
     users,
     route: {
       totalDistance: rawMatch.route.totalDistance,
-      sequence,
+      sequence: rawMatch.route.sequence,
+      orderedIndices: rawMatch.route.orderedIndices,
     },
     detourRatio: rawMatch.route.detourRatio,
   };

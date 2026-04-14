@@ -1,5 +1,6 @@
 // ✅ FIX THIS
 const prisma = require("../../prisma/client");
+const { buildTripStops } = require("./trip.utils");
 
 /**
  * Create Trip from matching result
@@ -9,13 +10,20 @@ const prisma = require("../../prisma/client");
  */
 async function createTripFromMatch(match, tx = null) {
   const { users, route, detourRatio } = match;
+  console.log("MATCH ROUTE:", route);
+  console.log("ORDERED INDICES:", route ? route.orderedIndices : undefined);
+  console.log("USERS:", users);
+
+  if (route && route.orderedIndices && route.orderedIndices.length !== users.length * 2) {
+    console.warn(`Mismatch: orderedIndices.length=${route.orderedIndices.length} expected=${users.length * 2}`);
+  }
 
   if (!users || users.length < 2) {
     throw new Error("Invalid match: not enough users");
   }
 
-  if (!route || !route.sequence || route.sequence.length === 0) {
-    throw new Error("Invalid match: route missing");
+  if (!route || !route.orderedIndices || route.orderedIndices.length === 0) {
+    throw new Error("Invalid match: route missing orderedIndices");
   }
 
   // Extract rideRequestIds properly
@@ -73,15 +81,9 @@ async function createTripFromMatch(match, tx = null) {
     /**
      * ✅ STEP 3 — CREATE TRIP STOPS
      */
-    const stopsData = route.sequence.map((stop, index) => ({
+    const stopsData = buildTripStops(users, route.orderedIndices).map(stop => ({
       tripId: trip.id,
-      stopOrder: index,
-      type: stop.type.toUpperCase(), // PICKUP / DROPOFF
-      lat: stop.lat,
-      lng: stop.lng,
-      rideRequestId: stop.rideRequestId,
-      segmentDistKm: stop.segmentDistKm || 0,
-      activePassengersOnSegment: stop.activePassengers || 0,
+      ...stop,
     }));
 
     await txContext.tripStop.createMany({

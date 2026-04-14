@@ -220,8 +220,28 @@ function optimizeRoute(users) {
 
   const maxUserDetour = computePerUserDetour(users, bestSequence);
 
+  /**
+   * Convert sequence of stops back to orderedIndices
+   * Indices: 0..n-1 = pickups, n..2n-1 = dropoffs
+   */
+  const n = users.length;
+  const userToIndex = {};
+  users.forEach((u, idx) => {
+    userToIndex[u.id] = idx;
+  });
+
+  const orderedIndices = bestSequence.map(stop => {
+    const userIdx = userToIndex[stop.userId];
+    if (stop.type === 'pickup') {
+      return userIdx; // 0..n-1
+    } else {
+      return n + userIdx; // n..2n-1
+    }
+  });
+
   return {
     sequence: bestSequence,
+    orderedIndices,
     totalDistance: bestDistance,
     detourRatio,
     maxUserDetour,

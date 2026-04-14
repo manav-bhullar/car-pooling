@@ -33,6 +33,8 @@ async function verify() {
             lat: true,
             lng: true,
             rideRequestId: true,
+            segmentDistKm: true,
+            activePassengersOnSegment: true,
           },
         },
       },
@@ -49,7 +51,7 @@ async function verify() {
       });
       console.log(`  Stops: ${trip.tripStops.length}`);
       trip.tripStops.forEach(s => {
-        console.log(`    - ${s.stopOrder}: ${s.type.toUpperCase()} (${s.lat}, ${s.lng})`);
+        console.log(`    - ${s.stopOrder}: ${s.type.toUpperCase()} (${s.lat}, ${s.lng}) | Segment: ${s.segmentDistKm.toFixed(2)}km | Active: ${s.activePassengersOnSegment}`);
       });
     });
 
@@ -64,21 +66,19 @@ async function verify() {
     console.log(`❌ Users Cancelled: ${cancelledCount}`);
     console.log(`📊 Total Requests: ${requests.length}`);
 
-    // Check for duplicates
-    const userIds = new Set();
+    // Check for duplicates within each trip (same user shouldn't appear twice in one trip)
     let hasDuplicates = false;
-    requests.forEach(r => {
-      if (r.status === 'MATCHED') {
-        if (userIds.has(r.userId)) {
-          console.log(`\n⚠️  DUPLICATE: User ${r.userId} in multiple requests!`);
-          hasDuplicates = true;
-        }
-        userIds.add(r.userId);
+    trips.forEach((trip, tripIdx) => {
+      const userIds = trip.tripUsers.map(u => u.userId);
+      const uniqueUsers = new Set(userIds);
+      if (uniqueUsers.size !== userIds.length) {
+        console.log(`\n⚠️  DUPLICATE in Trip ${tripIdx + 1}: Same user appears twice!`);
+        hasDuplicates = true;
       }
     });
 
-    if (!hasDuplicates && matchedCount > 0) {
-      console.log(`\n✅ No duplicates found`);
+    if (!hasDuplicates && trips.length > 0) {
+      console.log(`\n✅ No duplicates within trips (each user appears once per trip)`);
     }
   } catch (err) {
     console.error('Error:', err);
