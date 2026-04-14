@@ -1,6 +1,7 @@
 // ✅ FIX THIS
 const prisma = require("../../prisma/client");
 const { buildTripStops } = require("./trip.utils");
+const { calculateFares } = require("./fare.utlis");
 
 /**
  * Create Trip from matching result
@@ -66,30 +67,35 @@ async function createTripFromMatch(match, tx = null) {
     });
 
     /**
-     * ✅ STEP 2 — CREATE TRIP USERS
+     * ✅ STEP 2 — BUILD STOPS (in-memory, deterministic)
      */
-    const tripUsersData = users.map((user) => ({
-      tripId: trip.id,
-      userId: user.userId, // must be userId
-      rideRequestId: user.rideRequestId,
-      fareShare: 0, // placeholder (will implement later)
-    }));
-
-    await txContext.tripUser.createMany({
-      data: tripUsersData,
-    });
-
-    /**
-     * ✅ STEP 3 — CREATE TRIP STOPS
-     */
-    const stopsData = buildTripStops(users, route.orderedIndices).map(stop => ({
+    const stopsData = buildTripStops(users, route.orderedIndices).map((stop) => ({
       tripId: trip.id,
       ...stop,
     }));
 
-    await txContext.tripStop.createMany({
-      data: stopsData,
-    });
+    /**
+     * ✅ STEP 3 — CALCULATE FARES (pure computation using stored stop rows)
+     * Must run inside the transaction so persistence is atomic.
+     */
+    const fares = calculateFares(users, stopsData);
+
+    /**
+     * ✅ STEP 4 — CREATE TRIP USERS (persist fares atomically)
+     */
+    const tripUsersData = users.map((user) => ({
+      tripId: trip.id,
+      userId: user.userId,
+      rideRequestId: user.rideRequestId,
+      fareShare: fares[user.rideRequestId],
+    }));
+
+    await txContext.tripUser.createMany({ data: tripUsersData });
+
+    /**
+     * ✅ STEP 5 — PERSIST TRIP STOPS
+     */
+    await txContext.tripStop.createMany({ data: stopsData });
 
     /**
      * ✅ STEP 4 — UPDATE RIDE REQUESTS
