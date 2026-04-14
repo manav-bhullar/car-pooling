@@ -39,6 +39,9 @@ model Trip {
   detourRatio          Float
   createdAt            DateTime @default(now())
   completedAt          DateTime?
+
+  tripUsers TripUser[]
+  tripStops TripStop[]
 }
 
 model TripUser {
@@ -47,6 +50,8 @@ model TripUser {
   userId          String
   rideRequestId   String @unique
   fareShare       Float
+
+  trip            Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
 }
 
 model TripStop {
@@ -59,6 +64,8 @@ model TripStop {
   rideRequestId                String
   segmentDistKm                Float
   activePassengersOnSegment    Int
+
+  trip            Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
 }
 
 model MatchCycleLog {

@@ -86,6 +86,42 @@ function tryFormGroup(pair, allRequests, usedIds) {
 }
 
 /**
+ * Transform match output to required format
+ * match = { users: [{userId, rideRequestId}, ...], route: {...}, detourRatio: ... }
+ */
+function transformMatchOutput(rawMatch) {
+  // Transform users array
+  const users = rawMatch.users.map(request => ({
+    userId: request.userId,
+    rideRequestId: request.id,
+  }));
+
+  // Transform route sequence: replace userId with rideRequestId
+  const sequence = rawMatch.route.sequence.map(stop => {
+    // Find the request with this userId to get rideRequestId
+    const request = rawMatch.users.find(u => u.id === stop.userId);
+    
+    return {
+      type: stop.type,
+      lat: stop.lat,
+      lng: stop.lng,
+      rideRequestId: request ? request.id : stop.userId,
+      segmentDistKm: stop.segmentDistKm || 0,
+      activePassengers: stop.activePassengers || 0,
+    };
+  });
+
+  return {
+    users,
+    route: {
+      totalDistance: rawMatch.route.totalDistance,
+      sequence,
+    },
+    detourRatio: rawMatch.route.detourRatio,
+  };
+}
+
+/**
  * Step 3: Main matching function
  */
 function runMatchingBatch(requests) {
@@ -122,7 +158,9 @@ function runMatchingBatch(requests) {
     // Mark users as used
     best.users.forEach(u => usedIds.add(u.id));
 
-    results.push(best);
+    // Transform to required output format before returning
+    const transformedMatch = transformMatchOutput(best);
+    results.push(transformedMatch);
   }
 
   return results;
@@ -130,4 +168,5 @@ function runMatchingBatch(requests) {
 
 module.exports = {
   runMatchingBatch,
+  transformMatchOutput,
 };
