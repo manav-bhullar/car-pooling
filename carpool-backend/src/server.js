@@ -9,5 +9,3 @@ app.listen(PORT, () => {
 
 const { startMatchingScheduler } = require("./modules/scheduler/matching.cron");
 startMatchingScheduler();
-
-startMatchingScheduler();
