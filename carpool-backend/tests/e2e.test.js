@@ -1,6 +1,8 @@
 const axios = require('axios');
+const { PrismaClient } = require('@prisma/client');
 
 const BASE_URL = 'http://localhost:5050/api';
+const prisma = new PrismaClient();
 
 /**
  * E2E Test: Full Ride Matching Pipeline
@@ -29,12 +31,24 @@ async function runE2ETest() {
     }
     console.log('  ✅ Server is healthy\n');
 
-    // Real user IDs (from seed.js output)
+    // Get users from database by email
+    const users = await prisma.user.findMany({
+      where: {
+        email: {
+          in: ['alice@test.com', 'bob@test.com', 'charlie@test.com']
+        }
+      }
+    });
+
     const USERS = {
-      alice: 'a944e730-9fd2-4283-8d3b-7f38e48ffe5e',
-      bob: '1fb49071-b06f-4435-be7a-a889d1e77678',
-      charlie: '86c8baf7-4963-4f14-a486-856952e41240',
+      alice: users.find(u => u.email === 'alice@test.com')?.id,
+      bob: users.find(u => u.email === 'bob@test.com')?.id,
+      charlie: users.find(u => u.email === 'charlie@test.com')?.id,
     };
+
+    if (!USERS.alice || !USERS.bob || !USERS.charlie) {
+      throw new Error('Could not find test users in database');
+    }
 
     // STEP 2: Create compatible ride requests
     console.log('📝 STEP 2: Creating 3 compatible ride requests...');
@@ -44,6 +58,12 @@ async function runE2ETest() {
     const tripsBeforeTest = stateBefore.data.data.trips.total;
     const matchedBeforeTest = stateBefore.data.data.requests.matched;
     
+    // Use dynamic future timestamp (next day, 6:30 PM)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const baseTime = new Date(tomorrow);
+    baseTime.setHours(18, 30, 0, 0);
+    
     const requests = [
       {
         name: 'Alice',
@@ -52,7 +72,7 @@ async function runE2ETest() {
         pickupLng: 76.3616,
         dropLat: 30.6942,
         dropLng: 76.8606,
-        preferredTime: '2026-04-17T18:30:00Z',
+        preferredTime: baseTime.toISOString(),
       },
       {
         name: 'Bob',
@@ -61,7 +81,7 @@ async function runE2ETest() {
         pickupLng: 76.3620,
         dropLat: 30.6940,
         dropLng: 76.8600,
-        preferredTime: '2026-04-17T18:32:00Z',
+        preferredTime: new Date(baseTime.getTime() + 2 * 60000).toISOString(), // +2 min
       },
       {
         name: 'Charlie',
@@ -70,7 +90,7 @@ async function runE2ETest() {
         pickupLng: 76.3618,
         dropLat: 30.6945,
         dropLng: 76.8610,
-        preferredTime: '2026-04-17T18:31:00Z',
+        preferredTime: new Date(baseTime.getTime() + 1 * 60000).toISOString(), // +1 min
       },
     ];
 
@@ -165,6 +185,7 @@ async function runE2ETest() {
     } else {
       console.error(`  ${error.message}`);
     }
+    await prisma.$disconnect();
     return false;
   }
 }
@@ -172,8 +193,12 @@ async function runE2ETest() {
 // Run test if executed directly
 if (require.main === module) {
   runE2ETest()
-    .then(passed => process.exit(passed ? 0 : 1))
-    .catch(err => {
+    .then(async passed => {
+      await prisma.$disconnect();
+      process.exit(passed ? 0 : 1);
+    })
+    .catch(async err => {
+      await prisma.$disconnect();
       console.error('Unexpected error:', err);
       process.exit(1);
     });
