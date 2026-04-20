@@ -61,10 +61,15 @@ exports.cancelRideRequest = async (id, userId) => {
     }
     // 🔹 CASE 1: PENDING → simple cancel
     if (request.status === "PENDING") {
-      return tx.rideRequest.update({
+      await tx.rideRequest.update({
         where: { id },
         data: { status: "CANCELLED" },
       });
+      return {
+        id,
+        status: "CANCELLED",
+        cancelledTripId: null,
+      };
     }
     // 🔹 CASE 2: MATCHED → CASCADE CANCEL
     if (request.status === "MATCHED") {
