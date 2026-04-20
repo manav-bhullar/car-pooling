@@ -47,7 +47,17 @@ exports.cancelRideRequest = async (id, userId) => {
       throw new Error("Unauthorized");
     }
     if (request.status === "CANCELLED") {
-      return request;
+      // Already cancelled → idempotent success
+      // Try to find associated trip if it exists
+      const tripUser = await tx.tripUser.findUnique({
+        where: { rideRequestId: id },
+      });
+      return {
+        id,
+        status: "CANCELLED",
+        cancelledTripId: tripUser?.tripId || null,
+        note: "Already cancelled",
+      };
     }
     // 🔹 CASE 1: PENDING → simple cancel
     if (request.status === "PENDING") {
