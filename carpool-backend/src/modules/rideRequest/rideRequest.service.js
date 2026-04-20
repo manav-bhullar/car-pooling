@@ -66,32 +66,52 @@ exports.cancelRideRequest = async (id, userId) => {
         throw new Error("Trip association not found");
       }
       const tripId = tripUser.tripId;
-      // 2. Cancel trip
-      await tx.trip.update({
-        where: { id: tripId },
-        data: { status: "CANCELLED" },
+      
+      // 2. Cancel trip (only if ACTIVE - defensive check)
+      const cancelledTrip = await tx.trip.updateMany({
+        where: {
+          id: tripId,
+          status: "ACTIVE", // 🔒 Only cancel active trips
+        },
+        data: {
+          status: "CANCELLED",
+        },
       });
+      if (cancelledTrip.count === 0) {
+        // Trip already cancelled → idempotent success
+        return {
+          id,
+          status: "CANCELLED",
+          cancelledTripId: tripId,
+          note: "Already cancelled",
+        };
+      }
+      
       // 3. Get all ride requests in this trip
       const tripUsers = await tx.tripUser.findMany({
         where: { tripId },
       });
       const rideRequestIds = tripUsers.map(tu => tu.rideRequestId);
-      // 4. Update all ride requests
-      for (const rid of rideRequestIds) {
-        if (rid === id) {
-          // Cancelling user
-          await tx.rideRequest.update({
-            where: { id: rid },
-            data: { status: "CANCELLED" },
-          });
-        } else {
-          // Co-riders → back to PENDING
-          await tx.rideRequest.update({
-            where: { id: rid },
-            data: { status: "PENDING" },
-          });
-        }
+      
+      // 4. Cancel the triggering user (single update)
+      await tx.rideRequest.update({
+        where: { id },
+        data: { status: "CANCELLED" },
+      });
+      
+      // 5. Revert co-riders in ONE bulk query (🔒 only revert MATCHED users)
+      if (rideRequestIds.length > 1) {
+        await tx.rideRequest.updateMany({
+          where: {
+            id: { in: rideRequestIds.filter(rid => rid !== id) },
+            status: "MATCHED", // 🔒 Only revert matched users
+          },
+          data: {
+            status: "PENDING",
+          },
+        });
       }
+      
       return {
         id,
         status: "CANCELLED",
