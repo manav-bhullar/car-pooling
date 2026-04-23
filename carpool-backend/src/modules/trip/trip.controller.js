@@ -97,8 +97,15 @@ exports.completeTrip = async (req, res) => {
 			if (!isParticipant) {
 				throw { code: 403, message: 'Not a trip participant' };
 			}
+
+			// Idempotent: already completed
 			if (trip.status === 'COMPLETED') {
 				return { already: true, trip };
+			}
+
+			// Only ACTIVE trips may be completed
+			if (trip.status !== 'ACTIVE') {
+				throw { code: 400, message: 'TRIP_NOT_COMPLETABLE' };
 			}
 
 			const now = new Date();
@@ -107,14 +114,7 @@ exports.completeTrip = async (req, res) => {
 				data: { status: 'COMPLETED', completedAt: now },
 			});
 
-			const rideRequestIds = trip.tripUsers.map((tu) => tu.rideRequestId).filter(Boolean);
-			if (rideRequestIds.length > 0) {
-				await tx.rideRequest.updateMany({
-					where: { id: { in: rideRequestIds }, status: 'MATCHED' },
-					data: { status: 'COMPLETED' },
-				});
-			}
-
+			// IMPORTANT: Do NOT modify rideRequest.status here — ride requests represent matching input
 			return { already: false, trip: updated };
 		});
 
