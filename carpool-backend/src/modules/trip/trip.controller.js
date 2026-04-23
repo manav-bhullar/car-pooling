@@ -70,3 +70,65 @@ exports.getTrips = async (req, res) => {
 	}
 };
 
+/**
+ * POST /api/trips/:id/complete
+ * Mark a trip as completed. Requesting user must be a participant.
+ */
+exports.completeTrip = async (req, res) => {
+	try {
+		const userId = req.headers['x-user-id'];
+		const { id } = req.params;
+		if (!userId) {
+			return error(res, 'Missing x-user-id header', 400);
+		}
+		if (!id) {
+			return error(res, 'Missing trip id', 400);
+		}
+
+		const result = await prisma.$transaction(async (tx) => {
+			const trip = await tx.trip.findUnique({
+				where: { id },
+				include: { tripUsers: true },
+			});
+			if (!trip) {
+				throw { code: 404, message: 'Trip not found' };
+			}
+			const isParticipant = trip.tripUsers.some((tu) => tu.userId === userId);
+			if (!isParticipant) {
+				throw { code: 403, message: 'Not a trip participant' };
+			}
+			if (trip.status === 'COMPLETED') {
+				return { already: true, trip };
+			}
+
+			const now = new Date();
+			const updated = await tx.trip.update({
+				where: { id },
+				data: { status: 'COMPLETED', completedAt: now },
+			});
+
+			const rideRequestIds = trip.tripUsers.map((tu) => tu.rideRequestId).filter(Boolean);
+			if (rideRequestIds.length > 0) {
+				await tx.rideRequest.updateMany({
+					where: { id: { in: rideRequestIds }, status: 'MATCHED' },
+					data: { status: 'COMPLETED' },
+				});
+			}
+
+			return { already: false, trip: updated };
+		});
+
+		if (result.already) {
+			return success(res, { id: result.trip.id, status: 'COMPLETED', note: 'Already completed' });
+		}
+
+		return success(res, { id: result.trip.id, status: 'COMPLETED', completed_at: result.trip.completedAt });
+	} catch (err) {
+		console.error('Complete trip error:', err);
+		if (err && err.code) {
+			return error(res, err.message, err.code);
+		}
+		return error(res, err.message || 'Failed to complete trip', 500);
+	}
+};
+
