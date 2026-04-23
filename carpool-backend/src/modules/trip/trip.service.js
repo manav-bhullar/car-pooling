@@ -1,7 +1,7 @@
 // ✅ FIX THIS
 const prisma = require("../../prisma/client");
 const { buildTripStops } = require("./trip.utils");
-const { calculateFares } = require("./fare.utlis");
+const { calculateFares } = require("./trip.fare");
 
 /**
  * Create Trip from matching result
