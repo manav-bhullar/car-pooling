@@ -109,10 +109,55 @@ exports.completeTrip = async (req, res) => {
 			}
 
 			const now = new Date();
+
+			// Read rideRequest statuses BEFORE updating trip (so we can restore if something mutates them)
+			let beforeRrs = [];
+			try {
+				const rrIds = trip.tripUsers.map((tu) => tu.rideRequestId).filter(Boolean);
+				beforeRrs = await tx.rideRequest.findMany({ where: { id: { in: rrIds } }, select: { id: true, status: true } });
+				console.log('DEBUG: rideRequests BEFORE trip.update', beforeRrs);
+			} catch (dbgErr) {
+				console.warn('DEBUG: failed to read rideRequests before update', dbgErr.message);
+			}
+
 			const updated = await tx.trip.update({
 				where: { id },
 				data: { status: 'COMPLETED', completedAt: now },
 			});
+
+			// Read rideRequest statuses AFTER updating trip to detect unexpected mutations
+			let afterRrs = [];
+			try {
+				const rrIds2 = trip.tripUsers.map((tu) => tu.rideRequestId).filter(Boolean);
+				afterRrs = await tx.rideRequest.findMany({ where: { id: { in: rrIds2 } }, select: { id: true, status: true } });
+				console.log('DEBUG: rideRequests AFTER trip.update', afterRrs);
+			} catch (dbgErr) {
+				console.warn('DEBUG: failed to read rideRequests after update', dbgErr.message);
+			}
+
+			// If any rideRequests were MATCHED before but are now changed, restore them to MATCHED
+			try {
+				const toRestore = beforeRrs
+					.filter((b) => b.status === 'MATCHED')
+					.map((b) => ({ id: b.id, before: b.status, after: (afterRrs.find(a => a.id === b.id) || {}).status } ))
+					.filter((rec) => rec.after && rec.after !== 'MATCHED')
+					.map((r) => r.id);
+
+				if (toRestore.length > 0) {
+					console.warn('Warning: restoring rideRequest.status to MATCHED for ids', toRestore);
+					try {
+						const restoreResult = await tx.rideRequest.updateMany({
+							where: { id: { in: toRestore } },
+							data: { status: 'MATCHED' },
+						});
+						console.log('DEBUG: rideRequest restore result', restoreResult);
+					} catch (uErr) {
+						console.warn('DEBUG: failed to restore rideRequests', uErr.message);
+					}
+				}
+			} catch (restoreErr) {
+				console.warn('Failed to restore rideRequest statuses', restoreErr.message);
+			}
 
 			// IMPORTANT: Do NOT modify rideRequest.status here — ride requests represent matching input
 			return { already: false, trip: updated };

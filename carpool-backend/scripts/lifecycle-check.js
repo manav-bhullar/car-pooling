@@ -20,6 +20,7 @@ const { PrismaClient } = require('@prisma/client');
 
     console.log('TRIP_ID', trip.id);
     console.log('PARTICIPANT', participant);
+    console.log('TRIP_STATUS_BEFORE_COMPLETE', trip.status, 'completedAt:', trip.completedAt);
 
     // Call complete endpoint
     try {
