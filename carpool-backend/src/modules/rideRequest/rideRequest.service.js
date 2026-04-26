@@ -26,7 +26,7 @@ exports.createRideRequest = async(userId, data) => {
 }
 
 exports.getRideRequests = async(userId, status) => {
-    return prisma.rideRequest.findMany({
+    const requests = await prisma.rideRequest.findMany({
         where:{
             userId,
             ...(status && {status}),
@@ -35,6 +35,46 @@ exports.getRideRequests = async(userId, status) => {
             createdAt: 'desc',
         },
     });
+
+    // ✅ Phase 1: Enrich PENDING requests with requeue metadata
+    // Detect: PENDING + TripUser exists + trip.status='CANCELLED' → requeued from cascade
+    if (requests.length > 0) {
+        const pendingRequests = requests.filter(r => r.status === 'PENDING');
+        
+        if (pendingRequests.length > 0) {
+            // 🔒 Batch-fetch TripUser + Trip relationships (no N+1)
+            const tripUsers = await prisma.tripUser.findMany({
+                where: { rideRequestId: { in: pendingRequests.map(r => r.id) } },
+                include: { trip: { select: { id: true, status: true } } }
+            });
+
+            const tripUserMap = Object.fromEntries(
+                tripUsers.map(tu => [tu.rideRequestId, tu])
+            );
+
+            // Map all requests: enrich PENDING with requeue info, others with defaults
+            return requests.map(r => {
+                if (r.status === 'PENDING') {
+                    const tripUser = tripUserMap[r.id];
+                    const requeued = tripUser?.trip?.status === 'CANCELLED';
+                    return {
+                        ...r,
+                        requeued,
+                        requeueReason: requeued ? 'CO_RIDER_CANCELLED' : null
+                    };
+                }
+                // Non-PENDING requests never requeued
+                return {
+                    ...r,
+                    requeued: false,
+                    requeueReason: null
+                };
+            });
+        }
+    }
+
+    // No requests: return empty array with consistent schema
+    return [];
 };
 
 exports.cancelRideRequest = async (id, userId) => {
