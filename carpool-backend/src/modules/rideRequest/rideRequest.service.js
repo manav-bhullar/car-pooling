@@ -112,8 +112,9 @@ exports.cancelRideRequest = async (id, userId) => {
       };
     }
     // 🔹 CASE 2: MATCHED → CASCADE CANCEL
+    // PHASE 2 FIX: Explicit state machine instead of count-based assumptions
     if (request.status === "MATCHED") {
-      // 1. Find trip via TripUser
+      // 1. Find trip association
       const tripUser = await tx.tripUser.findUnique({
         where: { rideRequestId: id },
       });
@@ -122,56 +123,74 @@ exports.cancelRideRequest = async (id, userId) => {
       }
       const tripId = tripUser.tripId;
       
-      // 2. Cancel trip (only if ACTIVE - defensive check)
-      const cancelledTrip = await tx.trip.updateMany({
-        where: {
-          id: tripId,
-          status: "ACTIVE", // 🔒 Only cancel active trips
-        },
-        data: {
-          status: "CANCELLED",
-        },
+      // 2. PHASE 2 FIX: Fetch trip to inspect actual status (not guess from updateMany count)
+      const trip = await tx.trip.findUnique({
+        where: { id: tripId },
       });
-      if (cancelledTrip.count === 0) {
-        // Trip already cancelled → idempotent success
+      if (!trip) {
+        throw new Error("Trip not found");
+      }
+
+      // 3. Branch by trip status (explicit state machine)
+      if (trip.status === 'COMPLETED') {
+        // ❌ CRITICAL: Cannot cascade cancel a completed trip
+        // Rider should not be MATCHED on a completed trip; this is an invalid state
+        throw new Error("TRIP_ALREADY_COMPLETED: Cannot cancel request on completed trip");
+      }
+
+      if (trip.status === 'CANCELLED') {
+        // ✅ Idempotent: Trip already cancelled, co-riders already reverted
+        // Just return success
         return {
           id,
           status: "CANCELLED",
           cancelledTripId: tripId,
-          note: "Already cancelled",
+          note: "Trip already cancelled",
         };
       }
-      
-      // 3. Get all ride requests in this trip
-      const tripUsers = await tx.tripUser.findMany({
-        where: { tripId },
-      });
-      const rideRequestIds = tripUsers.map(tu => tu.rideRequestId);
-      
-      // 4. Cancel the triggering user (single update)
-      await tx.rideRequest.update({
-        where: { id },
-        data: { status: "CANCELLED" },
-      });
-      
-      // 5. Revert co-riders in ONE bulk query (🔒 only revert MATCHED users)
-      if (rideRequestIds.length > 1) {
-        await tx.rideRequest.updateMany({
-          where: {
-            id: { in: rideRequestIds.filter(rid => rid !== id) },
-            status: "MATCHED", // 🔒 Only revert matched users
-          },
-          data: {
-            status: "PENDING",
-          },
+
+      if (trip.status === 'ACTIVE') {
+        // ✅ Only ACTIVE trips can be cascaded
+        // 4. Cancel the trip
+        const updated = await tx.trip.update({
+          where: { id: tripId },
+          data: { status: "CANCELLED" },
         });
+
+        // 5. Get all ride requests in this trip
+        const tripUsers = await tx.tripUser.findMany({
+          where: { tripId },
+        });
+        const rideRequestIds = tripUsers.map(tu => tu.rideRequestId);
+
+        // 6. Cancel the triggering user
+        await tx.rideRequest.update({
+          where: { id },
+          data: { status: "CANCELLED" },
+        });
+
+        // 7. Revert co-riders to PENDING (only if they're still MATCHED)
+        if (rideRequestIds.length > 1) {
+          await tx.rideRequest.updateMany({
+            where: {
+              id: { in: rideRequestIds.filter(rid => rid !== id) },
+              status: "MATCHED",
+            },
+            data: {
+              status: "PENDING",
+            },
+          });
+        }
+
+        return {
+          id,
+          status: "CANCELLED",
+          cancelledTripId: tripId,
+        };
       }
-      
-      return {
-        id,
-        status: "CANCELLED",
-        cancelledTripId: tripId,
-      };
+
+      // Should never reach here
+      throw new Error(`Unexpected trip status: ${trip.status}`);
     }
     throw new Error("Invalid state");
   });

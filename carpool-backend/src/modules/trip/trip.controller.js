@@ -73,6 +73,10 @@ exports.getTrips = async (req, res) => {
 /**
  * POST /api/trips/:id/complete
  * Mark a trip as completed. Requesting user must be a participant.
+ * 
+ * PHASE 3 FIX: Lifecycle Synchronization
+ * Trip completion now updates all associated ride requests to COMPLETED state.
+ * This ensures trip.status and rideRequest.status are always consistent.
  */
 exports.completeTrip = async (req, res) => {
 	try {
@@ -93,81 +97,68 @@ exports.completeTrip = async (req, res) => {
 			if (!trip) {
 				throw { code: 404, message: 'Trip not found' };
 			}
+
+			// Verify requester is a participant
 			const isParticipant = trip.tripUsers.some((tu) => tu.userId === userId);
 			if (!isParticipant) {
 				throw { code: 403, message: 'Not a trip participant' };
 			}
 
-			// Idempotent: already completed
+			// ✅ Idempotent: already completed
 			if (trip.status === 'COMPLETED') {
 				return { already: true, trip };
 			}
 
-			// Only ACTIVE trips may be completed
+			// 🔒 Only ACTIVE trips may be completed
 			if (trip.status !== 'ACTIVE') {
 				throw { code: 400, message: 'TRIP_NOT_COMPLETABLE' };
 			}
 
 			const now = new Date();
+			const rideRequestIds = trip.tripUsers.map((tu) => tu.rideRequestId).filter(Boolean);
 
-			// Read rideRequest statuses BEFORE updating trip (so we can restore if something mutates them)
-			let beforeRrs = [];
-			try {
-				const rrIds = trip.tripUsers.map((tu) => tu.rideRequestId).filter(Boolean);
-				beforeRrs = await tx.rideRequest.findMany({ where: { id: { in: rrIds } }, select: { id: true, status: true } });
-				console.log('DEBUG: rideRequests BEFORE trip.update', beforeRrs);
-			} catch (dbgErr) {
-				console.warn('DEBUG: failed to read rideRequests before update', dbgErr.message);
-			}
-
-			const updated = await tx.trip.update({
+			// ✅ PHASE 3: Update trip + all ride requests atomically
+			// Trip completion drives ride request completion (lifecycle sync)
+			
+			// Step 1: Complete the trip
+			const completedTrip = await tx.trip.update({
 				where: { id },
-				data: { status: 'COMPLETED', completedAt: now },
+				data: { 
+					status: 'COMPLETED', 
+					completedAt: now 
+				},
 			});
 
-			// Read rideRequest statuses AFTER updating trip to detect unexpected mutations
-			let afterRrs = [];
-			try {
-				const rrIds2 = trip.tripUsers.map((tu) => tu.rideRequestId).filter(Boolean);
-				afterRrs = await tx.rideRequest.findMany({ where: { id: { in: rrIds2 } }, select: { id: true, status: true } });
-				console.log('DEBUG: rideRequests AFTER trip.update', afterRrs);
-			} catch (dbgErr) {
-				console.warn('DEBUG: failed to read rideRequests after update', dbgErr.message);
+			// Step 2: Complete all associated ride requests
+			// All participants in the trip are now in COMPLETED state
+			if (rideRequestIds.length > 0) {
+				await tx.rideRequest.updateMany({
+					where: { 
+						id: { in: rideRequestIds },
+						status: 'MATCHED'  // Only update MATCHED requests (safety guard)
+					},
+					data: { 
+						status: 'COMPLETED' 
+					},
+				});
 			}
 
-			// If any rideRequests were MATCHED before but are now changed, restore them to MATCHED
-			try {
-				const toRestore = beforeRrs
-					.filter((b) => b.status === 'MATCHED')
-					.map((b) => ({ id: b.id, before: b.status, after: (afterRrs.find(a => a.id === b.id) || {}).status } ))
-					.filter((rec) => rec.after && rec.after !== 'MATCHED')
-					.map((r) => r.id);
-
-				if (toRestore.length > 0) {
-					console.warn('Warning: restoring rideRequest.status to MATCHED for ids', toRestore);
-					try {
-						const restoreResult = await tx.rideRequest.updateMany({
-							where: { id: { in: toRestore } },
-							data: { status: 'MATCHED' },
-						});
-						console.log('DEBUG: rideRequest restore result', restoreResult);
-					} catch (uErr) {
-						console.warn('DEBUG: failed to restore rideRequests', uErr.message);
-					}
-				}
-			} catch (restoreErr) {
-				console.warn('Failed to restore rideRequest statuses', restoreErr.message);
-			}
-
-			// IMPORTANT: Do NOT modify rideRequest.status here — ride requests represent matching input
-			return { already: false, trip: updated };
+			return { already: false, trip: completedTrip };
 		});
 
 		if (result.already) {
-			return success(res, { id: result.trip.id, status: 'COMPLETED', note: 'Already completed' });
+			return success(res, { 
+				id: result.trip.id, 
+				status: 'COMPLETED', 
+				note: 'Already completed' 
+			});
 		}
 
-		return success(res, { id: result.trip.id, status: 'COMPLETED', completed_at: result.trip.completedAt });
+		return success(res, { 
+			id: result.trip.id, 
+			status: 'COMPLETED', 
+			completed_at: result.trip.completedAt 
+		});
 	} catch (err) {
 		console.error('Complete trip error:', err);
 		if (err && err.code) {

@@ -197,26 +197,52 @@ async function runMatchingCycle(triggerType = 'CRON') {
 
       /**
        * ✅ STEP 3: Create trips from matches (within transaction)
+       * 
+       * PHASE 1 FIX: Pre-validate each match before attempting trip creation
+       * This prevents logical errors from causing batch-wide transaction failures.
+       * 
+       * Process:
+       * 1. Validate: all users in match still PENDING
+       * 2. If valid: create trip (expected to succeed)
+       * 3. If invalid: skip match (continue with next)
+       * 4. If trip creation throws despite validation: real system error, let propagate
        */
       const createdTrips = [];
       const matchedIds = new Set();
       let usersMatched = 0;
 
       for (const match of matches) {
-        try {
-          const trip = await createTripFromMatch(match, tx);
-          createdTrips.push(trip);
-          usersMatched += match.users.length;
+        // 🔒 PRE-VALIDATION: Ensure all users in this match are still PENDING
+        // This catches cases where a user cancelled between matching and trip creation
+        const matchUserIds = match.users.map(u => u.rideRequestId);
+        const stillPendingCount = await tx.rideRequest.count({
+          where: {
+            id: { in: matchUserIds },
+            status: 'PENDING'
+          }
+        });
 
-          // Track matched IDs for pending_cycles update
-          match.users.forEach(u => matchedIds.add(u.rideRequestId));
-
+        if (stillPendingCount !== match.users.length) {
+          const skipped = match.users.length - stillPendingCount;
           console.log(
-            `✅ Trip created: ${trip.id} (${match.users.length} users, ${match.route.totalDistance.toFixed(2)}km)`
+            `⏭️  Skipping match: ${skipped}/${match.users.length} users no longer PENDING ` +
+            `(likely cancelled during batch)`
           );
-        } catch (err) {
-          console.error(`❌ Failed to create trip:`, err.message);
+          continue;  // Skip this match, move to next
         }
+
+        // ✅ Validation passed: create trip
+        // If this throws, it's a real system error; let transaction fail
+        const trip = await createTripFromMatch(match, tx);
+        createdTrips.push(trip);
+        usersMatched += match.users.length;
+
+        // Track matched IDs for pending_cycles update
+        match.users.forEach(u => matchedIds.add(u.rideRequestId));
+
+        console.log(
+          `✅ Trip created: ${trip.id} (${match.users.length} users, ${match.route.totalDistance.toFixed(2)}km)`
+        );
       }
 
       /**
