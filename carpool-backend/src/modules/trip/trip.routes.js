@@ -5,6 +5,9 @@ const controller = require('./trip.controller');
 // GET /api/trips - return trips visible to the requesting user
 router.get('/', controller.getTrips);
 
+// GET /api/trips/:id - return a single trip by id
+router.get('/:id', controller.getTripById);
+
 // POST /api/trips/:id/complete - mark trip as completed
 router.post('/:id/complete', controller.completeTrip);
 

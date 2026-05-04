@@ -18,16 +18,18 @@ async function fetchPendingRequests(tx) {
 
 /**
  * Update pending cycles for unmatched requests + auto-cancel stale ones
+ * Returns { cycleCancelled, timeCancelled } for observability
  */
 async function updatePendingCycles(tx, allRequests, matchedIds) {
   const unmatchedIds = allRequests
     .map(r => r.id)
     .filter(id => !matchedIds.has(id));
 
-  if (unmatchedIds.length === 0) return;
+  if (unmatchedIds.length === 0) return { cycleCancelled: 0, timeCancelled: 0 };
 
-  // 🔒 Increment pending cycles for unmatched PENDING requests ONLY
+  // 🔒 STEP 1: Increment pending cycles for unmatched PENDING requests ONLY
   // Prevents dirty updates if a request somehow becomes MATCHED/CANCELLED
+  // ⚠️ CRITICAL: This must run BEFORE cancel logic
   await tx.rideRequest.updateMany({
     where: {
       id: { in: unmatchedIds },
@@ -38,18 +40,32 @@ async function updatePendingCycles(tx, allRequests, matchedIds) {
     }
   });
 
-  // 🔒 Auto-cancel PENDING requests that have been pending for 5+ cycles
-  // Double-check status to prevent accidentally cancelling MATCHED requests
-  await tx.rideRequest.updateMany({
+  // 🔒 STEP 2: Auto-cancel by pending cycles (>= 20 cycles = ~20 min unmatched)
+  const cutoffTime = new Date(Date.now() - 45 * 60 * 1000);
+  
+  const cycleCancelled = await tx.rideRequest.updateMany({
     where: {
       id: { in: unmatchedIds },
-      status: 'PENDING',  // ✅ CRITICAL: Only cancel PENDING requests
-      pendingCycles: { gte: 5 }
+      status: 'PENDING',
+      pendingCycles: { gte: 20 }
     },
-    data: {
-      status: 'CANCELLED'
-    }
+    data: { status: 'CANCELLED' }
   });
+
+  // 🔒 STEP 3: Auto-cancel by time (preferredTime > 45 min old)
+  // Only affects PENDING requests (may have been cancelled in STEP 2)
+  const timeCancelled = await tx.rideRequest.updateMany({
+    where: {
+      id: { in: unmatchedIds },
+      status: 'PENDING',
+      preferredTime: { lt: cutoffTime }
+    },
+    data: { status: 'CANCELLED' }
+  });
+
+  // ✅ Return counts for observability (enables debugging)
+  console.log(`Auto-cancelled: cycles=${cycleCancelled.count} time=${timeCancelled.count}`);
+  return { cycleCancelled: cycleCancelled.count, timeCancelled: timeCancelled.count };
 }
 
 /**
@@ -104,25 +120,9 @@ async function runMatchingCycle(triggerType = 'CRON') {
         
         // ⚠️ CRITICAL: Still increment pending_cycles for unmatched requests
         if (pending.length > 0) {
-          // Track cancellations with delta approach
-          const cancelledBefore = await tx.rideRequest.count({
-            where: {
-              id: { in: pending.map(r => r.id) },
-              status: 'CANCELLED'
-            },
-          });
-
           const matchedIds = new Set(); // No matches found
-          await updatePendingCycles(tx, pending, matchedIds);
-
-          const cancelledAfter = await tx.rideRequest.count({
-            where: {
-              id: { in: pending.map(r => r.id) },
-              status: 'CANCELLED'
-            },
-          });
-
-          const autoCancelledCount = cancelledAfter - cancelledBefore;
+          const { cycleCancelled, timeCancelled } = await updatePendingCycles(tx, pending, matchedIds);
+          const autoCancelledCount = cycleCancelled + timeCancelled;
 
           const usersStillPending = await tx.rideRequest.count({
             where: { status: 'PENDING' },
@@ -161,25 +161,9 @@ async function runMatchingCycle(triggerType = 'CRON') {
         console.log(`❌ No valid matches found for ${pending.length} requests`);
         
         // ⚠️ CRITICAL: Still increment pending_cycles for all unmatched requests
-        // Track cancellations with delta approach
-        const cancelledBefore = await tx.rideRequest.count({
-          where: {
-            id: { in: pending.map(r => r.id) },
-            status: 'CANCELLED'
-          },
-        });
-
         const matchedIds = new Set(); // No matches found
-        await updatePendingCycles(tx, pending, matchedIds);
-
-        const cancelledAfter = await tx.rideRequest.count({
-          where: {
-            id: { in: pending.map(r => r.id) },
-            status: 'CANCELLED'
-          },
-        });
-
-        const autoCancelledCount = cancelledAfter - cancelledBefore;
+        const { cycleCancelled, timeCancelled } = await updatePendingCycles(tx, pending, matchedIds);
+        const autoCancelledCount = cycleCancelled + timeCancelled;
 
         const usersStillPending = await tx.rideRequest.count({
           where: { status: 'PENDING' },
@@ -248,30 +232,8 @@ async function runMatchingCycle(triggerType = 'CRON') {
       /**
        * ✅ STEP 4: Update pending_cycles for unmatched requests + track cancellations
        */
-      const unmatched = pending.filter(r => !matchedIds.has(r.id));
-
-      // 🔒 CRITICAL: Count BEFORE to measure delta
-      // This ensures we only count what was cancelled IN THIS CYCLE
-      const cancelledBefore = await tx.rideRequest.count({
-        where: {
-          id: { in: unmatched.map(u => u.id) },
-          status: 'CANCELLED'
-        },
-      });
-
-      // Apply update
-      await updatePendingCycles(tx, pending, matchedIds);
-
-      // Count AFTER to measure delta
-      const cancelledAfter = await tx.rideRequest.count({
-        where: {
-          id: { in: unmatched.map(u => u.id) },
-          status: 'CANCELLED'
-        },
-      });
-
-      // Precise: only count requests cancelled in THIS cycle
-      const autoCancelledCount = cancelledAfter - cancelledBefore;
+      const { cycleCancelled, timeCancelled } = await updatePendingCycles(tx, pending, matchedIds);
+      const autoCancelledCount = cycleCancelled + timeCancelled;
 
       // Count remaining pending
       const usersStillPending = await tx.rideRequest.count({

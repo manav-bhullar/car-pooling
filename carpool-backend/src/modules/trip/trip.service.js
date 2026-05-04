@@ -123,6 +123,81 @@ async function createTripFromMatch(match, tx = null) {
   return await executor.$transaction(executeTransaction);
 }
 
+async function getTripById(tripId, userId) {
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    include: {
+      tripUsers: {
+        include: { user: true },
+      },
+      tripStops: true,
+    },
+  });
+
+  if (!trip) {
+    return null;
+  }
+
+  const isParticipant = trip.tripUsers.some((tu) => tu.userId === userId);
+  if (!isParticipant) {
+    throw { code: 403, message: 'Forbidden' };
+  }
+
+  return trip;
+}
+
+async function completeTrip(tripId, userId) {
+  return await prisma.$transaction(async (tx) => {
+    const trip = await tx.trip.findUnique({
+      where: { id: tripId },
+      include: { tripUsers: true },
+    });
+
+    if (!trip) {
+      throw { code: 404, message: 'Trip not found' };
+    }
+
+    const isParticipant = trip.tripUsers.some((tu) => tu.userId === userId);
+    if (!isParticipant) {
+      throw { code: 403, message: 'Not a trip participant' };
+    }
+
+    if (trip.status === 'COMPLETED') {
+      return {
+        id: trip.id,
+        status: 'COMPLETED',
+        completedAt: trip.completedAt,
+      };
+    }
+
+    if (trip.status === 'CANCELLED') {
+      throw { code: 400, message: 'TRIP_NOT_COMPLETABLE' };
+    }
+
+    if (trip.status !== 'ACTIVE') {
+      throw { code: 400, message: 'TRIP_NOT_COMPLETABLE' };
+    }
+
+    const now = new Date();
+
+    const updatedTrip = await tx.trip.update({
+      where: { id: tripId },
+      data: {
+        status: 'COMPLETED',
+        completedAt: now,
+      },
+    });
+
+    return {
+      id: updatedTrip.id,
+      status: 'COMPLETED',
+      completedAt: updatedTrip.completedAt,
+    };
+  });
+}
+
 module.exports = {
   createTripFromMatch,
+  getTripById,
+  completeTrip,
 };
