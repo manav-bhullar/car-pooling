@@ -51,12 +51,23 @@ function reducer(state, action) {
     }
 
     case 'SET_TRIP': {
+      const rideRequest = state.rideRequest;
       const trip = action.payload;
+      const derived = deriveUIState(rideRequest, trip);
+
+      // co-rider cancelled — clear trip, go back to PENDING
+      if (derived === 'REQUEUED') {
+        return {
+          ...state,
+          trip: null,
+          uiState: 'PENDING',
+        };
+      }
 
       return {
         ...state,
         trip,
-        uiState: deriveUIState(state.rideRequest, trip),
+        uiState: derived,
       };
     }
 
@@ -98,6 +109,7 @@ export function AppProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useApp() {
   const ctx = useContext(AppContext);
 
