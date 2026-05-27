@@ -1,10 +1,12 @@
 const express = require('express');
+const cors = require('cors');
 const rideRequestRoutes = require('./modules/rideRequest/rideRequest.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const tripRoutes = require('./modules/trip/trip.routes');
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.use('/api/ride-requests', rideRequestRoutes);

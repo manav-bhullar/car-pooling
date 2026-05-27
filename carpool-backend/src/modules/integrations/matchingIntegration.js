@@ -191,9 +191,8 @@ async function runMatchingCycle(triggerType = 'CRON') {
        * 3. If invalid: skip match (continue with next)
        * 4. If trip creation throws despite validation: real system error, let propagate
        */
-      const createdTrips = [];
+      const validMatches = [];
       const matchedIds = new Set();
-      let usersMatched = 0;
 
       for (const match of matches) {
         // 🔒 PRE-VALIDATION: Ensure all users in this match are still PENDING
@@ -215,17 +214,11 @@ async function runMatchingCycle(triggerType = 'CRON') {
           continue;  // Skip this match, move to next
         }
 
-        // ✅ Validation passed: create trip
-        // If this throws, it's a real system error; let transaction fail
-        const trip = await createTripFromMatch(match, tx);
-        createdTrips.push(trip);
-        usersMatched += match.users.length;
-
-        // Track matched IDs for pending_cycles update
+        validMatches.push(match);
         match.users.forEach(u => matchedIds.add(u.rideRequestId));
 
         console.log(
-          `✅ Trip created: ${trip.id} (${match.users.length} users, ${match.route.totalDistance.toFixed(2)}km)`
+          `✅ Match validated for trip creation: ${match.users.length} users, ${match.route.totalDistance.toFixed(2)}km`
         );
       }
 
@@ -242,18 +235,51 @@ async function runMatchingCycle(triggerType = 'CRON') {
 
       return {
         pendingCountStart,
-        tripsCreated: createdTrips.length,
-        usersMatched,
+        validMatches,
         usersStillPending,
         autoCancelledCount,
         durationMs: Date.now() - startTime,
       };
     });
 
-    // Log to database
-    await logMatchingCycle(result, triggerType);
+    let tripsCreated = 0;
+    let usersMatched = 0;
 
-    return result;
+    for (const match of result.validMatches || []) {
+      try {
+        const trip = await createTripFromMatch(match);
+        tripsCreated += 1;
+        usersMatched += match.users.length;
+
+        console.log(
+          `✅ Trip created: ${trip.id} (${match.users.length} users, ${match.route.totalDistance.toFixed(2)}km)`
+        );
+      } catch (err) {
+        if (err.message === 'ROAD_DETOUR_EXCEEDED' || err.message === 'Some ride requests already processed') {
+          console.warn(`⏭️ Skipping trip creation for match: ${err.message}`);
+          continue;
+        }
+        throw err;
+      }
+    }
+
+    const usersStillPending = await prisma.rideRequest.count({
+      where: { status: 'PENDING' },
+    });
+
+    const resultToLog = {
+      pendingCountStart: result.pendingCountStart,
+      tripsCreated,
+      usersMatched,
+      usersStillPending,
+      autoCancelledCount: result.autoCancelledCount,
+      durationMs: Date.now() - startTime,
+    };
+
+    // Log to database
+    await logMatchingCycle(resultToLog, triggerType);
+
+    return resultToLog;
   } catch (err) {
     console.error(`❌ Matching cycle failed:`, err);
     const result = {

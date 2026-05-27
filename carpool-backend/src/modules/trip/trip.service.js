@@ -1,7 +1,11 @@
 // ✅ FIX THIS
 const prisma = require("../../prisma/client");
-const { buildTripStops } = require("./trip.utils");
 const { calculateFares } = require("./trip.fare");
+const { getRoadDistances, ROAD_DETOUR_THRESHOLD } = require("./osrm");
+const { haversine } = require("../matching/utils");
+
+const AVG_SPEED_KMH = 30;
+const ROAD_TO_HAVERSINE_CORRECTION = 1.35; // used when skipping OSRM
 
 /**
  * Create Trip from matching result
@@ -11,7 +15,7 @@ const { calculateFares } = require("./trip.fare");
  */
 async function createTripFromMatch(match, tx = null) {
   const { users, route, detourRatio } = match;
-  // Validation: ensure orderedIndices contract satisfied
+
   if (!route || !route.orderedIndices) {
     throw new Error('Invalid match: route.orderedIndices missing');
   }
@@ -21,92 +25,114 @@ async function createTripFromMatch(match, tx = null) {
   }
 
   if (!users || users.length < 2) {
-    throw new Error("Invalid match: not enough users");
+    throw new Error('Invalid match: not enough users');
   }
 
-  if (!route || !route.orderedIndices || route.orderedIndices.length === 0) {
-    throw new Error("Invalid match: route missing orderedIndices");
-  }
-
-  // Extract rideRequestIds properly
   const rideRequestIds = users.map((u) => u.rideRequestId);
+  const coords = [
+    ...users.map((u) => ({ lat: u.pickupLat, lng: u.pickupLng })),
+    ...users.map((u) => ({ lat: u.dropLat, lng: u.dropLng })),
+  ];
 
-  // Use provided transaction or create new one
+  const orderedStops = route.orderedIndices.map((idx) => coords[idx]);
+  const haversineTotal = route.totalDistance;
+
+  let roadData;
+  if (process.env.SKIP_OSRM === '1') {
+    // Temporary fallback: compute road-like distances from Haversine
+    const legDistances = [];
+    for (let i = 0; i < orderedStops.length - 1; i++) {
+      legDistances.push(
+        haversine(
+          orderedStops[i].lat,
+          orderedStops[i].lng,
+          orderedStops[i + 1].lat,
+          orderedStops[i + 1].lng
+        ) * ROAD_TO_HAVERSINE_CORRECTION
+      );
+    }
+
+    const soloRoadDistances = users.map((u) => ({
+      userId: u.userId,
+      rideRequestId: u.rideRequestId,
+      soloDistance:
+        haversine(u.pickupLat, u.pickupLng, u.dropLat, u.dropLng) * ROAD_TO_HAVERSINE_CORRECTION,
+    }));
+
+    const totalRoadDistanceKm = legDistances.reduce((s, d) => s + d, 0);
+    const totalSoloRoad = soloRoadDistances.reduce((s, u) => s + u.soloDistance, 0);
+
+    roadData = {
+      totalRoadDistanceKm,
+      legDistances,
+      soloRoadDistances,
+      usedFallback: true,
+      roadDetourRatio: Math.max(0, (totalRoadDistanceKm - totalSoloRoad) / Math.max(1e-6, totalSoloRoad)),
+    };
+  } else {
+    roadData = await getRoadDistances(orderedStops, users, haversineTotal);
+  }
+
+  if (roadData.roadDetourRatio > ROAD_DETOUR_THRESHOLD) {
+    console.warn(
+      `[OSRM] Road detour too high: ${roadData.roadDetourRatio.toFixed(2)} > ${ROAD_DETOUR_THRESHOLD}. Rejecting match.`
+    );
+    throw new Error('ROAD_DETOUR_EXCEEDED');
+  }
+
+  const totalRoadDistanceKm = roadData.totalRoadDistanceKm;
+  const estimatedEtaMinutes = Math.round((totalRoadDistanceKm / AVG_SPEED_KMH) * 60);
+
   const executor = tx || prisma;
   const isNestedTransaction = !!tx;
 
   const executeTransaction = async (txContext) => {
-    /**
-     * 🔒 STEP 0 — SAFETY CHECK
-     * Ensure all requests are still PENDING
-     */
     const validRequests = await txContext.rideRequest.findMany({
       where: {
         id: { in: rideRequestIds },
-        status: "PENDING",
+        status: 'PENDING',
       },
       select: { id: true },
     });
 
     if (validRequests.length !== rideRequestIds.length) {
-      throw new Error("Some ride requests already processed");
+      throw new Error('Some ride requests already processed');
     }
 
-    /**
-     * ✅ STEP 1 — CREATE TRIP
-     */
     const trip = await txContext.trip.create({
       data: {
-        status: "ACTIVE",
-        totalDistanceKm: route.totalDistance,
-        estimatedEtaMinutes: Math.round(
-          (route.totalDistance / 30) * 60 // correct ETA formula
-        ),
-        detourRatio: detourRatio,
+        status: 'ACTIVE',
+        totalDistanceKm: totalRoadDistanceKm,
+        estimatedEtaMinutes,
+        detourRatio: roadData.roadDetourRatio,
       },
     });
 
-    /**
-     * ✅ STEP 2 — BUILD STOPS (in-memory, deterministic)
-     */
-    const stopsData = buildTripStops(users, route.orderedIndices).map((stop) => ({
+    const stopsData = buildTripStopsWithRoadDistances(users, route.orderedIndices, roadData.legDistances).map((stop) => ({
       tripId: trip.id,
       ...stop,
     }));
 
-    /**
-     * ✅ STEP 3 — CALCULATE FARES (pure computation using stored stop rows)
-     * Must run inside the transaction so persistence is atomic.
-     */
     const fares = calculateFares(users, stopsData);
 
-    /**
-     * ✅ STEP 4 — CREATE TRIP USERS (persist fares atomically)
-     */
-    const tripUsersData = users.map((user) => ({
-      tripId: trip.id,
-      userId: user.userId,
-      rideRequestId: user.rideRequestId,
-      fareShare: fares[user.rideRequestId],
-    }));
+    await txContext.tripUser.createMany({
+      data: users.map((user) => ({
+        tripId: trip.id,
+        userId: user.userId,
+        rideRequestId: user.rideRequestId,
+        fareShare: fares[user.rideRequestId],
+      })),
+    });
 
-    await txContext.tripUser.createMany({ data: tripUsersData });
-
-    /**
-     * ✅ STEP 5 — PERSIST TRIP STOPS
-     */
     await txContext.tripStop.createMany({ data: stopsData });
 
-    /**
-     * ✅ STEP 4 — UPDATE RIDE REQUESTS
-     */
     await txContext.rideRequest.updateMany({
       where: {
         id: { in: rideRequestIds },
-        status: "PENDING", // extra safety
+        status: 'PENDING',
       },
       data: {
-        status: "MATCHED",
+        status: 'MATCHED',
         pendingCycles: 0,
       },
     });
@@ -114,13 +140,55 @@ async function createTripFromMatch(match, tx = null) {
     return trip;
   };
 
-  // If nested, just execute within the transaction context
   if (isNestedTransaction) {
     return await executeTransaction(tx);
   }
 
-  // Otherwise, create a new transaction
   return await executor.$transaction(executeTransaction);
+}
+
+function buildTripStopsWithRoadDistances(users, orderedIndices, legDistances) {
+  const n = users.length;
+  const coords = [
+    ...users.map((u) => ({ lat: u.pickupLat, lng: u.pickupLng })),
+    ...users.map((u) => ({ lat: u.dropLat, lng: u.dropLng })),
+  ];
+
+  const active = new Set();
+  const stops = [];
+
+  for (let i = 0; i < orderedIndices.length; i++) {
+    const idx = orderedIndices[i];
+    const { lat, lng } = coords[idx];
+    const segmentDistKm = i === 0 ? 0 : legDistances[i - 1];
+    const activePassengers = active.size;
+
+    let type;
+    let rideRequestId;
+
+    if (idx < n) {
+      type = 'PICKUP';
+      rideRequestId = users[idx].rideRequestId;
+      active.add(idx);
+    } else {
+      type = 'DROPOFF';
+      const userIdx = idx - n;
+      rideRequestId = users[userIdx].rideRequestId;
+      active.delete(userIdx);
+    }
+
+    stops.push({
+      stopOrder: i,
+      type,
+      lat,
+      lng,
+      rideRequestId,
+      segmentDistKm,
+      activePassengersOnSegment: activePassengers,
+    });
+  }
+
+  return stops;
 }
 
 async function getTripById(tripId, userId) {
