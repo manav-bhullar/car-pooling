@@ -5,7 +5,6 @@ const { getRoadDistances, ROAD_DETOUR_THRESHOLD } = require("./osrm");
 const { haversine } = require("../matching/utils");
 
 const AVG_SPEED_KMH = 30;
-const ROAD_TO_HAVERSINE_CORRECTION = 1.35; // used when skipping OSRM
 
 /**
  * Create Trip from matching result
@@ -37,41 +36,8 @@ async function createTripFromMatch(match, tx = null) {
   const orderedStops = route.orderedIndices.map((idx) => coords[idx]);
   const haversineTotal = route.totalDistance;
 
-  let roadData;
-  if (process.env.SKIP_OSRM === '1') {
-    // Temporary fallback: compute road-like distances from Haversine
-    const legDistances = [];
-    for (let i = 0; i < orderedStops.length - 1; i++) {
-      legDistances.push(
-        haversine(
-          orderedStops[i].lat,
-          orderedStops[i].lng,
-          orderedStops[i + 1].lat,
-          orderedStops[i + 1].lng
-        ) * ROAD_TO_HAVERSINE_CORRECTION
-      );
-    }
-
-    const soloRoadDistances = users.map((u) => ({
-      userId: u.userId,
-      rideRequestId: u.rideRequestId,
-      soloDistance:
-        haversine(u.pickupLat, u.pickupLng, u.dropLat, u.dropLng) * ROAD_TO_HAVERSINE_CORRECTION,
-    }));
-
-    const totalRoadDistanceKm = legDistances.reduce((s, d) => s + d, 0);
-    const totalSoloRoad = soloRoadDistances.reduce((s, u) => s + u.soloDistance, 0);
-
-    roadData = {
-      totalRoadDistanceKm,
-      legDistances,
-      soloRoadDistances,
-      usedFallback: true,
-      roadDetourRatio: Math.max(0, (totalRoadDistanceKm - totalSoloRoad) / Math.max(1e-6, totalSoloRoad)),
-    };
-  } else {
-    roadData = await getRoadDistances(orderedStops, users, haversineTotal);
-  }
+  // Always use OSRM (or its fallback logic inside getRoadDistances)
+  const roadData = await getRoadDistances(orderedStops, users, haversineTotal);
 
   if (roadData.roadDetourRatio > ROAD_DETOUR_THRESHOLD) {
     console.warn(
