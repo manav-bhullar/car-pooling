@@ -105,6 +105,11 @@ exports.cancelRideRequest = async (id, userId) => {
         where: { id },
         data: { status: "CANCELLED" },
       });
+
+      await tx.tripUser.deleteMany({
+        where: { rideRequestId: id },
+      });
+
       return {
         id,
         status: "CANCELLED",
@@ -162,6 +167,7 @@ exports.cancelRideRequest = async (id, userId) => {
           where: { tripId },
         });
         const rideRequestIds = tripUsers.map(tu => tu.rideRequestId);
+        const coRiderIds = rideRequestIds.filter(rid => rid !== id);
 
         // 6. Cancel the triggering user
         await tx.rideRequest.update({
@@ -169,15 +175,22 @@ exports.cancelRideRequest = async (id, userId) => {
           data: { status: "CANCELLED" },
         });
 
-        // 7. Revert co-riders to PENDING (only if they're still MATCHED)
-        if (rideRequestIds.length > 1) {
+        // 7. Revert co-riders to PENDING and remove their TripUser linkage
+        if (coRiderIds.length > 0) {
           await tx.rideRequest.updateMany({
             where: {
-              id: { in: rideRequestIds.filter(rid => rid !== id) },
+              id: { in: coRiderIds },
               status: "MATCHED",
             },
             data: {
               status: "PENDING",
+            },
+          });
+
+          await tx.tripUser.deleteMany({
+            where: {
+              tripId,
+              rideRequestId: { in: coRiderIds },
             },
           });
         }
