@@ -1,6 +1,111 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { createRideRequest } from '../api/rideRequests';
+import { createRideRequest, getRideRequests } from '../api/rideRequests';
+import { searchLocation } from '../api/geocoding';
+
+function LocationInput({ label, value, onSelect }) {
+  const [query, setQuery] = useState(value?.displayName || '');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const debounceRef = useRef(null);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    setQuery(value?.displayName || '');
+  }, [value]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  function handleChange(e) {
+    const val = e.target.value;
+    setQuery(val);
+    setOpen(true);
+
+    if (value?.displayName && val !== value.displayName) {
+      onSelect(null);
+    }
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    if (val.trim().length < 3) {
+      setResults([]);
+      setOpen(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const found = await searchLocation(val);
+        setResults(found);
+      } catch {
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+  }
+
+  function handleSelect(place) {
+    setQuery(place.displayName);
+    setResults([]);
+    setOpen(false);
+    onSelect(place);
+  }
+
+  return (
+    <div className="location-input-wrapper" ref={wrapperRef}>
+      <label className="form-label">{label}</label>
+      <input
+        className="form-input"
+        type="text"
+        placeholder="Search for a location..."
+        value={query}
+        onChange={handleChange}
+        autoComplete="off"
+      />
+
+      {open && (
+        <div className="location-dropdown">
+          {loading && (
+            <div className="location-dropdown-item location-loading">
+              Searching...
+            </div>
+          )}
+
+          {!loading && query.trim().length >= 3 && results.length === 0 && (
+            <div className="location-dropdown-item location-empty">
+              No results found
+            </div>
+          )}
+
+          {!loading && results.map((place, index) => (
+            <button
+              key={index}
+              type="button"
+              className="location-dropdown-item"
+              onClick={() => handleSelect(place)}
+            >
+              {place.displayName}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function RideRequestForm() {
   const { state, dispatch } = useApp();
@@ -11,114 +116,102 @@ export default function RideRequestForm() {
     return now.toISOString().slice(0, 16);
   };
 
-  const [formData, setFormData] = useState({
-    pickupLat: '',
-    pickupLng: '',
-    dropoffLat: '',
-    dropoffLng: '',
-    preferredTime: getDefaultTime(),
-  });
+  const [pickup, setPickup] = useState(null);
+  const [drop, setDrop] = useState(null);
+  const [preferredTime, setPreferredTime] = useState(getDefaultTime());
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  function validate() {
+    if (!pickup) return 'Please select a pickup location';
+    if (!drop) return 'Please select a drop location';
+    if (!preferredTime) return 'Please select a preferred time';
+
+    if (pickup.lat === drop.lat && pickup.lng === drop.lng) {
+      return 'Pickup and drop cannot be the same location';
+    }
+
+    const prefTime = new Date(preferredTime);
+    if (prefTime < new Date(Date.now() - 5 * 60 * 1000)) {
+      return 'Preferred time cannot be in the past';
+    }
+
+    return null;
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setError(null);
 
-    const data = {
-      pickupLat: parseFloat(formData.pickupLat),
-      pickupLng: parseFloat(formData.pickupLng),
-      dropLat: parseFloat(formData.dropoffLat),
-      dropLng: parseFloat(formData.dropoffLng),
-      preferredTime: new Date(formData.preferredTime).toISOString(),
-    };
-
-    if (Object.values(data).slice(0, 4).some(v => isNaN(v))) {
-      dispatch({
-        type: 'SET_NOTIFICATION',
-        payload: { type: 'error', message: 'Please enter valid coordinates' }
-      });
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
+    setLoading(true);
+
     try {
-      const rideRequest = await createRideRequest(state.userId, data);
-      dispatch({ type: 'SET_RIDE_REQUEST', payload: rideRequest });
-    } catch {
-      dispatch({
-        type: 'SET_NOTIFICATION',
-        payload: { type: 'error', message: 'Failed to create ride request. Please try again.' }
+      const rideRequest = await createRideRequest(state.userId, {
+        pickupLat: pickup.lat,
+        pickupLng: pickup.lng,
+        dropLat: drop.lat,
+        dropLng: drop.lng,
+        preferredTime: new Date(preferredTime).toISOString(),
       });
+      dispatch({ type: 'SET_RIDE_REQUEST', payload: rideRequest });
+    } catch (err) {
+      if (err.status === 409) {
+        const requests = await getRideRequests(state.userId, 'PENDING');
+        if (requests.length > 0) {
+          dispatch({ type: 'SET_RIDE_REQUEST', payload: requests[0] });
+          setLoading(false);
+          return;
+        }
+      }
+
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   }
+
+  const canSubmit = !!pickup && !!drop && !!preferredTime && !loading;
 
   return (
     <form className="ride-request-form" onSubmit={handleSubmit}>
       <h2 className="form-title">Request a Ride</h2>
 
-      <div className="form-group">
-        <label className="form-label">Pickup Location</label>
-        <div className="coord-inputs">
-          <input
-            type="number"
-            step="0.0001"
-            name="pickupLat"
-            placeholder="Latitude"
-            value={formData.pickupLat}
-            onChange={handleChange}
-            required
-          />
-          <input
-            type="number"
-            step="0.0001"
-            name="pickupLng"
-            placeholder="Longitude"
-            value={formData.pickupLng}
-            onChange={handleChange}
-            required
-          />
-        </div>
-      </div>
+      <LocationInput
+        label="Pickup location"
+        value={pickup}
+        onSelect={setPickup}
+      />
 
-      <div className="form-group">
-        <label className="form-label">Dropoff Location</label>
-        <div className="coord-inputs">
-          <input
-            type="number"
-            step="0.0001"
-            name="dropoffLat"
-            placeholder="Latitude"
-            value={formData.dropoffLat}
-            onChange={handleChange}
-            required
-          />
-          <input
-            type="number"
-            step="0.0001"
-            name="dropoffLng"
-            placeholder="Longitude"
-            value={formData.dropoffLng}
-            onChange={handleChange}
-            required
-          />
-        </div>
-      </div>
+      <LocationInput
+        label="Drop location"
+        value={drop}
+        onSelect={setDrop}
+      />
 
       <div className="form-group">
         <label className="form-label">Preferred Time</label>
         <input
+          className="form-input"
           type="datetime-local"
-          name="preferredTime"
-          value={formData.preferredTime}
-          onChange={handleChange}
-          required
+          value={preferredTime}
+          onChange={e => setPreferredTime(e.target.value)}
         />
       </div>
 
-      <button type="submit" className="submit-button">
-        Request Ride
+      {error && <p className="form-error">{error}</p>}
+
+      <button
+        type="submit"
+        className="submit-button"
+        disabled={!canSubmit}
+      >
+        {loading ? 'Finding your ride...' : 'Request Ride'}
       </button>
     </form>
   );
