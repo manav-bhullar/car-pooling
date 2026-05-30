@@ -8,12 +8,14 @@ export function useAppInit() {
   const { state, dispatch } = useApp();
 
   useEffect(() => {
-    if (!state.userId) return;
+    const userId = (state.user && state.user.id) || state.userId;
+    if (!userId) return;
+    if (!state.loading.init) return;
 
     async function init() {
       try {
         // 1. Fetch all ride requests of user
-        const requests = await getRideRequests(state.userId);
+        const requests = await getRideRequests(userId);
 
         // 2. Find active request
         const active = requests.find(r =>
@@ -40,9 +42,9 @@ export function useAppInit() {
 
         // If matched → need trip
         if (active.status === 'MATCHED') {
-          const trips = await getTrips(state.userId);
+          const trips = await getTrips(userId);
 
-          const trip = findUserTrip(trips, state.userId);
+          const trip = findUserTrip(trips, userId);
 
           dispatch({
             type: 'INIT_COMPLETE',
@@ -64,5 +66,9 @@ export function useAppInit() {
     }
 
     init();
-  }, [state.userId]);
+  }, [
+    (state.user && state.user.id) || state.userId,
+    state.loading.init,
+    dispatch,
+  ]);
 }

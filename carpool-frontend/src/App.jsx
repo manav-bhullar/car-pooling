@@ -15,9 +15,23 @@ import LoadingState from './components/LoadingState';
 const STATE_TO_ROUTE = {
   IDLE: '/',
   PENDING: '/waiting',
-  MATCHED: '/trip',
-  COMPLETED: '/summary',
+  MATCHED: '/waiting',
+  TRIP_ACTIVE: '/trip',
+  TRIP_COMPLETED: '/summary',
+  CANCELLED: '/',
 };
+
+function getTargetRoute(uiState, tripId) {
+  if (uiState === 'TRIP_ACTIVE') {
+    return tripId ? `/trip/${tripId}` : '/trip';
+  }
+
+  if (uiState === 'TRIP_COMPLETED') {
+    return tripId ? `/summary/${tripId}` : '/summary';
+  }
+
+  return STATE_TO_ROUTE[uiState] || '/';
+}
 
 export default function App() {
   const { state } = useApp();
@@ -25,25 +39,26 @@ export default function App() {
 
   useAppInit();
 
-  // 🔥 This is the brain of navigation
-  useEffect(() => {
-    if (!state.userId) return;
-    if (state.isInitializing) return;
+  const userId = (state.user && state.user.id) || state.userId;
+  const targetRoute = getTargetRoute(state.uiState, state.trip?.id);
 
-    const targetRoute = STATE_TO_ROUTE[state.uiState];
+  // 🔥 Lifecycle-driven navigation after hydration completes
+  useEffect(() => {
+    if (!userId) return;
+    if (state.loading.init) return;
 
     if (targetRoute) {
       navigate(targetRoute, { replace: true });
     }
-  }, [state.uiState, state.isInitializing, state.userId]);
+  }, [userId, state.loading.init, state.uiState, state.trip?.id, targetRoute, navigate]);
 
   // No user selected
-  if (!state.userId) {
+  if (!userId) {
     return <UserSelectorScreen />;
   }
 
-  // Initial loading
-  if (state.isInitializing) {
+  // Initial loading / hydration
+  if (state.loading.init) {
     return <LoadingState message="Loading your session..." />;
   }
 
@@ -54,10 +69,10 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/waiting" element={<WaitingScreen />} />
-        <Route path="/trip" element={<TripScreen />} />
-        <Route path="/summary" element={<SummaryScreen />} />
+        <Route path="/trip/:tripId?" element={<TripScreen />} />
+        <Route path="/summary/:tripId?" element={<SummaryScreen />} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to={targetRoute} replace />} />
       </Routes>
     </>
   );
