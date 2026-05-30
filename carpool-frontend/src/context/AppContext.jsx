@@ -4,14 +4,26 @@ import { deriveUIState } from '../utils/stateUtils';
 const AppContext = createContext(null);
 
 const initialState = {
-  userId: null,
-  userName: null,
-
+  // Canonical source state
+  user: null, // { id, name, email }
   rideRequest: null,
   trip: null,
 
+  // Derived (kept for backward compatibility until next pass)
   uiState: 'IDLE',
 
+  // Loading / error buckets required by canonical shape
+  loading: {
+    init: true,
+    submitting: false,
+    cancelling: false,
+    completing: false,
+  },
+  error: null,
+
+  // Backwards-compatible fields (deprecated)
+  userId: null,
+  userName: null,
   notification: null,
   isInitializing: true,
 };
@@ -20,10 +32,19 @@ function reducer(state, action) {
   switch (action.type) {
 
     case 'SELECT_USER': {
+      const user = {
+        id: action.payload.id,
+        name: action.payload.name,
+        email: action.payload.email || null,
+      };
+
       return {
         ...initialState,
-        userId: action.payload.id,
-        userName: action.payload.name,
+        user,
+        // keep backwards compatibility
+        userId: user.id,
+        userName: user.name,
+        loading: { ...initialState.loading, init: false },
         isInitializing: false,
       };
     }
@@ -36,6 +57,7 @@ function reducer(state, action) {
         rideRequest: rideRequest || null,
         trip: trip || null,
         uiState: deriveUIState(rideRequest, trip),
+        loading: { ...state.loading, init: false },
         isInitializing: false,
       };
     }
@@ -88,8 +110,11 @@ function reducer(state, action) {
     case 'RESET': {
       return {
         ...initialState,
+        // preserve current user for session continuity
+        user: state.user || null,
         userId: state.userId,
         userName: state.userName,
+        loading: { ...initialState.loading, init: false },
         isInitializing: false,
       };
     }
