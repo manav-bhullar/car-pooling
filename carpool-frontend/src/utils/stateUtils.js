@@ -3,25 +3,50 @@
  * Never compute UI state inside components.
  */
 export function deriveUIState(rideRequest, trip) {
-  if (!rideRequest || rideRequest.status === 'CANCELLED') {
+  // Terminal state: if a trip is explicitly completed, surface TRIP_COMPLETED
+  if (trip && trip.status === 'COMPLETED') {
+    return 'TRIP_COMPLETED';
+  }
+
+  // Terminal state: explicit ride request cancellation
+  if (rideRequest && rideRequest.status === 'CANCELLED') {
+    return 'CANCELLED';
+  }
+
+  // No source state at all -> IDLE
+  if (!rideRequest && !trip) {
     return 'IDLE';
   }
 
-  if (rideRequest.status === 'PENDING') {
+  // Pending ride request -> PENDING
+  if (rideRequest && rideRequest.status === 'PENDING') {
     return 'PENDING';
   }
 
-  if (rideRequest.status === 'MATCHED') {
-    if (!trip) return 'MATCHED';
+  // Matched transition: matched but trip may not yet be loaded.
+  // This must return MATCHED as a transition state to avoid blank-screen flashes
+  // while the trip fetch is in-flight.
+  if (rideRequest && rideRequest.status === 'MATCHED') {
+    if (!trip) {
+      return 'MATCHED';
+    }
 
-    if (trip.status === 'ACTIVE') return 'MATCHED';
-    if (trip.status === 'COMPLETED') return 'COMPLETED';
-
-    // Important edge case:
-    // Trip got cancelled due to co-rider cancel
+    // Trip exists and we can inspect its status deterministically
+    if (trip.status === 'ACTIVE') return 'TRIP_ACTIVE';
+    if (trip.status === 'COMPLETED') return 'TRIP_COMPLETED';
     if (trip.status === 'CANCELLED') return 'REQUEUED';
+
+    // Unknown or transitional trip state: remain in MATCHED transition
+    return 'MATCHED';
   }
 
+  // If we have a trip but no rideRequest, infer UI from trip status
+  if (trip) {
+    if (trip.status === 'ACTIVE') return 'TRIP_ACTIVE';
+    if (trip.status === 'COMPLETED') return 'TRIP_COMPLETED';
+  }
+
+  // Default fallback
   return 'IDLE';
 }
 
