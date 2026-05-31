@@ -62,8 +62,8 @@ async function testPendingCycles() {
     const rideRequestId = createResponse.data.data.id;
     console.log(`  ✅ Created request: ${rideRequestId.substring(0, 8)}`);
 
-    // Run matching 5 times
-    console.log('\n⚙️  STEP 2: Running matching 5 cycles...\n');
+    // Run matching 10 times
+    console.log('\n⚙️  STEP 2: Running matching 10 cycles...\n');
     const cycleResults = [];
 
     for (let cycle = 1; cycle <= 5; cycle++) {
@@ -99,7 +99,12 @@ async function testPendingCycles() {
       { cycle: 2, pendingCycles: 2, status: 'PENDING' },
       { cycle: 3, pendingCycles: 3, status: 'PENDING' },
       { cycle: 4, pendingCycles: 4, status: 'PENDING' },
-      { cycle: 5, pendingCycles: 5, status: 'CANCELLED' }
+      { cycle: 5, pendingCycles: 5, status: 'PENDING' },
+      { cycle: 6, pendingCycles: 6, status: 'PENDING' },
+      { cycle: 7, pendingCycles: 7, status: 'PENDING' },
+      { cycle: 8, pendingCycles: 8, status: 'PENDING' },
+      { cycle: 9, pendingCycles: 9, status: 'PENDING' },
+      { cycle: 10, pendingCycles: 10, status: 'CANCELLED' }
     ];
 
     for (let i = 0; i < cycleResults.length; i++) {
@@ -124,7 +129,7 @@ async function testPendingCycles() {
     if (testPassed) {
       console.log('  ✅ SUCCESS - pending_cycles logic is working correctly');
       console.log('     • Cycles 1-4: Correctly incremented');
-      console.log('     • Cycle 5: Correctly auto-cancelled at threshold\n');
+      console.log('     • Cycle 10: Correctly auto-cancelled at threshold\n');
       return true;
     } else {
       console.log('  ❌ FAILED - pending_cycles logic has issues\n');

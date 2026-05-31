@@ -118,6 +118,10 @@ function calculateSegmentDistance(sequence, startIdx, endIdx) {
  * Returns maximum detour ratio experienced by any user
  */
 function computePerUserDetour(users, sequence) {
+  if (!sequence || sequence.length === 0) {
+    return Infinity;
+  }
+
   let maxDetour = 0;
 
   for (const user of users) {
@@ -200,6 +204,10 @@ function optimizeRoute(users) {
       bestDistance = dist;
       bestSequence = seq;
     }
+  }
+
+  if (!bestSequence) {
+    return null;
   }
 
   // Compute individual distances

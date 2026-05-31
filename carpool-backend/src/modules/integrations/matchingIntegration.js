@@ -40,14 +40,14 @@ async function updatePendingCycles(tx, allRequests, matchedIds) {
     }
   });
 
-  // 🔒 STEP 2: Auto-cancel by pending cycles (>= 20 cycles = ~20 min unmatched)
+  // 🔒 STEP 2: Auto-cancel by pending cycles (>= 10 cycles = ~10 min unmatched)
   const cutoffTime = new Date(Date.now() - 45 * 60 * 1000);
   
   const cycleCancelled = await tx.rideRequest.updateMany({
     where: {
       id: { in: unmatchedIds },
       status: 'PENDING',
-      pendingCycles: { gte: 20 }
+      pendingCycles: { gte: 10 }
     },
     data: { status: 'CANCELLED' }
   });

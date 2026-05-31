@@ -47,7 +47,7 @@ function tryFormGroup(pair, allRequests, usedIds) {
 
     // Step A: Check all pair combinations inside group
     let valid = true;
-    let totalScore = pair.score;
+    let totalScore = 0;
 
     for (let i = 0; i < groupUsers.length; i++) {
       for (let j = i + 1; j < groupUsers.length; j++) {

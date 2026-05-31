@@ -40,10 +40,10 @@ async function testAutoCancelledCountAccuracy() {
     const rideRequestId = createResponse.data.data.id;
     console.log(`  ✅ Created request: ${rideRequestId.substring(0, 8)}\n`);
 
-    // Run 6 cycles and check logs each time
+    // Run 10 cycles and check logs each time
     console.log('⚙️  STEP 2: Running matching cycles and checking logs...\n');
 
-    for (let cycle = 1; cycle <= 6; cycle++) {
+    for (let cycle = 1; cycle <= 10; cycle++) {
       // Run matching
       await axios.post(`${BASE_URL}/admin/run-matching`);
 
@@ -71,11 +71,11 @@ async function testAutoCancelledCountAccuracy() {
     
     const allLogs = await prisma.matchCycleLog.findMany({
       orderBy: { runAt: 'asc' },
-      take: 6
+      take: 10
     });
 
     let testPassed = true;
-    const expectedAutoCancelled = [0, 0, 0, 0, 1, 0]; // Should be 1 in cycle 5
+    const expectedAutoCancelled = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]; // Should be 1 in cycle 10
 
     for (let i = 0; i < allLogs.length; i++) {
       const log = allLogs[i];
@@ -92,8 +92,8 @@ async function testAutoCancelledCountAccuracy() {
     console.log('\n🎯 TEST RESULT:');
     if (testPassed) {
       console.log('  ✅ SUCCESS - autoCancelledCount is precise per-cycle');
-      console.log('     • Cycles 1-4: autoCancelledCount = 0 (no cancellations yet)');
-      console.log('     • Cycle 5: autoCancelledCount = 1 (request auto-cancelled)');
+      console.log('     • Cycles 1-9: autoCancelledCount = 0 (no cancellations yet)');
+      console.log('     • Cycle 10: autoCancelledCount = 1 (request auto-cancelled)');
       console.log('     • Delta-based counting is working correctly\n');
       return true;
     } else {

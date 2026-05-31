@@ -59,13 +59,19 @@ function scorePair(a, b) {
   const directionScore = Math.max(0, 1 - (diff / MAX_DIR_DIFF));
 
   // --- FINAL WEIGHTED SCORE ---
-  return (
+  const baseScore =
     0.25 * pickupScore +
     0.20 * dropScore +
     0.30 * detourScore +
     0.15 * timeScore +
-    0.10 * directionScore
+    0.10 * directionScore;
+
+  const waitBonus = Math.min(
+    0.08,
+    ((a.pendingCycles || 0) + (b.pendingCycles || 0)) * 0.008
   );
+
+  return Math.min(1, baseScore + waitBonus);
 }
 
 module.exports = {
