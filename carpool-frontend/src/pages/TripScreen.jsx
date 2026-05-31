@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useTripPoller } from '../hooks/useTripPoller';
-import { completeTrip } from '../api/trips';
+import { completeTrip, getTripById } from '../api/trips';
 import { cancelRideRequest } from '../api/rideRequests';
 import TripCard from '../components/TripCard';
 import CancelButton from '../components/CancelButton';
@@ -11,13 +13,16 @@ export default function TripScreen() {
   useTripPoller();
 
   async function handleComplete() {
+    // Confirm because completing a trip will finalize it for all riders
+    if (!window.confirm('Completing this trip will finalize it for all riders. Are you sure?')) return;
+
     try {
       await completeTrip(state.userId, state.trip.id);
       const updatedTrip = { ...state.trip, status: 'COMPLETED' };
       dispatch({ type: 'SET_TRIP', payload: updatedTrip });
     } catch (err) {
       if (err.status === 400) {
-        // trip was cancelled underneath us
+        // trip was cancelled or not completable underneath us
         dispatch({
           type: 'SET_NOTIFICATION',
           payload: { type: 'warning', message: 'Trip could not be completed. It may have been cancelled.' }
@@ -30,6 +35,30 @@ export default function TripScreen() {
       }
     }
   }
+
+  // If a tripId is present in the URL (refresh/bookmark), fetch that trip explicitly
+  const { tripId } = useParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchTrip() {
+      if (!tripId) return;
+      const userId = (state.user && state.user.id) || state.userId;
+      try {
+        const trip = await getTripById(userId, tripId);
+        if (!mounted) return;
+        dispatch({ type: 'SET_TRIP', payload: trip });
+      } catch (err) {
+        // unauthorized or missing trip → reset and go home
+        dispatch({ type: 'RESET' });
+        navigate('/', { replace: true });
+      }
+    }
+
+    fetchTrip();
+    return () => { mounted = false; };
+  }, [tripId, state.user, state.userId, dispatch, navigate]);
 
   async function handleCancel() {
     try {
