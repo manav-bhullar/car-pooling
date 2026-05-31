@@ -19,6 +19,8 @@ exports.createRideRequest = async(userId, data) => {
             pickupLng : data.pickupLng,
             dropLat : data.dropLat,
             dropLng : data.dropLng,
+            pickupAddress: data.pickupAddress ?? null,
+            dropAddress: data.dropAddress ?? null,
             preferredTime : new Date(data.preferredTime),
         },
     });
@@ -41,36 +43,36 @@ exports.getRideRequests = async(userId, status) => {
     if (requests.length > 0) {
         const pendingRequests = requests.filter(r => r.status === 'PENDING');
         
-        if (pendingRequests.length > 0) {
-            // 🔒 Batch-fetch TripUser + Trip relationships (no N+1)
-            const tripUsers = await prisma.tripUser.findMany({
+        // 🔒 Batch-fetch TripUser + Trip relationships for PENDING requests only
+        // This computes requeue metadata without N+1 queries.
+        const tripUsers = pendingRequests.length > 0
+            ? await prisma.tripUser.findMany({
                 where: { rideRequestId: { in: pendingRequests.map(r => r.id) } },
                 include: { trip: { select: { id: true, status: true } } }
-            });
+            })
+            : [];
 
-            const tripUserMap = Object.fromEntries(
-                tripUsers.map(tu => [tu.rideRequestId, tu])
-            );
+        const tripUserMap = Object.fromEntries(
+            tripUsers.map(tu => [tu.rideRequestId, tu])
+        );
 
-            // Map all requests: enrich PENDING with requeue info, others with defaults
-            return requests.map(r => {
-                if (r.status === 'PENDING') {
-                    const tripUser = tripUserMap[r.id];
-                    const requeued = tripUser?.trip?.status === 'CANCELLED';
-                    return {
-                        ...r,
-                        requeued,
-                        requeueReason: requeued ? 'CO_RIDER_CANCELLED' : null
-                    };
-                }
-                // Non-PENDING requests never requeued
+        return requests.map(r => {
+            if (r.status === 'PENDING') {
+                const tripUser = tripUserMap[r.id];
+                const requeued = tripUser?.trip?.status === 'CANCELLED';
                 return {
                     ...r,
-                    requeued: false,
-                    requeueReason: null
+                    requeued,
+                    requeueReason: requeued ? 'CO_RIDER_CANCELLED' : null
                 };
-            });
-        }
+            }
+            // Non-PENDING requests should still be returned with consistent schema
+            return {
+                ...r,
+                requeued: false,
+                requeueReason: null
+            };
+        });
     }
 
     // No requests: return empty array with consistent schema

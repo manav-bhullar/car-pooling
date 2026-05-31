@@ -10,7 +10,7 @@ export default function StopList({ stops = [] }) {
             {stop.type === 'PICKUP' ? '▲ Pickup' : '▼ Drop'}
           </span>
           <span className="stop-coords">
-            {stop.lat.toFixed(4)}, {stop.lng.toFixed(4)}
+            {stop.address ?? `${stop.lat.toFixed(4)}, ${stop.lng.toFixed(4)}`}
           </span>
         </div>
       ))}

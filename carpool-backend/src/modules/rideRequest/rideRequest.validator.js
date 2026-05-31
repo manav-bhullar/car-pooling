@@ -4,6 +4,8 @@ exports.validateCreateRideRequest = (body) => {
     pickupLng,
     dropLat,
     dropLng,
+    pickupAddress,
+    dropAddress,
     preferredTime,
   } = body;
 
@@ -15,6 +17,14 @@ exports.validateCreateRideRequest = (body) => {
     !preferredTime
   ) {
     return "All fields are required";
+  }
+
+  if (pickupAddress != null && typeof pickupAddress !== 'string') {
+    return "pickupAddress must be a string";
+  }
+
+  if (dropAddress != null && typeof dropAddress !== 'string') {
+    return "dropAddress must be a string";
   }
 
   if (pickupLat === dropLat && pickupLng === dropLng) {

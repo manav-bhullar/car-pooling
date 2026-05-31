@@ -24,6 +24,8 @@ model RideRequest {
   pickupLng      Float
   dropLat        Float
   dropLng        Float
+  pickupAddress  String?
+  dropAddress    String?
   preferredTime  DateTime
   status         String   @default("PENDING")
   pendingCycles  Int      @default(0)

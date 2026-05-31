@@ -16,15 +16,19 @@ function serializeTrip(trip, userId) {
 	const stops = (trip.tripStops || [])
 		.slice()
 		.sort((a, b) => a.stopOrder - b.stopOrder)
-		.map((s) => ({
-			stopOrder: s.stopOrder,
-			type: s.type,
-			lat: s.lat,
-			lng: s.lng,
-			rideRequestId: s.rideRequestId,
-			segmentDistKm: s.segmentDistKm,
-			activePassengersOnSegment: s.activePassengersOnSegment,
-		}));
+		.map((s) => {
+			const addressField = s.type === 'PICKUP' ? s.rideRequest?.pickupAddress : s.rideRequest?.dropAddress;
+			return {
+				stopOrder: s.stopOrder,
+				type: s.type,
+				lat: s.lat,
+				lng: s.lng,
+				address: addressField ?? `${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}`,
+				rideRequestId: s.rideRequestId,
+				segmentDistKm: s.segmentDistKm,
+				activePassengersOnSegment: s.activePassengersOnSegment,
+			};
+		});
 
 	return {
 		id: trip.id,
@@ -61,7 +65,16 @@ exports.getTrips = async (req, res) => {
 				tripUsers: {
 					include: { user: true },
 				},
-				tripStops: true,
+				tripStops: {
+					include: {
+						rideRequest: {
+							select: {
+								pickupAddress: true,
+								dropAddress: true,
+							},
+						},
+					},
+				},
 			},
 			orderBy: { createdAt: 'desc' },
 		});

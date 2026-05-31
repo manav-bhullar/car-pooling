@@ -164,7 +164,16 @@ async function getTripById(tripId, userId) {
       tripUsers: {
         include: { user: true },
       },
-      tripStops: true,
+      tripStops: {
+        include: {
+          rideRequest: {
+            select: {
+              pickupAddress: true,
+              dropAddress: true,
+            },
+          },
+        },
+      },
     },
   });
 

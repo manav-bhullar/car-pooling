@@ -157,6 +157,8 @@ export default function RideRequestForm() {
         pickupLng: pickup.lng,
         dropLat: drop.lat,
         dropLng: drop.lng,
+        pickupAddress: pickup.displayName,
+        dropAddress: drop.displayName,
         preferredTime: new Date(preferredTime).toISOString(),
       });
       dispatch({ type: 'SET_RIDE_REQUEST', payload: rideRequest });
