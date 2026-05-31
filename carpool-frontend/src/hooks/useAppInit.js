@@ -9,63 +9,52 @@ export function useAppInit() {
 
   useEffect(() => {
     const userId = (state.user && state.user.id) || state.userId;
+
+    // No user → don't initialize
     if (!userId) return;
+
+    // Only run while init flag is true
     if (!state.loading.init) return;
+
+    let mounted = true;
 
     async function init() {
       try {
-        // 1. Fetch all ride requests of user
-        const requests = await getRideRequests(userId);
+        // Fetch both source endpoints in parallel (backend is source of truth)
+        const [requests, trips] = await Promise.all([
+          getRideRequests(userId),
+          getTrips(userId),
+        ]);
 
-        // 2. Find active request
-        const active = requests.find(r =>
-          r.status === 'PENDING' || r.status === 'MATCHED'
-        );
+        if (!mounted) return;
 
-        // No active request → IDLE
-        if (!active) {
-          dispatch({
-            type: 'INIT_COMPLETE',
-            payload: { rideRequest: null, trip: null },
-          });
-          return;
-        }
+        // Determine active rideRequest (PENDING or MATCHED)
+        const active = (requests || []).find(r => r.status === 'PENDING' || r.status === 'MATCHED') || null;
 
-        // If still waiting
-        if (active.status === 'PENDING') {
-          dispatch({
-            type: 'INIT_COMPLETE',
-            payload: { rideRequest: active, trip: null },
-          });
-          return;
-        }
+        // Find user trip if available
+        const trip = findUserTrip(trips || [], userId) || null;
 
-        // If matched → need trip
-        if (active.status === 'MATCHED') {
-          const trips = await getTrips(userId);
+        // Store backend source facts first (no routing yet)
+        dispatch({ type: 'SET_RIDE_REQUEST', payload: active });
+        dispatch({ type: 'SET_TRIP', payload: trip });
 
-          const trip = findUserTrip(trips, userId);
-
-          dispatch({
-            type: 'INIT_COMPLETE',
-            payload: { rideRequest: active, trip },
-          });
-
-          return;
-        }
-
+        // Finally, complete initialization — reducer will derive uiState and clear init flag
+        dispatch({ type: 'INIT_COMPLETE', payload: { rideRequest: active, trip } });
       } catch (err) {
         console.error('Init failed:', err);
 
-        // Fail-safe → don’t block UI
-        dispatch({
-          type: 'INIT_COMPLETE',
-          payload: { rideRequest: null, trip: null },
-        });
+        // Fail-safe → don’t block UI, normalize to empty source state
+        dispatch({ type: 'SET_RIDE_REQUEST', payload: null });
+        dispatch({ type: 'SET_TRIP', payload: null });
+        dispatch({ type: 'INIT_COMPLETE', payload: { rideRequest: null, trip: null } });
       }
     }
 
     init();
+
+    return () => {
+      mounted = false;
+    };
   }, [
     (state.user && state.user.id) || state.userId,
     state.loading.init,

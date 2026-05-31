@@ -105,6 +105,16 @@ function reducer(state, action) {
     case 'SET_RIDE_REQUEST': {
       const rideRequest = action.payload;
 
+      // During initialization we only store source facts and avoid
+      // deriving uiState to prevent pollers or routing from starting
+      // before hydration completes.
+      if (state.isInitializing) {
+        return {
+          ...state,
+          rideRequest,
+        };
+      }
+
       return {
         ...state,
         rideRequest,
@@ -116,6 +126,16 @@ function reducer(state, action) {
       const rideRequest = state.rideRequest;
       const trip = action.payload;
       const derived = deriveUIState(rideRequest, trip);
+
+      // During initialization we only store backend facts. Defer
+      // final lifecycle derivation until INIT_COMPLETE to avoid
+      // starting pollers or routing prematurely.
+      if (state.isInitializing) {
+        return {
+          ...state,
+          trip,
+        };
+      }
 
       // co-rider cancelled — clear trip, go back to PENDING
       if (derived === 'REQUEUED') {
