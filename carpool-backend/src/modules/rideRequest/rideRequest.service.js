@@ -76,36 +76,46 @@ exports.getRideRequests = async(userId, status) => {
 };
 
 exports.getCurrentRideRequest = async (userId) => {
-    const request = await prisma.rideRequest.findFirst({
+    const matchedRequest = await prisma.rideRequest.findFirst({
         where: {
             userId,
-            status: { in: ['MATCHED', 'PENDING'] },
+            status: 'MATCHED',
         },
         orderBy: {
             createdAt: 'desc',
         },
     });
 
-    if (!request) {
-        return null;
-    }
-
-    if (request.status !== 'PENDING') {
+    if (matchedRequest) {
         return {
-            ...request,
+            ...matchedRequest,
             requeued: false,
             requeueReason: null,
         };
     }
 
+    const pendingRequest = await prisma.rideRequest.findFirst({
+        where: {
+            userId,
+            status: 'PENDING',
+        },
+        orderBy: {
+            createdAt: 'desc',
+        },
+    });
+
+    if (!pendingRequest) {
+        return null;
+    }
+
     const tripUser = await prisma.tripUser.findFirst({
-        where: { rideRequestId: request.id },
+        where: { rideRequestId: pendingRequest.id },
         include: { trip: { select: { status: true } } },
     });
 
     const requeued = tripUser?.trip?.status === 'CANCELLED';
     return {
-        ...request,
+        ...pendingRequest,
         requeued,
         requeueReason: requeued ? 'CO_RIDER_CANCELLED' : null,
     };

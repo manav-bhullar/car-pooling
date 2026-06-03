@@ -80,8 +80,8 @@ export function isRouteValidForUiState(pathname, state) {
     return state.uiState === 'MATCHED';
   }
 
-  if (routeKey === ROUTES.SUMMARY_BASE && state.trip?.id) {
-    return isSummaryRouteMatch(pathname, state.trip.id);
+  if (routeKey === ROUTES.SUMMARY_BASE) {
+    return state.trip?.id ? isSummaryRouteMatch(pathname, state.trip.id) : false;
   }
 
   return true;

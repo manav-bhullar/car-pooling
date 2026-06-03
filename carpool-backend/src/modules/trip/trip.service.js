@@ -221,34 +221,7 @@ async function getCurrentTrip(userId) {
     return activeTrip;
   }
 
-  const completedTrip = await prisma.trip.findFirst({
-    where: {
-      status: 'COMPLETED',
-      tripUsers: {
-        some: { userId },
-      },
-    },
-    include: {
-      tripUsers: {
-        include: { user: true },
-      },
-      tripStops: {
-        include: {
-          rideRequest: {
-            select: {
-              pickupAddress: true,
-              dropAddress: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: {
-      completedAt: 'desc',
-    },
-  });
-
-  return completedTrip;
+  return null;
 }
 
 async function completeTrip(tripId, userId) {
@@ -290,6 +263,15 @@ async function completeTrip(tripId, userId) {
       data: {
         status: 'COMPLETED',
         completedAt: now,
+      },
+    });
+
+    await tx.rideRequest.updateMany({
+      where: {
+        id: { in: trip.tripUsers.map((tu) => tu.rideRequestId) },
+      },
+      data: {
+        status: 'COMPLETED',
       },
     });
 
