@@ -2,22 +2,20 @@ import { useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { getCurrentTrip } from '../api/trips';
 
-// Poll trips while the app may need the current active trip.
-// This includes TRIP_ACTIVE and MATCHED when a trip has not yet been hydrated.
+// Poll trips only when UI lifecycle is TRIP_ACTIVE.
 export function useTripPoller() {
   const { state, dispatch } = useApp();
   const intervalRef = useRef(null);
 
-  useEffect(() => {
-    const userId = (state.user && state.user.id) || state.userId;
-    const uiState = state.uiState;
-    const tripId = state.trip?.id || null;
+  const userId = (state.user && state.user.id) || state.userId;
+  const uiState = state.uiState;
 
+  useEffect(() => {
     // Guard: do not start polling without an authenticated user
     if (!userId) return;
 
-    const shouldPollTrip = uiState === 'TRIP_ACTIVE' || (uiState === 'MATCHED' && !tripId);
-    if (!shouldPollTrip) return;
+    // Activate only during TRIP_ACTIVE lifecycle state
+    if (uiState !== 'TRIP_ACTIVE') return;
 
     let mounted = true;
 
@@ -41,7 +39,7 @@ export function useTripPoller() {
 
     // Immediate poll before setting interval
     poll();
-    intervalRef.current = setInterval(poll, 2000);
+    intervalRef.current = setInterval(poll, 30000);
 
     return () => {
       mounted = false;
@@ -52,8 +50,8 @@ export function useTripPoller() {
     };
     // Depend on primitives only to avoid unnecessary interval recreation
   }, [
-    (state.user && state.user.id) || state.userId,
-    state.uiState,
+    userId,
+    uiState,
     state.trip,
     dispatch,
   ]);

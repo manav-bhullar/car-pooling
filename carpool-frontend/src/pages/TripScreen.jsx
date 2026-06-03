@@ -1,5 +1,4 @@
 import { useApp } from '../context/AppContext';
-import { useTripPoller } from '../hooks/useTripPoller';
 import { completeTrip } from '../api/trips';
 import { cancelRideRequest } from '../api/rideRequests';
 import TripCard from '../components/TripCard';
@@ -7,8 +6,6 @@ import CancelButton from '../components/CancelButton';
 
 export default function TripScreen() {
   const { state, dispatch } = useApp();
-
-  useTripPoller();
 
   async function handleComplete() {
     // Confirm because completing a trip will finalize it for all riders

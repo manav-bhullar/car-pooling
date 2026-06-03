@@ -1,17 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { getCurrentRideRequest } from '../api/rideRequests';
+import { getCurrentTrip } from '../api/trips';
 
 // Poll ride requests only when UI lifecycle is PENDING or MATCHED.
 export function useRideRequestPoller() {
   const { state, dispatch } = useApp();
   const intervalRef = useRef(null);
 
-  useEffect(() => {
-    const userId = (state.user && state.user.id) || state.userId;
-    const uiState = state.uiState;
-    const rideRequestId = state.rideRequest?.id || null;
+  const userId = (state.user && state.user.id) || state.userId;
+  const uiState = state.uiState;
 
+  useEffect(() => {
     // Guard: do not start polling without an authenticated user
     if (!userId) return;
 
@@ -33,6 +33,14 @@ export function useRideRequestPoller() {
         if (updated && JSON.stringify(updated) !== JSON.stringify(state.rideRequest)) {
           dispatch({ type: 'SET_RIDE_REQUEST', payload: updated });
         }
+
+        if (uiState === 'MATCHED' && !state.trip) {
+          const currentTrip = await getCurrentTrip(userId);
+          if (!mounted) return;
+          if (currentTrip) {
+            dispatch({ type: 'SET_TRIP', payload: currentTrip });
+          }
+        }
       } catch (err) {
         console.error('RideRequest poll failed:', err);
       }
@@ -40,7 +48,7 @@ export function useRideRequestPoller() {
 
     // Run one immediate poll then start stable interval
     poll();
-    intervalRef.current = setInterval(poll, 2000);
+    intervalRef.current = setInterval(poll, 10000);
 
     return () => {
       mounted = false;
@@ -51,9 +59,10 @@ export function useRideRequestPoller() {
     };
     // Depend on primitives only to avoid unnecessary interval recreation
   }, [
-    (state.user && state.user.id) || state.userId,
-    state.uiState,
+    userId,
+    uiState,
     state.rideRequest,
+    state.trip,
     dispatch,
   ]);
 }

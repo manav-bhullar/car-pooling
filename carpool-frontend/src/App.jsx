@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useApp } from './context/AppContext';
 import { useAppInit } from './hooks/useAppInit';
+import { useRideRequestPoller } from './hooks/useRideRequestPoller';
+import { useTripPoller } from './hooks/useTripPoller';
 import { getCurrentTrip } from './api/trips';
 import { getRouteForUiState } from './utils/routeUtils';
 import ProtectedRoute from './ProtectedRoute';
@@ -20,6 +22,8 @@ export default function App() {
   const navigate = useNavigate();
 
   useAppInit();
+  useRideRequestPoller();
+  useTripPoller();
 
   const userId = (state.user && state.user.id) || state.userId;
   const targetRoute = userId ? getRouteForUiState(state.uiState, state.trip?.id) : '/';

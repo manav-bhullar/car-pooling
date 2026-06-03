@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { useRideRequestPoller } from '../hooks/useRideRequestPoller';
 import { cancelRideRequest } from '../api/rideRequests';
 import LoadingState from '../components/LoadingState';
 import CancelButton from '../components/CancelButton';
@@ -10,8 +9,6 @@ export default function WaitingScreen() {
   const { state, dispatch } = useApp();
   // eslint-disable-next-line react-hooks/purity
   const startTimeRef = useRef(Date.now());
-
-  useRideRequestPoller();
 
   const [elapsed, setElapsed] = useState(0);
   const [cancelling, setCancelling] = useState(false);
