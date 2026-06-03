@@ -2,8 +2,7 @@ import { useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useApp } from './context/AppContext';
 import { useAppInit } from './hooks/useAppInit';
-import { getTrips } from './api/trips';
-import { findUserTrip } from './utils/stateUtils';
+import { getCurrentTrip } from './api/trips';
 import { getRouteForUiState } from './utils/routeUtils';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -31,11 +30,10 @@ export default function App() {
     if (state.trip) return;
     if (state.uiState !== 'MATCHED') return;
 
-    getTrips(userId)
-      .then((trips) => {
-        const userTrip = findUserTrip(trips, userId);
-        if (userTrip) {
-          dispatch({ type: 'SET_TRIP', payload: userTrip });
+    getCurrentTrip(userId)
+      .then((trip) => {
+        if (trip) {
+          dispatch({ type: 'SET_TRIP', payload: trip });
         }
       })
       .catch((err) => {

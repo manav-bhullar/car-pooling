@@ -189,6 +189,68 @@ async function getTripById(tripId, userId) {
   return trip;
 }
 
+async function getCurrentTrip(userId) {
+  const activeTrip = await prisma.trip.findFirst({
+    where: {
+      status: 'ACTIVE',
+      tripUsers: {
+        some: { userId },
+      },
+    },
+    include: {
+      tripUsers: {
+        include: { user: true },
+      },
+      tripStops: {
+        include: {
+          rideRequest: {
+            select: {
+              pickupAddress: true,
+              dropAddress: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  if (activeTrip) {
+    return activeTrip;
+  }
+
+  const completedTrip = await prisma.trip.findFirst({
+    where: {
+      status: 'COMPLETED',
+      tripUsers: {
+        some: { userId },
+      },
+    },
+    include: {
+      tripUsers: {
+        include: { user: true },
+      },
+      tripStops: {
+        include: {
+          rideRequest: {
+            select: {
+              pickupAddress: true,
+              dropAddress: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      completedAt: 'desc',
+    },
+  });
+
+  return completedTrip;
+}
+
 async function completeTrip(tripId, userId) {
   return await prisma.$transaction(async (tx) => {
     const trip = await tx.trip.findUnique({

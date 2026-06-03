@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { getRideRequests } from '../api/rideRequests';
+import { getCurrentRideRequest } from '../api/rideRequests';
 
 // Poll ride requests only when UI lifecycle is PENDING or MATCHED.
 export function useRideRequestPoller() {
@@ -22,15 +22,18 @@ export function useRideRequestPoller() {
 
     async function poll() {
       try {
-        const requests = await getRideRequests(userId);
+        const updated = await getCurrentRideRequest(userId);
         if (!mounted) return;
 
-        const updated = requests.find(r => r.id === rideRequestId);
-        if (updated && updated.status !== state.rideRequest?.status) {
+        if (!updated && state.rideRequest) {
+          dispatch({ type: 'SET_RIDE_REQUEST', payload: null });
+          return;
+        }
+
+        if (updated && JSON.stringify(updated) !== JSON.stringify(state.rideRequest)) {
           dispatch({ type: 'SET_RIDE_REQUEST', payload: updated });
         }
       } catch (err) {
-        // Keep polling resilient; surface errors to console only
         console.error('RideRequest poll failed:', err);
       }
     }
@@ -50,7 +53,7 @@ export function useRideRequestPoller() {
   }, [
     (state.user && state.user.id) || state.userId,
     state.uiState,
-    state.rideRequest?.id,
+    state.rideRequest,
     dispatch,
   ]);
 }

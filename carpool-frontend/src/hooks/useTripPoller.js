@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { getTrips } from '../api/trips';
-import { findUserTrip } from '../utils/stateUtils';
+import { getCurrentTrip } from '../api/trips';
 
 // Poll trips only when UI lifecycle is TRIP_ACTIVE.
 export function useTripPoller() {
@@ -23,11 +22,15 @@ export function useTripPoller() {
 
     async function poll() {
       try {
-        const trips = await getTrips(userId);
+        const updatedTrip = await getCurrentTrip(userId);
         if (!mounted) return;
 
-        const updatedTrip = findUserTrip(trips, userId);
-        if (updatedTrip && updatedTrip.status !== state.trip?.status) {
+        if (!updatedTrip && state.trip) {
+          dispatch({ type: 'SET_TRIP', payload: null });
+          return;
+        }
+
+        if (updatedTrip && JSON.stringify(updatedTrip) !== JSON.stringify(state.trip)) {
           dispatch({ type: 'SET_TRIP', payload: updatedTrip });
         }
       } catch (err) {
@@ -50,7 +53,7 @@ export function useTripPoller() {
   }, [
     (state.user && state.user.id) || state.userId,
     state.uiState,
-    state.trip?.id,
+    state.trip,
     dispatch,
   ]);
 }

@@ -47,6 +47,23 @@ export async function getRideRequests(userId, status = null) {
   return json.data;
 }
 
+export async function getCurrentRideRequest(userId) {
+  const res = await fetch(`${BASE_URL}/ride-requests/current`, {
+    headers: getHeaders(userId),
+  });
+
+  const json = await res.json();
+
+  if (!json.success) {
+    throw {
+      status: res.status,
+      message: json.error?.message || 'Fetch failed',
+    };
+  }
+
+  return json.data;
+}
+
 export async function cancelRideRequest(userId, rideRequestId) {
   const res = await fetch(
     `${BASE_URL}/ride-requests/${rideRequestId}/cancel`,

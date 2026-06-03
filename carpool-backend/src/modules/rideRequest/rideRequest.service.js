@@ -75,6 +75,42 @@ exports.getRideRequests = async(userId, status) => {
     });
 };
 
+exports.getCurrentRideRequest = async (userId) => {
+    const request = await prisma.rideRequest.findFirst({
+        where: {
+            userId,
+            status: { in: ['MATCHED', 'PENDING'] },
+        },
+        orderBy: {
+            createdAt: 'desc',
+        },
+    });
+
+    if (!request) {
+        return null;
+    }
+
+    if (request.status !== 'PENDING') {
+        return {
+            ...request,
+            requeued: false,
+            requeueReason: null,
+        };
+    }
+
+    const tripUser = await prisma.tripUser.findFirst({
+        where: { rideRequestId: request.id },
+        include: { trip: { select: { status: true } } },
+    });
+
+    const requeued = tripUser?.trip?.status === 'CANCELLED';
+    return {
+        ...request,
+        requeued,
+        requeueReason: requeued ? 'CO_RIDER_CANCELLED' : null,
+    };
+};
+
 exports.cancelRideRequest = async (id, userId) => {
   return prisma.$transaction(async (tx) => {
     const request = await tx.rideRequest.findUnique({

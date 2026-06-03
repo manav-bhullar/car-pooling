@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { getRideRequests } from '../api/rideRequests';
-import { getTrips } from '../api/trips';
-import { findUserTrip } from '../utils/stateUtils';
+import { getCurrentRideRequest } from '../api/rideRequests';
+import { getCurrentTrip } from '../api/trips';
 
 export function useAppInit() {
   const { state, dispatch } = useApp();
@@ -26,26 +25,17 @@ export function useAppInit() {
 
     async function init() {
       try {
-        // Fetch both source endpoints in parallel (backend is source of truth)
-        const [requests, trips] = await Promise.all([
-          getRideRequests(userId),
-          getTrips(userId),
+        // Fetch only the current lifecycle state from backend
+        const [rideRequest, trip] = await Promise.all([
+          getCurrentRideRequest(userId),
+          getCurrentTrip(userId),
         ]);
 
         if (!mounted) return;
 
-        // Determine active rideRequest (PENDING or MATCHED)
-        const active = (requests || []).find(r => r.status === 'PENDING' || r.status === 'MATCHED') || null;
-
-        // Find user trip if available
-        const trip = findUserTrip(trips || [], userId) || null;
-
-        // Store backend source facts first (no routing yet)
-        dispatch({ type: 'SET_RIDE_REQUEST', payload: active });
+        dispatch({ type: 'SET_RIDE_REQUEST', payload: rideRequest });
         dispatch({ type: 'SET_TRIP', payload: trip });
-
-        // Finally, complete initialization — reducer will derive uiState and clear init flag
-        dispatch({ type: 'INIT_COMPLETE', payload: { rideRequest: active, trip } });
+        dispatch({ type: 'INIT_COMPLETE', payload: { rideRequest, trip } });
       } catch (err) {
         console.error('Init failed:', err);
 

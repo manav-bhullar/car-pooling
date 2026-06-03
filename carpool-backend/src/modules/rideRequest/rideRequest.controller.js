@@ -32,6 +32,21 @@ exports.getAll = async(req,res) =>{
     }
 };
 
+exports.getCurrent = async(req,res) => {
+    try {
+        const userId = req.headers['x-user-id'];
+        if (!userId) {
+            return error(res, 'Missing x-user-id header', 400);
+        }
+
+        const data = await service.getCurrentRideRequest(userId);
+        return success(res, data);
+    } catch (err) {
+        console.error(err);
+        return error(res, err.message || 'Internal Server Error', 500);
+    }
+};
+
 exports.cancel = async(req, res) => {
     try{
         const userId = req.headers['x-user-id'];

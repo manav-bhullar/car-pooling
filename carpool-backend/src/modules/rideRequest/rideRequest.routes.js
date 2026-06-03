@@ -3,6 +3,7 @@ const router = express.Router();
 const controller = require('./rideRequest.controller');
 
 router.post('/', controller.create);
+router.get('/current', controller.getCurrent);
 router.get('/', controller.getAll);
 router.post('/:id/cancel', controller.cancel);
 
