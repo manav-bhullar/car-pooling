@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useApp } from './context/AppContext';
 import { useAppInit } from './hooks/useAppInit';
+import { getTrips } from './api/trips';
+import { findUserTrip } from './utils/stateUtils';
 
 import UserSelectorScreen from './pages/UserSelectorScreen';
 import HomeScreen from './pages/HomeScreen';
@@ -34,13 +36,31 @@ function getTargetRoute(uiState, tripId) {
 }
 
 export default function App() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const navigate = useNavigate();
 
   useAppInit();
 
   const userId = (state.user && state.user.id) || state.userId;
   const targetRoute = getTargetRoute(state.uiState, state.trip?.id);
+
+  useEffect(() => {
+    if (!userId) return;
+    if (state.loading.init) return;
+    if (state.trip) return;
+    if (state.uiState !== 'MATCHED') return;
+
+    getTrips(userId)
+      .then((trips) => {
+        const userTrip = findUserTrip(trips, userId);
+        if (userTrip) {
+          dispatch({ type: 'SET_TRIP', payload: userTrip });
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch trip after MATCHED:', err);
+      });
+  }, [state.uiState, state.trip, state.loading.init, userId, dispatch]);
 
   // 🔥 Lifecycle-driven navigation after hydration completes
   useEffect(() => {
