@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { getCurrentTrip } from '../api/trips';
 
-// Poll trips only when UI lifecycle is TRIP_ACTIVE.
+// Poll trips while the app may need the current active trip.
+// This includes TRIP_ACTIVE and MATCHED when a trip has not yet been hydrated.
 export function useTripPoller() {
   const { state, dispatch } = useApp();
   const intervalRef = useRef(null);
@@ -15,8 +16,8 @@ export function useTripPoller() {
     // Guard: do not start polling without an authenticated user
     if (!userId) return;
 
-    // Activate only during TRIP_ACTIVE lifecycle
-    if (uiState !== 'TRIP_ACTIVE') return;
+    const shouldPollTrip = uiState === 'TRIP_ACTIVE' || (uiState === 'MATCHED' && !tripId);
+    if (!shouldPollTrip) return;
 
     let mounted = true;
 

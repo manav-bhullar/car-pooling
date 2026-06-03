@@ -286,5 +286,6 @@ async function completeTrip(tripId, userId) {
 module.exports = {
   createTripFromMatch,
   getTripById,
+  getCurrentTrip,
   completeTrip,
 };
