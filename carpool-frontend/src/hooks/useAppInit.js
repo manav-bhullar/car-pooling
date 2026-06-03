@@ -10,11 +10,17 @@ export function useAppInit() {
   useEffect(() => {
     const userId = (state.user && state.user.id) || state.userId;
 
-    // No user → don't initialize
-    if (!userId) return;
+    // If there is no user, we still need to complete initialization so
+    // the app can show the user selector instead of remaining stuck on loading.
+    if (!userId && state.loading.init) {
+      dispatch({ type: 'INIT_COMPLETE', payload: { rideRequest: null, trip: null } });
+      return;
+    }
 
     // Only run while init flag is true
     if (!state.loading.init) return;
+
+    if (!userId) return;
 
     let mounted = true;
 
