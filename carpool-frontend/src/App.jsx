@@ -4,6 +4,8 @@ import { useApp } from './context/AppContext';
 import { useAppInit } from './hooks/useAppInit';
 import { getTrips } from './api/trips';
 import { findUserTrip } from './utils/stateUtils';
+import { getRouteForUiState } from './utils/routeUtils';
+import ProtectedRoute from './ProtectedRoute';
 
 import UserSelectorScreen from './pages/UserSelectorScreen';
 import HomeScreen from './pages/HomeScreen';
@@ -14,27 +16,6 @@ import SummaryScreen from './pages/SummaryScreen';
 import StatusBanner from './components/StatusBanner';
 import LoadingState from './components/LoadingState';
 
-const STATE_TO_ROUTE = {
-  IDLE: '/',
-  PENDING: '/waiting',
-  MATCHED: '/waiting',
-  TRIP_ACTIVE: '/trip',
-  TRIP_COMPLETED: '/summary',
-  CANCELLED: '/',
-};
-
-function getTargetRoute(uiState, tripId) {
-  if (uiState === 'TRIP_ACTIVE') {
-    return tripId ? `/trip/${tripId}` : '/trip';
-  }
-
-  if (uiState === 'TRIP_COMPLETED') {
-    return tripId ? `/summary/${tripId}` : '/summary';
-  }
-
-  return STATE_TO_ROUTE[uiState] || '/';
-}
-
 export default function App() {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
@@ -42,7 +23,7 @@ export default function App() {
   useAppInit();
 
   const userId = (state.user && state.user.id) || state.userId;
-  const targetRoute = getTargetRoute(state.uiState, state.trip?.id);
+  const targetRoute = userId ? getRouteForUiState(state.uiState, state.trip?.id) : '/';
 
   useEffect(() => {
     if (!userId) return;
@@ -72,11 +53,6 @@ export default function App() {
     }
   }, [userId, state.loading.init, state.uiState, state.trip?.id, targetRoute, navigate]);
 
-  // No user selected
-  if (!userId) {
-    return <UserSelectorScreen />;
-  }
-
   // Initial loading / hydration
   if (state.loading.init) {
     return <LoadingState message="Loading your session..." />;
@@ -87,10 +63,46 @@ export default function App() {
       <StatusBanner />
 
       <Routes>
-        <Route path="/" element={<HomeScreen />} />
-        <Route path="/waiting" element={<WaitingScreen />} />
-        <Route path="/trip/:tripId?" element={<TripScreen />} />
-        <Route path="/summary/:tripId?" element={<SummaryScreen />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <UserSelectorScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <HomeScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/waiting"
+          element={
+            <ProtectedRoute>
+              <WaitingScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/trip/:tripId?"
+          element={
+            <ProtectedRoute>
+              <TripScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/summary/:tripId"
+          element={
+            <ProtectedRoute>
+              <SummaryScreen />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="*" element={<Navigate to={targetRoute} replace />} />
       </Routes>
