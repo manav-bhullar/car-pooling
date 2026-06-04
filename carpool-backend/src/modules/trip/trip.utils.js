@@ -68,4 +68,32 @@ for (const idx of orderedIndices) {
   return stops;
 }
 
-module.exports = { buildTripStops };
+const AVG_SPEED_KMH = 30;
+
+function calculatePassengerMetrics(stops = [], rideRequestId) {
+  if (!Array.isArray(stops) || !rideRequestId) return { distanceKm: 0, etaMinutes: null };
+
+  const sorted = [...stops].sort((a, b) => a.stopOrder - b.stopOrder);
+
+  const pickup = sorted.find((s) => s.rideRequestId === rideRequestId && s.type === 'PICKUP');
+  const dropoff = sorted.find((s) => s.rideRequestId === rideRequestId && s.type === 'DROPOFF');
+
+  if (!pickup || !dropoff) return { distanceKm: 0, etaMinutes: null };
+
+  const pickupOrder = pickup.stopOrder;
+  const dropoffOrder = dropoff.stopOrder;
+
+  let distanceKm = 0;
+
+  for (const s of sorted) {
+    if (s.stopOrder > pickupOrder && s.stopOrder <= dropoffOrder) {
+      distanceKm += Number(s.segmentDistKm) || 0;
+    }
+  }
+
+  const etaMinutes = Math.round((distanceKm / AVG_SPEED_KMH) * 60);
+
+  return { distanceKm, etaMinutes };
+}
+
+module.exports = { buildTripStops, calculatePassengerMetrics };

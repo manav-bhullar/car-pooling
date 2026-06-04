@@ -1,17 +1,11 @@
 const prisma = require('../../prisma/client');
 const service = require('./trip.service');
 const { success, error } = require('../../utils/response');
+const { calculatePassengerMetrics } = require('./trip.utils');
 
 function serializeTrip(trip, userId) {
 	const myTripUser = trip.tripUsers.find((tu) => tu.userId === userId);
 	const fareShare = myTripUser ? Math.round((myTripUser.fareShare + Number.EPSILON) * 100) / 100 : null;
-
-	const passengers = trip.tripUsers.map((tu) => ({
-		userId: tu.userId,
-		name: tu.user.name,
-		rideRequestId: tu.rideRequestId,
-		fareShare: Math.round((tu.fareShare + Number.EPSILON) * 100) / 100,
-	}));
 
 	const stops = (trip.tripStops || [])
 		.slice()
@@ -29,6 +23,23 @@ function serializeTrip(trip, userId) {
 				activePassengersOnSegment: s.activePassengersOnSegment,
 			};
 		});
+
+	const passengers = trip.tripUsers.map((tu) => {
+		const base = {
+			userId: tu.userId,
+			name: tu.user.name,
+			rideRequestId: tu.rideRequestId,
+			fareShare: Math.round((tu.fareShare + Number.EPSILON) * 100) / 100,
+		};
+
+		const metrics = calculatePassengerMetrics(stops, tu.rideRequestId);
+
+		return {
+			...base,
+			distanceKm: Number((metrics.distanceKm || 0)),
+			etaMinutes: metrics.etaMinutes,
+		};
+	});
 
 	return {
 		id: trip.id,
