@@ -3,22 +3,24 @@ import { useApp } from '../context/AppContext';
 import { cancelRideRequest } from '../api/rideRequests';
 import LoadingState from '../components/LoadingState';
 import CancelButton from '../components/CancelButton';
-import { formatElapsed } from '../utils/time';
+import { getElapsedSeconds, formatElapsed } from '../utils/time';
 
 export default function WaitingScreen() {
   const { state, dispatch } = useApp();
-  // eslint-disable-next-line react-hooks/purity
-  const startTimeRef = useRef(Date.now());
-
-  const [elapsed, setElapsed] = useState(0);
   const [cancelling, setCancelling] = useState(false);
 
+  // Elapsed seconds since ride request creation. Use rideRequest.createdAt
+  // so the timer survives navigation and reflects server timestamp.
+  const createdAt = state.rideRequest?.createdAt || null;
+  const [elapsed, setElapsed] = useState(() => getElapsedSeconds(createdAt));
+
   useEffect(() => {
+    setElapsed(getElapsedSeconds(createdAt));
     const timer = setInterval(() => {
-      setElapsed(Date.now() - startTimeRef.current);
+      setElapsed(getElapsedSeconds(createdAt));
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [createdAt]);
 
   async function handleCancel() {
     if (!state.rideRequest) return;
@@ -44,11 +46,28 @@ export default function WaitingScreen() {
     return <LoadingState message="Preparing your request..." />;
   }
 
+  const pendingCycles = state.rideRequest?.pendingCycles;
+
+  function getProgressMessage(seconds) {
+    if (seconds < 10) return "Finding the best matches near you...";
+    if (seconds < 60) return "Still searching — thanks for your patience.";
+    if (seconds < 120) return "This may take slightly longer; expanding search.";
+    if (seconds < 240) return "We're extending search radius and retrying.";
+    return "Thanks for waiting — we're still working on finding matches.";
+  }
+
   return (
     <div className="waiting-screen">
       <LoadingState message="Finding you a ride..." />
-      <p className="waiting-time">Waiting for {formatElapsed(Math.floor(elapsed / 1000))}</p>
-      <p className="waiting-hint">We'll match you with compatible riders soon</p>
+
+      <p className="waiting-time">Waiting for {formatElapsed(elapsed)}</p>
+
+      {typeof pendingCycles === 'number' && (
+        <p className="waiting-cycles">Attempt {pendingCycles + 1}</p>
+      )}
+
+      <p className="waiting-hint" aria-live="polite">{getProgressMessage(elapsed)}</p>
+
       <CancelButton onCancel={handleCancel} label={cancelling ? 'Cancelling...' : 'Cancel Ride'} />
     </div>
   );
