@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { completeTrip } from '../api/trips';
 import { cancelRideRequest } from '../api/rideRequests';
 import TripCard from '../components/TripCard';
+import TripMap from '../components/TripMap';
 import CancelModal from '../components/CancelModal';
 import FareBadge from '../components/FareBadge';
 import StopList from '../components/StopList';
@@ -92,7 +93,9 @@ export default function TripScreen() {
       </div>
 
       <div className="right-panel">
-        <div className="map-placeholder">Map coming soon</div>
+        <div className="map-container">
+          <TripMap stops={trip.stops} />
+        </div>
         <div className="trip-card-compact">
           <TripCard trip={trip} currentUserId={state.userId} />
         </div>
