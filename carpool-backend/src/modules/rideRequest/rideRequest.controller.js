@@ -12,9 +12,9 @@ exports.create = async(req, res) =>{
 
         const result = await service.createRideRequest(userId, req.body);
         return success(res, result, 201);
-    }catch(err){
+    } catch (err) {
         console.error(err);
-        return error(res, err.message || "Internal Server Error", 500);
+        return error(res, err.message || "Internal Server Error", err.status || 500);
     }
 }
 

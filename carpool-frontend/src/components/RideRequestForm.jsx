@@ -167,6 +167,13 @@ export default function RideRequestForm() {
         const requests = await getRideRequests(state.userId, 'PENDING');
         if (requests.length > 0) {
           dispatch({ type: 'SET_RIDE_REQUEST', payload: requests[0] });
+          dispatch({
+            type: 'SET_NOTIFICATION',
+            payload: {
+              type: 'info',
+              message: 'You already have an active ride request.',
+            },
+          });
           setLoading(false);
           return;
         }

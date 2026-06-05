@@ -8,8 +8,10 @@ exports.createRideRequest = async(userId, data) => {
         },
     });
 
-    if(existing){
-        throw new Error("User already has a pending ride request");
+    if (existing) {
+      const err = new Error("User already has a pending ride request");
+      err.status = 409;
+      throw err;
     }
 
     const rideRequest = await prisma.rideRequest.create({
