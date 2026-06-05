@@ -39,7 +39,8 @@ export function useTripPoller() {
 
     // Immediate poll before setting interval
     poll();
-    intervalRef.current = setInterval(poll, 30000);
+    // Poll more frequently to detect remote cancellations quicker.
+    intervalRef.current = setInterval(poll, 10000);
 
     return () => {
       mounted = false;

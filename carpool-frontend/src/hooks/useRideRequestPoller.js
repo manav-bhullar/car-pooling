@@ -48,7 +48,8 @@ export function useRideRequestPoller() {
 
     // Run one immediate poll then start stable interval
     poll();
-    intervalRef.current = setInterval(poll, 10000);
+    // Slightly faster polling to surface ride request state changes quickly.
+    intervalRef.current = setInterval(poll, 5000);
 
     return () => {
       mounted = false;
