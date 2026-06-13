@@ -1,0 +1,601 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2870
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red230\green232\blue236;}
+{\*\expandedcolortbl;;\cssrgb\c0\c1\c1;\cssrgb\c91987\c92775\c94114;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs24 \cf2 \expnd0\expndtw0\kerning0
+# CarpoolTU Component Specs \'97 Part 3\
+## Actions + Navigation\
+**Token Reference:** theme-tokens.json\
+**Rule:** Every value references a token name, never a raw hex.\
+\
+---\
+\
+## The Button Hierarchy \'97 Read First\
+\
+Before individual specs, understand the system they form together.\
+\
+Every screen has a maximum of ONE filled button visible at a time.\
+This is not a suggestion \'97 it is a rule.\
+\
+The moment you put two filled buttons on the same screen, the user\
+cannot tell which action matters more. Visual weight collapses.\
+\
+The three button types form a deliberate hierarchy:\
+\
+```\
+PrimaryButton    (filled)     \uc0\u8594  the one thing the user should do\
+SecondaryButton  (outlined)   \uc0\u8594  an available alternative\
+TextButton       (text only)  \uc0\u8594  always accessible, never competing\
+DestructiveButton             \uc0\u8594  special case, outlined in error color\
+```\
+\
+On Trip screen:\
+  Complete Trip \uc0\u8594  PrimaryButton (filled, accent)\
+  Cancel Trip   \uc0\u8594  DestructiveButton (outlined, error color)\
+\
+On Waiting screen:\
+  Cancel Ride   \uc0\u8594  TextButton (text only, low visual weight)\
+\
+On Home screen:\
+  Request Ride  \uc0\u8594  PrimaryButton (filled, accent)\
+\
+On Summary screen:\
+  Book again    \uc0\u8594  SecondaryButton (outlined, accent) \'97 NOT filled\
+  Reason: booking again should feel like an invitation, not a directive\
+\
+---\
+\
+---\
+\
+# UserCard\
+\
+## Purpose\
+Lives on the User Selector screen.\
+Each card represents one seeded user. Clicking it selects that user\
+and initializes the app session.\
+\
+This is the first interactive element the user touches.\
+It must feel responsive and trustworthy immediately.\
+\
+## Variants\
+- `default` \'97 standard user card\
+- `selected` \'97 brief selected state before navigation\
+  (visible for ~300ms during transition \'97 confirms the tap registered)\
+\
+## States\
+\
+**default**\
+- Background: `color.surface.default`\
+- Border: 1px `color.outline.default`\
+- Radius: `radius.md` (12px)\
+- Text: name in `color.text.primary`, email in `color.text.tertiary`\
+\
+**hover**\
+- Background: `color.surface.container`\
+- Border: 1px `color.outline.focus`\
+- Transform: `translateY(-2px)`\
+- Cursor: pointer\
+- Transition: 200ms `motion.easing.standard`\
+- Box shadow: none \'97 elevation via border and transform only\
+\
+**focus** (keyboard navigation)\
+- Border: 2px `color.outline.focus`\
+- Outline: 2px `color.outline.focus`, 2px offset, outside border\
+- Background: `color.surface.container`\
+- Transform: none \'97 keyboard users do not get the lift effect\
+  Reason: translateY on focus causes layout shift for keyboard nav\
+\
+**active/pressed**\
+- Background: `color.background.tertiary`\
+- Transform: `translateY(0)` \'97 returns to baseline on press\
+- Scale: 0.98\
+- Transition: `motion.duration.instant` (100ms)\
+\
+**selected** (post-click, pre-navigation)\
+- Border: 1px `color.accent.primary`\
+- Background: `color.accent.dim`\
+- Name color: `color.accent.primary`\
+- Duration: held for 300ms then navigation fires\
+\
+## Layout Rules\
+- Width: 148px\
+- Height: 80px\
+- Padding: `spacing.4` (16px) all sides\
+- Display: flex, column, justify: center\
+- Name: `typography.title` (17px DM Sans 500), `color.text.primary`\
+- Email: `typography.caption` (11px DM Sans 400), `color.text.tertiary`\
+- Gap between name and email: `spacing.1` (4px)\
+- No avatar, no icon \'97 name and email only\
+  Reason: avatars imply profile photos that don't exist in demo\
+\
+## Accessibility Rules\
+- Element: `<button>` \'97 not div, not anchor\
+- `aria-label="Continue as \{name\}"`\
+- `aria-pressed` reflects selected state\
+- Focus visible at all times \'97 never suppress focus ring\
+- Cards arranged in grid: arrow key navigation between cards\
+  (implement with roving tabindex pattern)\
+\
+## Animation Rules\
+- Hover lift: translateY transition 200ms `motion.easing.standard`\
+- Press return: translateY(0) + scale(0.98), 100ms instant\
+- Selected state: background + border color transition 200ms\
+- Grid stagger on page entrance:\
+  Each card fades in with translateY(8px)\uc0\u8594 0\
+  40ms delay between cards, left-to-right top-to-bottom\
+  Duration per card: `motion.duration.standard` (300ms)\
+  Easing: `motion.easing.decelerate`\
+\
+## Token Usage Summary\
+```\
+color.surface.default       \uc0\u8594  default background\
+color.surface.container     \uc0\u8594  hover + focus background\
+color.background.tertiary   \uc0\u8594  pressed background\
+color.outline.default       \uc0\u8594  default border\
+color.outline.focus         \uc0\u8594  hover border, focus ring\
+color.accent.primary        \uc0\u8594  selected border, selected name\
+color.accent.dim            \uc0\u8594  selected background\
+color.text.primary          \uc0\u8594  name text\
+color.text.tertiary         \uc0\u8594  email text\
+typography.title            \uc0\u8594  name (17px DM Sans 500)\
+typography.caption          \uc0\u8594  email (11px DM Sans 400)\
+radius.md                   \uc0\u8594  card radius\
+spacing.4                   \uc0\u8594  card padding\
+spacing.1                   \uc0\u8594  name-to-email gap\
+motion.duration.instant     \uc0\u8594  press response\
+motion.duration.standard    \uc0\u8594  hover, selected transitions\
+motion.easing.standard      \uc0\u8594  hover transition\
+motion.easing.decelerate    \uc0\u8594  entrance stagger\
+```\
+\
+---\
+\
+---\
+\
+# PrimaryButton\
+\
+## Purpose\
+The single most important action on the current screen.\
+Filled with accent color \'97 maximum visual weight.\
+Rule: only one PrimaryButton visible at a time on any screen.\
+\
+Used on:\
+- Home screen: "Request Ride"\
+- Trip screen: "Complete Trip" (with two-stage confirmation)\
+\
+## Variants\
+- `default` \'97 standard filled button\
+- `confirming` \'97 Complete Trip only, second-stage confirmation state\
+\
+## States\
+\
+**default \'97 enabled**\
+- Background: `color.accent.primary` (#5EBFAD)\
+- Text: `color.text.on_accent` (#0D1F1C)\
+- Border: none\
+- Radius: `radius.sm` (8px)\
+\
+**default \'97 hover**\
+- Background: `color.accent.strong` (#4AAFA0)\
+- Transform: none \'97 buttons do not lift\
+- Cursor: pointer\
+- Transition: 200ms `motion.easing.standard`\
+\
+**default \'97 focus**\
+- Background: `color.accent.primary`\
+- Outline: 2px `color.outline.focus`, 2px offset\
+- No background change on focus \'97 outline is sufficient\
+\
+**default \'97 active/pressed**\
+- Background: `color.accent.strong`\
+- Scale: 0.98\
+- Transition: `motion.duration.instant` (100ms)\
+\
+**default \'97 disabled**\
+- Background: `color.accent.primary` at 30% opacity\
+- Text: `color.text.on_accent` at 30% opacity\
+- Cursor: not-allowed\
+- No hover/focus effects\
+\
+**default \'97 loading**\
+- Background: `color.accent.primary`\
+- Text replaced with: spinner icon (16px) + "Finding your ride..."\
+- Button disabled during loading\
+- Spinner: circular, `color.text.on_accent`, 1px stroke, rotates 360deg\
+  Duration: 800ms infinite linear\
+\
+**confirming** (Complete Trip second stage)\
+- Background: `color.semantic.warning` (#F0A500)\
+  Shifts to amber \'97 visually signals "this is different from before"\
+- Text: `color.text.on_accent`\
+- Label: "Confirm complete?"\
+- Icon: checkmark, left of text, 16px\
+- This state held for maximum 3 seconds\
+- If no second click within 3 seconds: returns to default state\
+  with 300ms transition back to accent color\
+\
+## Layout Rules\
+- Height: 52px\
+- Width: context-dependent\
+  Home screen: full content column width\
+  Trip screen: 50% of content column minus half gap (side by side with DestructiveButton)\
+- Padding: `spacing.4` (16px) horizontal (only relevant when button has intrinsic width)\
+- Font: `typography.title` (17px DM Sans 500)\
+- Text alignment: center\
+- Display: flex, justify: center, align: center, gap `spacing.2` (8px) for icon\
+- Icon size: 16px, same color as text\
+\
+## The Two-Stage Complete Trip Flow\
+Stage 1 (default state):\
+  Label: "Complete Trip"\
+  Icon: checkmark-circle outline\
+\
+On first click:\
+  Background transitions to warning amber (300ms)\
+  Label changes to "Confirm complete?"\
+  Icon changes to checkmark-filled\
+  3-second countdown begins internally\
+\
+On second click (within 3 seconds):\
+  Fires completeTrip API call\
+  Button enters loading state\
+  Label: "Completing..."\
+\
+If no second click (3 seconds elapsed):\
+  Background transitions back to accent (300ms)\
+  Label returns to "Complete Trip"\
+  Icon returns to outline\
+\
+On click elsewhere while confirming:\
+  Same reset as timeout\
+\
+## Why This Pattern (Not A Modal)\
+A modal for trip completion would be disproportionate.\
+Trip completion only affects the current user's view.\
+The button-as-confirmation pattern:\
+- Requires intentional double action\
+- Provides clear visual feedback that something changed\
+- Does not interrupt the screen or block content\
+- Is a recognized Material pattern\
+\
+## Accessibility Rules\
+- Element: `<button type="button">`\
+- `aria-label` updates with state:\
+  Default: "Complete trip"\
+  Confirming: "Confirm trip completion \'97 click again to confirm"\
+  Loading: "Completing trip, please wait"\
+- `aria-disabled="true"` when disabled (not `disabled` attribute alone)\
+- `aria-busy="true"` during loading state\
+- Confirming state announced via `aria-live="polite"` on state change\
+- ESC key while confirming: resets to default state\
+\
+## Animation Rules\
+- Hover background: 200ms `motion.easing.standard`\
+- Press scale: 100ms instant\
+- Default\uc0\u8594 confirming transition:\
+  Background color: 300ms `motion.easing.standard`\
+  Label crossfade: outgoing 150ms, incoming 150ms, 50ms gap\
+- Confirming\uc0\u8594 default reset:\
+  Same 300ms transition back\
+- Loading spinner: continuous rotation, 800ms per revolution, linear\
+\
+## Token Usage Summary\
+```\
+color.accent.primary        \uc0\u8594  default background\
+color.accent.strong         \uc0\u8594  hover + pressed background\
+color.accent.dim            \uc0\u8594  disabled background base\
+color.semantic.warning      \uc0\u8594  confirming state background\
+color.text.on_accent        \uc0\u8594  button text all states\
+color.outline.focus         \uc0\u8594  focus ring\
+typography.title            \uc0\u8594  button label (17px DM Sans 500)\
+radius.sm                   \uc0\u8594  button radius (8px)\
+spacing.4                   \uc0\u8594  horizontal padding\
+spacing.2                   \uc0\u8594  icon-to-label gap\
+motion.duration.instant     \uc0\u8594  press response\
+motion.duration.standard    \uc0\u8594  hover + stage transitions\
+motion.easing.standard      \uc0\u8594  all transitions\
+```\
+\
+---\
+\
+---\
+\
+# DestructiveButton\
+\
+## Purpose\
+Cancel actions that have significant consequences.\
+Used on Trip screen only: "Cancel Trip"\
+\
+Visually de-emphasized relative to PrimaryButton \'97 outlined not filled.\
+The color signals danger without screaming it.\
+\
+The visual hierarchy message:\
+PrimaryButton (filled accent) = "do this"\
+DestructiveButton (outlined error) = "this is available but think twice"\
+\
+## Variants\
+Single variant. One job.\
+\
+## States\
+\
+**default**\
+- Background: transparent\
+- Border: 1px `color.semantic.error` (#FF453A)\
+- Text: `color.semantic.error`\
+- Radius: `radius.sm` (8px)\
+\
+**hover**\
+- Background: `color.semantic.error_dim` (#FF453A15)\
+- Border: 1px `color.semantic.error`\
+- Text: `color.semantic.error`\
+- Transition: 200ms `motion.easing.standard`\
+\
+**focus**\
+- Background: `color.semantic.error_dim`\
+- Outline: 2px `color.semantic.error`, 2px offset\
+\
+**active/pressed**\
+- Background: `color.semantic.error` at 20% opacity\
+- Scale: 0.98\
+- Transition: `motion.duration.instant` (100ms)\
+\
+**disabled**\
+- Border: 1px `color.semantic.error` at 30% opacity\
+- Text: `color.semantic.error` at 30% opacity\
+- Cursor: not-allowed\
+\
+**loading** (during cancel API call)\
+- Border: 1px `color.semantic.error`\
+- Text replaced with spinner + "Cancelling..."\
+- Spinner: `color.semantic.error`, same spec as PrimaryButton spinner\
+\
+## Layout Rules\
+- Height: 52px \'97 matches PrimaryButton height exactly\
+- Width: 50% of content column minus half gap\
+  Sits side by side with PrimaryButton on Trip screen\
+- Font: `typography.title` (17px DM Sans 500)\
+- Text color: `color.semantic.error`\
+- Display: flex, justify: center, align: center\
+\
+## Why Outlined Not Filled\
+A filled red button on the same screen as a filled teal button\
+creates two competing calls to action.\
+The user's eye bounces between them \'97 decision paralysis.\
+Outlined red says: "this exists, but it's not what we recommend."\
+\
+## Accessibility Rules\
+- Element: `<button type="button">`\
+- `aria-label="Cancel trip \'97 this will affect your co-riders"`\
+  The label communicates consequence without requiring the user\
+  to read surrounding copy\
+- `aria-busy="true"` during loading\
+- Opens CancelModal on click \'97 modal has its own accessibility spec\
+\
+## Animation Rules\
+- Hover background wash: 200ms `motion.easing.standard`\
+- Press scale: 100ms instant\
+- No stage-based confirmation \'97 DestructiveButton opens CancelModal instead\
+  Modal provides the friction, not the button itself\
+\
+## Token Usage Summary\
+```\
+color.semantic.error        \uc0\u8594  border, text, all states\
+color.semantic.error_dim    \uc0\u8594  hover + focus background\
+color.outline.focus         \uc0\u8594  focus ring (uses error color here)\
+typography.title            \uc0\u8594  button label\
+radius.sm                   \uc0\u8594  button radius\
+motion.duration.instant     \uc0\u8594  press response\
+motion.duration.standard    \uc0\u8594  hover transition\
+motion.easing.standard      \uc0\u8594  hover transition\
+```\
+\
+---\
+\
+---\
+\
+# SecondaryButton\
+\
+## Purpose\
+Available alternative action. Present but not dominant.\
+Outlined with accent color \'97 signals "this is a positive action"\
+without competing with PrimaryButton.\
+\
+Used on:\
+- Summary screen: "Book another ride \uc0\u8594 "\
+- Any screen where a positive but non-primary action exists\
+\
+## Variants\
+Single variant.\
+\
+## States\
+\
+**default**\
+- Background: transparent\
+- Border: 1px `color.accent.primary`\
+- Text: `color.accent.primary`\
+- Radius: `radius.sm` (8px)\
+\
+**hover**\
+- Background: `color.accent.dim` (#5EBFAD20)\
+- Border: 1px `color.accent.primary`\
+- Text: `color.accent.primary`\
+- Transition: 200ms `motion.easing.standard`\
+\
+**focus**\
+- Background: `color.accent.dim`\
+- Outline: 2px `color.outline.focus`, 2px offset\
+\
+**active/pressed**\
+- Background: `color.accent.primary` at 20% opacity\
+- Scale: 0.98\
+- Transition: `motion.duration.instant` (100ms)\
+\
+**disabled**\
+- Border: 1px `color.accent.primary` at 30% opacity\
+- Text: `color.accent.primary` at 30% opacity\
+- Cursor: not-allowed\
+\
+## Layout Rules\
+- Height: 52px\
+- Width: full content column width on Summary screen\
+- Font: `typography.title` (17px DM Sans 500)\
+- Text color: `color.accent.primary`\
+- Display: flex, justify: center, align: center, gap `spacing.2` (8px)\
+\
+## Why Not Filled On Summary Screen\
+The Summary screen's job is to affirm the completed trip.\
+A filled CTA at the bottom would create pressure to immediately book again.\
+Outlined says: "when you're ready, this is here."\
+The user just completed a trip \'97 they should leave feeling satisfied,\
+not nudged into the next transaction.\
+\
+## Accessibility Rules\
+- Element: `<button type="button">`\
+- `aria-label` describes the action fully: "Book another ride"\
+- If button contains an arrow icon: icon is `aria-hidden="true"`\
+\
+## Animation Rules\
+- Hover background: 200ms `motion.easing.standard`\
+- Press scale: 100ms instant\
+\
+## Token Usage Summary\
+```\
+color.accent.primary        \uc0\u8594  border, text all states\
+color.accent.dim            \uc0\u8594  hover + focus background\
+color.outline.focus         \uc0\u8594  focus ring\
+typography.title            \uc0\u8594  button label\
+radius.sm                   \uc0\u8594  button radius\
+spacing.2                   \uc0\u8594  icon-to-label gap\
+motion.duration.instant     \uc0\u8594  press response\
+motion.duration.standard    \uc0\u8594  hover transition\
+motion.easing.standard      \uc0\u8594  hover transition\
+```\
+\
+---\
+\
+---\
+\
+# TextButton\
+\
+## Purpose\
+Lowest visual weight action. Always accessible, never competing.\
+No border, no background \'97 just text that behaves like a button.\
+\
+Used on:\
+- Waiting screen: "Cancel Ride"\
+- Any low-stakes reversible action\
+\
+## Variants\
+- `default` \'97 standard text button\
+- `destructive` \'97 text button for cancel/remove actions\
+  Uses error color instead of accent\
+\
+## States \'97 default variant\
+\
+**default**\
+- Background: none\
+- Border: none\
+- Text: `color.accent.primary`\
+- Underline: none\
+\
+**hover**\
+- Text: `color.accent.strong`\
+- Background: `color.accent.dim` tight around text\
+  (padding `spacing.1` horizontal, `spacing.1` vertical)\
+- Border radius: `radius.xs` (4px)\
+- Transition: 200ms\
+\
+**focus**\
+- Outline: 2px `color.outline.focus`, 2px offset\
+- Background: `color.accent.dim`\
+\
+**active/pressed**\
+- Text: `color.accent.strong`\
+- Scale: 0.97\
+- Transition: 100ms instant\
+\
+**disabled**\
+- Text: `color.text.tertiary`\
+- Cursor: not-allowed\
+\
+## States \'97 destructive variant\
+Same as default but:\
+- Text: `color.semantic.error`\
+- Hover background: `color.semantic.error_dim`\
+- Hover text: `color.semantic.error`\
+- Focus outline: `color.semantic.error`\
+\
+## Layout Rules\
+- Height: 40px (shorter than filled/outlined buttons \'97 lower weight)\
+- Padding: `spacing.3` (12px) horizontal, `spacing.2` (8px) vertical\
+- Font: `typography.label` (13px DM Sans 500)\
+  Smaller than PrimaryButton \'97 reinforces lower hierarchy\
+- Text color: variant-dependent\
+- No fixed width \'97 intrinsic width only\
+- Alignment on Waiting screen: right-aligned within content column\
+  Reason: right alignment moves it away from the primary content\
+  Users who want to cancel must move their eye intentionally\
+\
+## The Waiting Screen Cancel Position\
+Cancel Ride is right-aligned and below the fold initially.\
+At 3 minutes elapsed, it moves above the fold via scroll.\
+This is not hiding the button \'97 it is not prioritizing it.\
+The button is always in the DOM and always reachable.\
+\
+## Accessibility Rules\
+- Element: `<button type="button">` \'97 never `<a>` without href\
+- `aria-label` if label alone is ambiguous:\
+  "Cancel Ride" is clear \'97 no additional aria needed\
+- Minimum tap target: 40\'d740px \'97 padding ensures this\
+- Focus visible at all times\
+\
+## Animation Rules\
+- Hover background: 150ms `motion.easing.standard`\
+- Press scale: 100ms instant\
+- No entrance/exit animations \'97 text buttons appear with their screen\
+\
+## Token Usage Summary\
+```\
+color.accent.primary        \uc0\u8594  default variant text\
+color.accent.strong         \uc0\u8594  default variant hover text\
+color.accent.dim            \uc0\u8594  default variant hover background\
+color.semantic.error        \uc0\u8594  destructive variant text\
+color.semantic.error_dim    \uc0\u8594  destructive variant hover background\
+color.text.tertiary         \uc0\u8594  disabled text\
+color.outline.focus         \uc0\u8594  focus ring\
+typography.label            \uc0\u8594  button text (13px DM Sans 500)\
+radius.xs                   \uc0\u8594  hover background radius\
+spacing.3                   \uc0\u8594  horizontal padding\
+spacing.2                   \uc0\u8594  vertical padding\
+motion.duration.instant     \uc0\u8594  press response\
+```\
+\
+---\
+\
+## Part 3 Complete\
+\
+**5 components specified:**\
+UserCard \'b7 PrimaryButton \'b7 DestructiveButton \'b7 SecondaryButton \'b7 TextButton\
+\
+**The system these five form together:**\
+\
+Every screen now has a clear visual action hierarchy.\
+An interviewer looking at your Trip screen will see:\
+- One filled teal button (complete \'97 do this)\
+- One outlined red button (cancel \'97 available but secondary)\
+\
+And immediately understand: this was designed intentionally.\
+That recognition is what separates a portfolio project\
+from a generic CRUD app.\
+\
+**Key decisions you can explain:**\
+\
+1. Why Complete Trip has two-stage confirmation but Cancel Trip uses a modal\
+2. Why Summary screen uses SecondaryButton not PrimaryButton for "Book again"\
+3. Why TextButton is smaller font than PrimaryButton\
+4. Why DestructiveButton is outlined not filled\
+5. Why only ONE PrimaryButton per screen}

@@ -1,0 +1,558 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2870
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red230\green233\blue236;}
+{\*\expandedcolortbl;;\cssrgb\c0\c1\c1;\cssrgb\c92207\c92998\c94107;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs24 \cf2 \expnd0\expndtw0\kerning0
+# CarpoolTU Component Specs \'97 Part 4\
+## Trip Anatomy Components\
+**Token Reference:** theme-tokens.json\
+**Rule:** Every value references a token name, never a raw hex.\
+\
+---\
+\
+## The Challenge These Components Solve\
+\
+The Trip screen has the highest information density in the app.\
+Stops, passengers, fare, ETA, distance, detour \'97 all on one screen.\
+\
+The risk: it feels like a data table. Clinical. Overwhelming.\
+\
+These four components solve that by creating clear visual hierarchy\
+through three tools: typography scale, color tiers, and spacing rhythm.\
+\
+The user should be able to scan the Trip screen in 3 seconds and know:\
+1. What they're paying\
+2. Where they're going\
+3. Who they're with\
+\
+Everything else is secondary context.\
+\
+---\
+\
+---\
+\
+# RouteTimeline\
+\
+## Purpose\
+Shows the complete ordered stop sequence for the trip.\
+Lives on the Trip screen between the hero cards and the passenger list.\
+\
+Its job is to answer: "where does the car go, and where am I in that sequence?"\
+\
+Uses the 3-tier visual system to make the user's position\
+immediately obvious without hiding the full route context.\
+\
+## Variants\
+- `active` \'97 trip is in progress, used on Trip screen\
+- `completed` \'97 trip is done, used on Summary screen\
+  Completed variant: all stops rendered in tier 2 (neutral)\
+  No highlighting \'97 journey is over, no current position\
+\
+## The 3-Tier System\
+\
+**Tier 1 \'97 Your stops (highlighted)**\
+- Stop dot: 12px filled circle, `color.accent.primary`\
+- Stop label: `typography.body` (15px DM Sans 400), `color.text.primary`\
+- Stop type tag: "Your pickup" / "Your drop"\
+  Font: `typography.caption` (11px DM Sans 500)\
+  Color: `color.accent.primary`\
+  Background: `color.accent.dim`\
+  Radius: `radius.full` (pill)\
+  Padding: `spacing.1` (4px) vertical, `spacing.2` (8px) horizontal\
+- Connector line above/below: `color.accent.primary` at 60% opacity\
+\
+**Tier 2 \'97 Stops after yours (neutral)**\
+- Stop dot: 10px filled circle, `color.text.secondary`\
+- Stop label: `typography.body` (15px DM Sans 400), `color.text.secondary`\
+- Stop type tag: not shown \'97 these stops are context, not instruction\
+- Connector line: `color.outline.default`\
+\
+**Tier 3 \'97 Stops before yours (dimmed)**\
+- Stop dot: 8px circle, outline only, `color.text.tertiary`\
+- Stop label: `typography.caption` (11px DM Sans 400), `color.text.tertiary`\
+- Stop type tag: not shown\
+- Connector line: `color.outline.subtle`\
+- Entire row opacity: 0.6\
+\
+## Why Dot Sizes Differ Across Tiers\
+Size reinforces tier without relying on color alone.\
+Tier 1: 12px \'97 largest, most prominent\
+Tier 2: 10px \'97 standard, readable\
+Tier 3: 8px \'97 smallest, receded\
+This means the visual hierarchy survives grayscale and low-contrast conditions.\
+\
+## Layout Rules\
+\
+```\
+  \uc0\u9675  \u9472  \u9472   Rohan pickup         \u8592  tier 3 (before you, dimmed)\
+  \uc0\u9474 \
+  \uc0\u9679       Your pickup          \u8592  tier 1 (your stop, highlighted)\
+  \uc0\u9474       [Your pickup]        \u8592  tier tag, accent pill\
+  \uc0\u9474 \
+  \uc0\u9679       Your drop            \u8592  tier 1 (your stop, highlighted)\
+  \uc0\u9474       [Your drop]          \u8592  tier tag, accent pill\
+  \uc0\u9474 \
+  \uc0\u9679       Rohan drop           \u8592  tier 2 (after you, neutral)\
+```\
+\
+- Component container: full content column width\
+- Container background: `color.surface.default`\
+- Container border: 1px `color.outline.default`\
+- Container radius: `radius.md` (12px)\
+- Container padding: `spacing.4` (16px) all sides\
+\
+- Each stop row: minimum 48px height\
+  Rows with tier tags: minimum 60px height\
+- Left column: dot + connector line, 24px wide, fixed\
+- Right column: stop content, remaining width\
+- Gap between left and right columns: `spacing.3` (12px)\
+\
+**Connector line:**\
+- Width: 1px\
+- Centered under dot horizontally\
+- Runs from bottom of current dot to top of next dot\
+- Last stop: no connector line below\
+- First stop: no connector line above\
+\
+**Stop address display:**\
+Full address from `stop.address` field.\
+If address is null: fallback to `$\{stop.lat.toFixed(4)\}, $\{stop.lng.toFixed(4)\}`\
+Max 2 lines \'97 overflow ellipsis on second line.\
+\
+## Completed Variant (Summary Screen)\
+All stops render at tier 2 visual level.\
+No tier 1 highlighting \'97 the journey is complete.\
+No tier tags.\
+Component background: transparent on Summary screen.\
+This creates visual distinction between Trip screen\
+(active, highlighted) and Summary screen (resolved, neutral).\
+\
+## Accessibility Rules\
+- Container: `role="list"`, `aria-label="Trip route"`\
+- Each stop: `role="listitem"`\
+- Your stops: `aria-label="Your \{type\}: \{address\}"`\
+- Other stops: `aria-label="\{type\}: \{address\}"`\
+- Tier 3 stops: `aria-label="Earlier stop: \{address\}"`\
+- Connector lines: `aria-hidden="true"` \'97 decorative\
+\
+## Animation Rules\
+**Active variant entrance (Trip screen):**\
+- Stops stagger in from top to bottom\
+- Each stop: opacity 0\uc0\u8594 1, translateY(6px)\u8594 0\
+- Delay between stops: 50ms\
+- Duration per stop: `motion.duration.standard` (300ms)\
+- Easing: `motion.easing.decelerate`\
+- Your tier 1 stops animate last in the stagger\
+  Then pulse once: scale 1\uc0\u8594 1.04\u8594 1, 400ms\
+  This draws the eye to your position in the route\
+\
+**Completed variant (Summary screen):**\
+- No stagger \'97 all stops fade in together\
+- Opacity 0\uc0\u8594 1, 300ms\
+- No pulse \'97 journey is done, no need to draw attention\
+\
+## Token Usage Summary\
+```\
+color.accent.primary        \uc0\u8594  tier 1 dot, label, tag text, connector\
+color.accent.dim            \uc0\u8594  tier 1 tag background\
+color.text.primary          \uc0\u8594  tier 1 address label\
+color.text.secondary        \uc0\u8594  tier 2 dot, address label\
+color.text.tertiary         \uc0\u8594  tier 3 dot, address label\
+color.outline.default       \uc0\u8594  tier 2 connector, container border\
+color.outline.subtle        \uc0\u8594  tier 3 connector\
+color.surface.default       \uc0\u8594  container background (active variant)\
+typography.body             \uc0\u8594  tier 1 + tier 2 address (15px DM Sans 400)\
+typography.caption          \uc0\u8594  tier 3 address + tier tags (11px DM Sans)\
+radius.md                   \uc0\u8594  container radius\
+radius.full                 \uc0\u8594  tier tag pill radius\
+spacing.4                   \uc0\u8594  container padding\
+spacing.3                   \uc0\u8594  dot-to-content gap\
+spacing.1                   \uc0\u8594  tier tag vertical padding\
+spacing.2                   \uc0\u8594  tier tag horizontal padding\
+motion.duration.standard    \uc0\u8594  stop entrance\
+motion.easing.decelerate    \uc0\u8594  stop entrance easing\
+```\
+\
+---\
+\
+---\
+\
+# RouteStopItem\
+\
+## Purpose\
+Single row inside RouteTimeline.\
+Renders one stop with correct tier treatment based on\
+its position relative to the current user's stops.\
+\
+This is the atomic unit of the route display.\
+RouteTimeline composes multiple RouteStopItems.\
+\
+## Variants\
+- `tier-1` \'97 current user's stop (pickup or drop)\
+- `tier-2` \'97 stop after user's last stop\
+- `tier-3` \'97 stop before user's first stop\
+\
+## Tier Determination Logic\
+The parent RouteTimeline passes each stop a `tier` prop.\
+The tier is computed in the parent, not the item itself.\
+\
+Computation rule:\
+```\
+Find index of user's first stop (their pickup)\
+Find index of user's last stop (their drop)\
+\
+For each stop:\
+  if stopOrder < userPickupOrder \uc0\u8594  tier 3\
+  if stopOrder === userPickupOrder OR stopOrder === userDropOrder \uc0\u8594  tier 1\
+  if stopOrder > userDropOrder \uc0\u8594  tier 2\
+```\
+\
+This logic lives in a utility function, not in the component.\
+\
+## States\
+RouteStopItem has no interactive states on Trip screen.\
+It is display-only.\
+\
+Exception: on a future iteration where stops are tappable\
+to show on map \'97 but that is out of scope for current implementation.\
+\
+## Layout Rules\
+\
+**Tier 1 layout:**\
+```\
+[12px filled dot]  [address text]          [tier tag pill]\
+                   [                    ]\
+```\
+- Dot: 12px circle, `color.accent.primary`, filled\
+- Address: `typography.body` (15px DM Sans 400), `color.text.primary`\
+- Tier tag: right-aligned, pill shape\
+  "Your pickup" or "Your drop"\
+  Font: `typography.caption` (11px DM Sans 500)\
+  Color: `color.accent.primary`\
+  Background: `color.accent.dim`\
+  Radius: `radius.full`\
+  Padding: `spacing.1` vertical, `spacing.2` horizontal\
+- Row min-height: 60px (taller to accommodate tag)\
+- Row display: flex, align-items: center\
+\
+**Tier 2 layout:**\
+```\
+[10px filled dot]  [address text]\
+```\
+- Dot: 10px circle, `color.text.secondary`, filled\
+- Address: `typography.body` (15px DM Sans 400), `color.text.secondary`\
+- No tag\
+- Row min-height: 48px\
+\
+**Tier 3 layout:**\
+```\
+[8px outline dot]  [address text]\
+```\
+- Dot: 8px circle, outline only (1px border), `color.text.tertiary`\
+- Address: `typography.caption` (11px DM Sans 400), `color.text.tertiary`\
+- No tag\
+- Row opacity: 0.6\
+- Row min-height: 40px (shorter \'97 less visual weight)\
+\
+## Connector Line Rules\
+Rendered by RouteTimeline, not RouteStopItem.\
+RouteStopItem only renders the dot and content.\
+This separation keeps the component clean and avoids\
+connector line positioning complexity inside the item.\
+\
+## Accessibility Rules\
+- `role="listitem"` (set by parent)\
+- Tier 1: `aria-label="Your \{stopType\}: \{address\}"`\
+  stopType: "pickup" or "drop-off"\
+- Tier 2: `aria-label="Stop: \{address\}"`\
+- Tier 3: `aria-label="Earlier stop: \{address\}"`\
+- Tier tag: `aria-hidden="true"` \'97 information already in aria-label\
+\
+## Animation Rules\
+Managed by parent RouteTimeline stagger.\
+RouteStopItem itself has no self-managed animation.\
+\
+**Tier 1 specific:**\
+After stagger entrance, tier 1 items pulse once:\
+scale 1\uc0\u8594 1.04\u8594 1, 400ms, `motion.easing.expressive`\
+This is the only component-level animation RouteStopItem triggers.\
+\
+## Token Usage Summary\
+```\
+color.accent.primary        \uc0\u8594  tier 1 dot + tag text + connector\
+color.accent.dim            \uc0\u8594  tier 1 tag background\
+color.text.primary          \uc0\u8594  tier 1 address\
+color.text.secondary        \uc0\u8594  tier 2 dot + address\
+color.text.tertiary         \uc0\u8594  tier 3 dot + address\
+typography.body             \uc0\u8594  tier 1 + tier 2 address\
+typography.caption          \uc0\u8594  tier 3 address + tier 1 tag\
+radius.full                 \uc0\u8594  tier tag pill\
+spacing.1                   \uc0\u8594  tag vertical padding\
+spacing.2                   \uc0\u8594  tag horizontal padding\
+motion.easing.expressive    \uc0\u8594  tier 1 entrance pulse\
+```\
+\
+---\
+\
+---\
+\
+# PassengerRow\
+\
+## Purpose\
+Single row in the "Sharing with" section on Trip screen.\
+Shows one co-rider \'97 their name and their fare share.\
+\
+Plural PassengerRows compose the passenger list section.\
+This component is purely informational \'97 no interaction.\
+\
+## Variants\
+- `co-rider` \'97 another passenger in the trip\
+  This is the only variant rendered in the list.\
+  The current user is NOT shown in the passenger list.\
+  Reason: the user already sees their own fare in FareHeroCard.\
+  Showing themselves again in the list creates redundancy.\
+\
+## States\
+Display only. No interactive states.\
+\
+## Layout Rules\
+\
+```\
+\uc0\u9484 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9488 \
+\uc0\u9474   [initial]   Rohan S.                    \u8377 47.40   \u9474 \
+\uc0\u9492 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9496 \
+```\
+\
+- Row height: 48px\
+- Row padding: `spacing.4` (16px) horizontal\
+- Row background: transparent (inherits container)\
+- Display: flex, align-items: center, justify-content: space-between\
+\
+**Left side \'97 passenger identity:**\
+- Initial avatar: 32px circle\
+  Background: `color.surface.container`\
+  Border: 1px `color.outline.default`\
+  Initial letter: `typography.title` (17px DM Sans 500), `color.text.secondary`\
+  Only first initial of first name \'97 never full name initial\
+- Gap between avatar and name: `spacing.3` (12px)\
+- Name: first name + last initial only\
+  Format: "Rohan S." \'97 never full last name\
+  Font: `typography.body` (15px DM Sans 400)\
+  Color: `color.text.primary`\
+\
+**Right side \'97 fare:**\
+- Amount: formatted as "\uc0\u8377 \{amount\}"\
+  Font: `typography.data_large` (24px DM Mono 400)\
+  Color: `color.text.secondary`\
+  Reason: their fare is context, not primary info\
+  The user's own fare (in FareHeroCard) uses accent color\
+  Co-rider fares use secondary text \'97 same data, lower priority\
+\
+**Between rows:**\
+- Divider: `inset` variant (16px left indent)\
+- This indent aligns the divider with the name, not the avatar\
+- Creates cleaner visual grouping\
+\
+## Why First Name + Last Initial Only\
+Full names are unnecessary in a university context \'97 everyone is\
+roughly peers. First name + initial provides enough identification\
+to distinguish two "Rohans" without exposing full identity.\
+This is a deliberate privacy-respecting choice.\
+\
+## Container (parent element, not the row itself)\
+- Background: `color.surface.default`\
+- Border: 1px `color.outline.default`\
+- Radius: `radius.md` (12px)\
+- Padding: 0 (rows handle their own padding)\
+- Section label above container: "Sharing with"\
+  Font: `typography.label` (13px DM Sans 500)\
+  Color: `color.text.tertiary`\
+  Letter-spacing: 0.02em\
+  Margin bottom: `spacing.2` (8px)\
+\
+## Empty State\
+If passengers array has only current user (solo trip \'97 should not happen):\
+Container shows: "Solo trip" centered\
+Font: `typography.body`, `color.text.tertiary`\
+This state should never occur in normal flow but must be handled.\
+\
+## Accessibility Rules\
+- Container: `role="list"`, `aria-label="Co-riders"`\
+- Each row: `role="listitem"`\
+- Row `aria-label`: "\{name\}, fare share \uc0\u8377 \{amount\}"\
+- Avatar initial: `aria-hidden="true"` \'97 name provides the label\
+- Dividers: `aria-hidden="true"`\
+\
+## Animation Rules\
+- Rows stagger in with RouteTimeline on Trip screen entrance\
+- Same stagger system: 50ms delay, 300ms duration, decelerate easing\
+- Passenger rows stagger after route stops complete\
+  Additional base delay: 200ms after last route stop appears\
+\
+## Token Usage Summary\
+```\
+color.surface.default       \uc0\u8594  container background\
+color.surface.container     \uc0\u8594  avatar background\
+color.outline.default       \uc0\u8594  container border, avatar border, divider\
+color.text.primary          \uc0\u8594  passenger name\
+color.text.secondary        \uc0\u8594  fare amount, avatar initial\
+color.text.tertiary         \uc0\u8594  section label, empty state\
+typography.body             \uc0\u8594  passenger name (15px DM Sans 400)\
+typography.title            \uc0\u8594  avatar initial (17px DM Sans 500)\
+typography.data_large       \uc0\u8594  fare amount (24px DM Mono 400)\
+typography.label            \uc0\u8594  section label (13px DM Sans 500)\
+radius.md                   \uc0\u8594  container radius\
+spacing.4                   \uc0\u8594  row horizontal padding\
+spacing.3                   \uc0\u8594  avatar-to-name gap\
+spacing.2                   \uc0\u8594  section label margin, avatar size context\
+motion.duration.standard    \uc0\u8594  row entrance\
+motion.easing.decelerate    \uc0\u8594  row entrance easing\
+```\
+\
+---\
+\
+---\
+\
+# TripMetaRow\
+\
+## Purpose\
+Shows supplementary trip data \'97 total distance and detour ratio.\
+Lives below the passenger list on Trip screen.\
+Also appears on Summary screen in a slightly different arrangement.\
+\
+This is the lowest-priority information on both screens.\
+It answers "is this route reasonable?" \'97 a secondary concern\
+after fare and ETA are already known.\
+\
+## Variants\
+- `trip` \'97 used on Trip screen, horizontal two-item layout\
+- `summary` \'97 used on Summary screen, includes completion time\
+\
+## States\
+Display only. No interactive states.\
+\
+## Layout Rules \'97 trip variant\
+\
+```\
+Total distance    8.4 km      \'b7      12% detour \'b7 saves \uc0\u8377 47\
+```\
+\
+- Display: flex, align-items: center, gap `spacing.4` (16px)\
+- Separator: "\'b7" character, `color.text.tertiary`\
+- No card, no background \'97 text directly on screen\
+\
+**Distance item:**\
+- Label: "Total distance"\
+  Font: `typography.label` (13px DM Sans 500)\
+  Color: `color.text.tertiary`\
+- Value: "8.4 km"\
+  Font: `typography.data_large` (24px DM Mono 400)\
+  Color: `color.text.secondary`\
+- Label and value stacked vertically, gap `spacing.1` (4px)\
+\
+**Detour item:**\
+- Label: "Detour"\
+  Font: `typography.label` (13px DM Sans 500)\
+  Color: `color.text.tertiary`\
+- Value: "12%"\
+  Font: `typography.data_large` (24px DM Mono 400)\
+  Color: `color.text.secondary`\
+- Sub-value: "\'b7 saves \uc0\u8377 \{amount\} vs solo"\
+  Font: `typography.caption` (11px DM Sans 400)\
+  Color: `color.text.tertiary`\
+  Inline with value, gap `spacing.1` (4px)\
+  Only shown if savings > 0\
+\
+**The detour + savings pair rule:**\
+Never show detour without savings context.\
+A 12% detour alone sounds bad.\
+"12% detour \'b7 saves \uc0\u8377 47 vs solo" sounds like a good deal.\
+If savings cannot be computed: show detour percentage only, omit sub-value.\
+\
+## Layout Rules \'97 summary variant\
+\
+```\
+8.4 km travelled   \'b7   3 stops   \'b7   24 minutes   \'b7   Completed 6:42 PM\
+```\
+\
+- Single horizontal row, all items inline\
+- Separator: "\'b7" character between each item\
+- Font: `typography.body` (15px DM Sans 400)\
+- Color: `color.text.secondary`\
+- All items same visual weight \'97 no hierarchy needed\
+  On Summary screen the savings card carries the hierarchy,\
+  this row is just confirming facts\
+\
+## Accessibility Rules\
+- `role="region"`, `aria-label="Trip details"`\
+- Each data pair: not individually labelled \'97 the text is self-describing\
+- Separator dots: `aria-hidden="true"`\
+\
+## Animation Rules\
+- Trip variant: fades in after PassengerRow stagger completes\
+  Opacity 0\uc0\u8594 1, 200ms, `motion.easing.standard`\
+  No translateY \'97 lowest priority content enters without movement\
+- Summary variant: fades in as part of screen entrance sequence\
+  Same 200ms fade, no movement\
+\
+## Token Usage Summary\
+```\
+color.text.primary          \uc0\u8594  not used in this component\
+color.text.secondary        \uc0\u8594  data values\
+color.text.tertiary         \uc0\u8594  labels, separators, sub-values\
+typography.label            \uc0\u8594  item labels (13px DM Sans 500)\
+typography.data_large       \uc0\u8594  item values (24px DM Mono 400)\
+typography.body             \uc0\u8594  summary variant text (15px DM Sans 400)\
+typography.caption          \uc0\u8594  savings sub-value (11px DM Sans 400)\
+spacing.4                   \uc0\u8594  gap between items\
+spacing.1                   \uc0\u8594  label-to-value gap, value-to-subvalue gap\
+motion.duration.standard    \uc0\u8594  entrance fade\
+motion.easing.standard      \uc0\u8594  entrance easing\
+```\
+\
+---\
+\
+## Part 4 Complete\
+\
+**4 components specified:**\
+RouteTimeline \'b7 RouteStopItem \'b7 PassengerRow \'b7 TripMetaRow\
+\
+**The system these four form together on the Trip screen:**\
+\
+```\
+[FareHeroCard]  [ETAHeroCard]    \uc0\u8592  answers the two anxieties\
+[Map]                            \uc0\u8592  spatial grounding\
+[RouteTimeline]                  \uc0\u8592  where does the car go\
+  [RouteStopItem tier-3]         \uc0\u8592  before you, dimmed\
+  [RouteStopItem tier-1]         \uc0\u8592  your pickup, highlighted\
+  [RouteStopItem tier-1]         \uc0\u8592  your drop, highlighted\
+  [RouteStopItem tier-2]         \uc0\u8592  after you, neutral\
+[PassengerRow \'d7 n]               \uc0\u8592  who you're sharing with\
+[TripMetaRow]                    \uc0\u8592  confirming details\
+[PrimaryButton] [DestructiveButton] \uc0\u8592  actions\
+```\
+\
+Information flows from highest anxiety (fare) to lowest (metadata).\
+A user scanning top to bottom gets answers in order of importance.\
+\
+**Key decisions you can explain:**\
+\
+1. Why tier sizes differ (12px / 10px / 8px) \'97 not just color\
+2. Why co-rider fares use secondary color not accent\
+3. Why the current user is NOT in the passenger list\
+4. Why detour is never shown without savings context\
+5. Why TripMetaRow has no translateY on entrance\
+\
+**Part 5 is the final part:**\
+CancelModal \'b7 SkeletonBlock \'b7 AnimatedRouteLine\
+\
+These three are the most technically interesting components in the system.\
+AnimatedRouteLine is the Waiting screen's core visual.\
+CancelModal is the only true modal in the entire app.\
+SkeletonBlock is the loading system used across Trip screen.\
+\
+Ready when you are.}

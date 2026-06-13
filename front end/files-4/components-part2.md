@@ -1,0 +1,638 @@
+# CarpoolTU Component Specs — Part 2
+## Display Components
+**Token Reference:** theme-tokens.json
+**Rule:** Every value references a token name, never a raw hex.
+
+---
+
+---
+
+# GreetingBlock
+
+## Purpose
+Top of the Home screen. Two jobs:
+1. Make the user feel seen — it knows who they are
+2. Establish the emotional register before they touch the form
+
+This is NOT a hero banner. It is not decorative.
+It is a small, warm acknowledgment that sets the tone.
+Maximum 2 lines. Never more.
+
+## Variants
+- `with-tagline` — greeting line + fixed tagline below
+  This is the only variant. We decided on Option C (fixed tagline).
+
+## Content Rules
+**Greeting line:**
+Format: "Good [morning/afternoon/evening], {firstName}."
+- Before 12pm: "Good morning"
+- 12pm–5pm: "Good afternoon"  
+- After 5pm: "Good evening"
+Use only first name from user object. Never full name.
+Punctuation: period, not exclamation mark.
+Reason: exclamation marks perform enthusiasm. A period feels grounded.
+
+**Tagline line:**
+Fixed string: "Your ride home, shared."
+Never changes. Never personalizes. Part of brand identity.
+
+## States
+Single state only. No interactive states — this is pure display.
+
+## Layout Rules
+- Position: top of Home screen content, above LocationInputCard
+- Bottom margin: `spacing.8` (32px) — generous gap before the form
+- Greeting line font: `typography.display_small` (28px Fraunces 500)
+- Greeting line color: `color.text.primary`
+- Tagline font: `typography.body_large` (16px DM Sans 400)
+- Tagline color: `color.text.secondary`
+- Gap between greeting and tagline: `spacing.2` (8px)
+- Text alignment: left — never centered on desktop
+- No background, no card, no border — pure text on background
+
+## Why Left-Aligned
+Centered text on desktop feels like a landing page.
+Left-aligned text feels like a personal message.
+This is a utility app, not a marketing page.
+
+## Accessibility Rules
+- Greeting wrapped in `<h1>` — it is the page's primary heading
+- Tagline wrapped in `<p>`
+- No `aria` attributes needed beyond semantic HTML
+
+## Animation Rules
+- Entrance: opacity 0→1, translateY(8px)→0
+- Duration: `motion.duration.standard` (300ms)
+- Easing: `motion.easing.decelerate`
+- Fires once on screen mount — not on every render
+
+## Token Usage Summary
+```
+color.text.primary          → greeting line
+color.text.secondary        → tagline
+typography.display_small    → greeting line (28px Fraunces 500)
+typography.body_large       → tagline (16px DM Sans 400)
+spacing.8                   → bottom margin before form
+spacing.2                   → gap between greeting and tagline
+motion.duration.standard    → entrance duration
+motion.easing.decelerate    → entrance easing
+```
+
+---
+
+---
+
+# FareHeroCard
+
+## Purpose
+Lives on the Trip screen. First thing the user sees above the fold.
+Answers the user's biggest anxiety immediately: "How much am I paying?"
+
+This is the most important display component in the entire app.
+If a user has to scroll or search for their fare, the design has failed.
+
+## Variants
+- `loading` — trip data not yet available
+- `loaded` — fare amount known and displayed
+
+## States
+
+**loading**
+- Shows skeleton treatment — no fare amount visible
+- Card structure present, content replaced with shimmer blocks
+
+**loaded — default**
+- Full fare amount displayed
+- No interactive states — this is pure display
+
+## Layout Rules
+
+```
+┌──────────────────────────────────┐
+│  Your fare                       │  ← label
+│  ₹47.40                          │  ← hero amount
+└──────────────────────────────────┘
+```
+
+- Card background: `color.surface.default`
+- Card border: 1px `color.outline.default`
+- Card radius: `radius.lg` (16px)
+- Card padding: `spacing.4` (16px) all sides
+- Card height: 96px fixed
+- Card width: approximately 50% of content column minus half gap
+  (sits side by side with ETA hero card)
+
+- Label text: "Your fare"
+- Label font: `typography.label` (13px DM Sans 500)
+- Label color: `color.text.secondary`
+- Label margin bottom: `spacing.1` (4px)
+
+- Amount text: formatted as "₹{amount}"
+- Amount font: `typography.data_hero` (40px DM Mono 500)
+- Amount color: `color.accent.primary` (#5EBFAD)
+- Amount letter-spacing: -0.02em (tight — large monospace needs this)
+
+## Why Accent Color For Fare
+The fare is the answer to the user's anxiety.
+Accent color = "this is the thing that matters right now."
+Every other number on this screen is `color.text.primary`.
+Only the fare gets accent treatment.
+
+## Formatting Rule
+Input: raw float from API e.g. 47.4
+Display: "₹47.40" — always 2 decimal places
+Use: `₹${fareShare.toFixed(2)}`
+Never: "Rs.", "INR", or any other format — ₹ symbol only
+
+## Loading State Specs
+- Label: skeleton block, 48px wide × 12px height, `color.surface.container`
+- Amount: skeleton block, 100px wide × 36px height, `color.surface.container`
+- Shimmer: `color.surface.elevated` highlight traveling left→right
+- Shimmer duration: `motion.duration.slow` (800ms), infinite linear
+
+## Accessibility Rules
+- Card: `role="region"`, `aria-label="Your fare"`
+- Amount: `aria-label="Fare: ₹{amount}"` — screen reader gets full context
+- Loading state: `aria-busy="true"`, `aria-label="Fare loading"`
+
+## Animation Rules
+- Loading→loaded transition: skeleton fades out (200ms), amount fades in (300ms)
+- Amount entrance uses `motion.easing.decelerate` — settles into place
+- No bounce, no scale — this is financial information, not a celebration element
+  (The SavingsHeroCard on Summary screen is where celebration lives)
+
+## Token Usage Summary
+```
+color.surface.default       → card background
+color.surface.container     → skeleton block color
+color.surface.elevated      → skeleton shimmer highlight
+color.outline.default       → card border
+color.accent.primary        → fare amount color
+color.text.secondary        → label color
+typography.label            → "Your fare" label
+typography.data_hero        → fare amount (40px DM Mono 500)
+radius.lg                   → card border radius
+spacing.4                   → card padding
+spacing.1                   → label-to-amount gap
+motion.duration.slow        → skeleton shimmer
+motion.duration.standard    → loaded transition
+motion.easing.decelerate    → amount entrance
+```
+
+---
+
+---
+
+# SavingsHeroCard
+
+## Purpose
+Lives on the Summary screen. First data element after the completion headline.
+Answers: "Was this worth it compared to going alone?"
+
+Structurally similar to FareHeroCard but emotionally different.
+FareHeroCard answers anxiety. SavingsHeroCard delivers satisfaction.
+This difference drives different visual treatment.
+
+## Variants
+- `with-savings` — both paid and saved amounts shown (standard case)
+- `paid-only` — only fare paid shown (savings could not be computed)
+
+## States
+Single state. Summary screen only renders when trip is COMPLETED
+and all data is present. No loading state needed.
+
+## Layout Rules — `with-savings` variant
+
+```
+┌────────────────────┬───────────────────────┐
+│  You paid          │  You saved            │  ← labels
+│  ₹47.40            │  ₹54.60               │  ← hero amounts
+│                    │  vs travelling alone  │  ← sub-label
+└────────────────────┴───────────────────────┘
+```
+
+- Card background: `color.surface.default`
+- Card border: 1px `color.outline.default`
+- Card radius: `radius.lg` (16px)
+- Card height: 104px fixed
+- Card width: full content column width
+- Internal divider between left and right: 1px `color.outline.subtle`, full card height
+
+**Left cell — "You paid":**
+- Cell background: transparent (inherits card)
+- Label: "You paid", `typography.label`, `color.text.secondary`
+- Amount: `typography.data_hero` (40px DM Mono 500), `color.text.primary`
+
+**Right cell — "You saved":**
+- Cell background: `color.semantic.success_dim` (#4CAF7D18)
+  Subtle green wash — warmth without loudness
+- Label: "You saved", `typography.label`, `color.semantic.success`
+- Amount: `typography.data_hero` (40px DM Mono 500), `color.semantic.success`
+- Sub-label: "vs travelling alone"
+  Font: `typography.caption` (11px DM Sans 400)
+  Color: `color.text.tertiary`
+  Position: below amount, `spacing.1` (4px) gap
+
+**Cell padding:** `spacing.4` (16px) all sides
+**Cell width:** equal split, 50% each
+
+## Layout Rules — `paid-only` variant
+- Single cell, full card width
+- "You paid" label and amount centered in card
+- Used when: soloCost calculation returns negative or undefined
+- No green wash — neutral card treatment
+
+## Savings Calculation
+This calculation happens in the component or in a utility function.
+Never hardcode savings — always compute:
+
+```
+soloDistanceKm = trip.totalDistanceKm × 1.35
+soloCost = soloDistanceKm × 12
+saving = soloCost - trip.fareShare
+```
+
+If saving ≤ 0: render `paid-only` variant.
+If saving > 0: render `with-savings` variant.
+
+The 1.35 is the road correction factor from your OSRM module.
+The 12 is FARE_PER_KM from your fare calculation module.
+These values should come from constants, not be hardcoded here.
+
+## The Savings Number Animation
+This is the ONE numerical animation in the entire app.
+The saved amount counts up from 0 to final value on mount.
+
+Why here and nowhere else:
+The saving number is the emotional payoff of the entire experience.
+A student just completed a shared ride. Seeing ₹54 count up to its final
+value makes the saving feel earned, not just displayed.
+
+Animation spec:
+- Duration: 600ms
+- Easing: ease-out (decelerates as it approaches final value)
+- Start: 0
+- End: computed saving value
+- Format: always show ₹ symbol, always 2 decimal places during count
+- Fires once on component mount
+
+## Accessibility Rules
+- Card: `role="region"`, `aria-label="Trip savings summary"`
+- Savings amount: `aria-label="You saved ₹{amount} compared to travelling alone"`
+- The animation must respect `prefers-reduced-motion`:
+  If reduced motion: show final value immediately, no count animation
+
+## Animation Rules (Full List)
+- Card entrance: opacity 0→1, scale 0.97→1.0
+  Duration: `motion.duration.expressive` (500ms)
+  Easing: `motion.easing.expressive` — subtle spring
+  Fires 100ms after completion headline appears (stagger)
+- Savings counter: 0→final, 600ms, ease-out
+  Fires 200ms after card entrance completes
+- Respects `prefers-reduced-motion` — no animation if user prefers
+
+## Token Usage Summary
+```
+color.surface.default           → card background
+color.surface.container         → left cell (transparent/inherits)
+color.semantic.success_dim      → right cell background wash
+color.outline.default           → card border
+color.outline.subtle            → internal cell divider
+color.text.primary              → paid amount
+color.text.secondary            → "You paid" label
+color.text.tertiary             → "vs travelling alone" sub-label
+color.semantic.success          → "You saved" label + saved amount
+typography.label                → both cell labels
+typography.data_hero            → both amounts (40px DM Mono 500)
+typography.caption              → "vs travelling alone"
+radius.lg                       → card border radius
+spacing.4                       → cell padding
+spacing.1                       → amount-to-sublabel gap
+motion.duration.expressive      → card entrance
+motion.easing.expressive        → card entrance spring
+```
+
+---
+
+---
+
+# StatusBadge
+
+## Purpose
+Small pill that communicates the current lifecycle state.
+Appears in: AppHeader (Trip screen), trip cards, anywhere state needs labeling.
+
+Must be instantly readable. Must not compete with surrounding content.
+Uses color to communicate state — not just text.
+
+## Variants
+One component, five lifecycle states:
+- `PENDING`
+- `MATCHED`
+- `TRIP_ACTIVE`
+- `TRIP_COMPLETED`
+- `CANCELLED`
+
+## States (Interactive)
+StatusBadge has no interactive states. It is display-only.
+
+## Visual Spec Per Variant
+
+**PENDING**
+- Background: `color.state.pending` at 15% opacity
+- Text: `color.state.pending` (#AEAEB2)
+- Label: "PENDING"
+- Meaning: waiting, neutral, system is working
+
+**MATCHED**
+- Background: `color.accent.dim` (#5EBFAD20)
+- Text: `color.accent.primary` (#5EBFAD)
+- Label: "MATCHED"
+- Meaning: positive confirmation, something happened
+
+**TRIP_ACTIVE**
+- Background: `color.semantic.success_dim`
+- Text: `color.semantic.success`
+- Left dot: 6px circle, `color.semantic.success`, pulsing animation
+- Label: "TRIP ACTIVE"
+- Meaning: live, in progress — the dot signals liveness
+
+**TRIP_COMPLETED**
+- Background: `color.semantic.success_dim`
+- Text: `color.semantic.success`
+- Label: "COMPLETED"
+- No dot — completed is static, not live
+- Meaning: done, resolved
+
+**CANCELLED**
+- Background: transparent
+- Border: 1px `color.state.cancelled`
+- Text: `color.state.cancelled` (#6C6C70)
+- Label: "CANCELLED"
+- Meaning: closed, muted — outlined not filled
+  Reason: cancelled should not draw the eye
+
+## Layout Rules
+- Display: inline-flex, vertically centered
+- Height: 24px
+- Padding: `spacing.1` (4px) vertical, `spacing.3` (12px) horizontal
+- Border radius: `radius.full` (9999px) — pill shape
+- Font: `typography.caption` (11px DM Sans 500)
+- Letter spacing: 0.05em — all-caps feel without actually uppercasing
+- Gap between dot and label (TRIP_ACTIVE only): `spacing.1` (4px)
+
+## The Pulsing Dot (TRIP_ACTIVE only)
+- Size: 6px × 6px circle
+- Color: `color.semantic.success`
+- Animation: opacity 1→0.3→1, scale 1→1.3→1
+- Duration: 1800ms infinite
+- Easing: ease-in-out
+- This is the only looping animation outside of the Waiting screen
+- Communicates: this is live, something is happening right now
+- Respects `prefers-reduced-motion`: if reduced motion, dot is static, no pulse
+
+## Accessibility Rules
+- `role="status"` on the badge element
+- `aria-label` includes full state meaning:
+  PENDING → "Ride request pending"
+  MATCHED → "Ride matched"
+  TRIP_ACTIVE → "Trip currently active"
+  TRIP_COMPLETED → "Trip completed"
+  CANCELLED → "Request cancelled"
+- Color alone does not convey state — text label always present
+
+## Animation Rules
+- State change transition: background and text color crossfade
+  Duration: `motion.duration.standard` (300ms)
+  Easing: `motion.easing.standard`
+- TRIP_ACTIVE dot pulse: see above
+
+## Token Usage Summary
+```
+color.state.pending         → PENDING text and background base
+color.accent.primary        → MATCHED text
+color.accent.dim            → MATCHED background
+color.semantic.success      → TRIP_ACTIVE + COMPLETED text and dot
+color.semantic.success_dim  → TRIP_ACTIVE + COMPLETED background
+color.state.cancelled       → CANCELLED text and border
+typography.caption          → badge label text
+radius.full                 → pill shape
+spacing.1                   → vertical padding, dot gap
+spacing.3                   → horizontal padding
+motion.duration.standard    → state change transition
+```
+
+---
+
+---
+
+# ElapsedTimer
+
+## Purpose
+Lives on the Waiting screen. Shows how long the user has been waiting.
+This is the single most important anxiety-reduction element on the Waiting screen.
+
+Why: uncertain wait feels longer than certain wait.
+A timer gives the user something concrete to watch.
+It transforms passive waiting into observable time passing.
+
+## Variants
+Single variant. One job.
+
+## States
+- `counting` — timer is running, ride request is PENDING
+- `stopped` — used briefly during match-found transition
+
+## Layout Rules
+
+```
+Waiting for   2m 14s
+```
+
+- Display: inline-flex, items centered, gap `spacing.2` (8px)
+- "Waiting for" label:
+  Font: `typography.label` (13px DM Sans 500)
+  Color: `color.text.secondary`
+- Time value:
+  Font: `typography.data_large` (24px DM Mono 400)
+  Color: `color.text.primary`
+- The label and value are on the same line
+- No card, no background — text on screen background directly
+- Top margin: `spacing.6` (24px) below the animated route line
+
+## Time Formatting Rules
+Input: elapsed seconds (integer)
+Output format:
+- 0–59s: "{n}s" e.g. "43s"
+- 60s–3599s: "{m}m {s}s" e.g. "2m 14s"
+- 3600s+: should never happen (auto-cancel fires at ~20 cycles × 60s)
+  But if it does: "{h}h {m}m"
+
+The formatting function lives in `utils/time.js` — already exists in your codebase.
+
+## Update Behavior
+- Updates every 1 second via `setInterval` inside the component
+- `createdAt` timestamp comes from `rideRequest.createdAt` (server timestamp)
+- Never use client-side start time — server timestamp prevents drift on refresh
+- Elapsed = `Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000)`
+- Interval clears on component unmount
+
+## Why Server Timestamp Matters
+If user refreshes the page after 3 minutes of waiting:
+- Client-side timer: resets to 0s (wrong — increases anxiety)
+- Server timestamp: shows 3m 12s (correct — continuous experience)
+
+## Stopped State
+During the match-found transition (800ms before Trip screen appears):
+Timer stops updating. Value freezes at last value.
+No visual change — it simply stops incrementing.
+
+## Accessibility Rules
+- `aria-live="polite"` — announces time to screen readers
+- Update frequency for screen readers: every 30 seconds only
+  (Every-second updates would be extremely disruptive to screen readers)
+- Implementation: separate visible timer (updates every second) +
+  hidden `aria-live` element (updates every 30 seconds)
+- `aria-label="Elapsed waiting time: {formatted time}"`
+
+## Animation Rules
+- No animation on the timer itself — digits update instantly
+- Reason: animating individual digit changes adds cognitive load
+  to a component whose job is to reduce cognitive load
+- The surrounding context animates (route line) — timer stays stable
+
+## Token Usage Summary
+```
+color.text.primary          → time value
+color.text.secondary        → "Waiting for" label
+typography.label            → label (13px DM Sans 500)
+typography.data_large       → time value (24px DM Mono 400)
+spacing.2                   → gap between label and value
+spacing.6                   → top margin from route animation
+```
+
+---
+
+---
+
+# RotatingQuote
+
+## Purpose
+Lives on the Waiting screen, below the elapsed timer.
+Provides psychological occupation during the wait.
+Research basis: occupied wait time feels shorter than unoccupied wait time.
+
+Quotes are hardcoded — static array in `quotes.js`.
+No API call. No loading state. Always available.
+
+## Variants
+Single variant.
+
+## Content Rules
+Quotes must:
+- Be short — maximum 12 words
+- Be honest — never promise a match is coming "soon"
+- Be calm — no urgency, no pressure
+- Acknowledge the wait without apologizing for it
+
+Example tone (you will write the actual quotes):
+- "Every shared ride is one less car on the road."
+- "Good things take a moment. This is one of them."
+- "Matching runs every minute. Your ride is being found."
+
+Anti-examples (do not use):
+- "Your driver is on the way!" (implies driver — wrong product)
+- "Almost there!" (false promise)
+- "Hang tight!" (infantilizing)
+
+You will define the final quotes array before implementation.
+The component spec does not depend on their content — only their format.
+
+## Rotation Behavior
+- Changes every 8 seconds
+- Rotation is sequential, not random
+  Reason: random can repeat, sequential never does
+- Array length: minimum 6 quotes recommended
+- After last quote: loops back to first
+
+## States
+- `visible` — current quote showing
+- `transitioning` — between quotes (crossfade in progress)
+
+## Layout Rules
+- Position: below ElapsedTimer, above request summary
+- Top margin: `spacing.5` (20px)
+- Width: full content column
+- Text alignment: center — exception to the left-align rule
+  Reason: quotes are reflective content, not instructional content
+  Centering creates a different reading posture — pause, not scan
+
+- Quote text font: `typography.body_large` (16px DM Sans 400)
+- Quote text color: `color.text.secondary`
+- Font style: italic — signals this is a quote, not system copy
+- Max width: 400px, centered within content column
+  Reason: long lines break the reflective reading quality
+
+## Accessibility Rules
+- `aria-live="polite"` — announces quote changes to screen readers
+- `role="status"` on the container
+- Quote text is the accessible content — no additional aria needed
+- Rotation pauses when: document is hidden (tab not active)
+  Use Page Visibility API to pause interval when hidden
+
+## Animation Rules
+- Quote change: crossfade
+  Outgoing: opacity 1→0, 300ms `motion.easing.accelerate`
+  Incoming: opacity 0→1, 300ms `motion.easing.decelerate`
+  Gap between out and in: 100ms (brief blank moment — like a breath)
+- Total transition: approximately 700ms
+- Rotation timer: resets after each transition completes
+  (8 seconds starts counting after incoming quote is fully visible)
+- Respects `prefers-reduced-motion`: if reduced motion, quotes change
+  instantly with no crossfade — still rotates, just no animation
+
+## Token Usage Summary
+```
+color.text.secondary        → quote text
+typography.body_large       → quote text (16px DM Sans 400)
+spacing.5                   → top margin from ElapsedTimer
+motion.duration.standard    → crossfade duration (300ms)
+motion.easing.accelerate    → outgoing fade
+motion.easing.decelerate    → incoming fade
+```
+
+---
+
+## Part 2 Complete
+
+**6 components specified:**
+GreetingBlock · FareHeroCard · SavingsHeroCard · StatusBadge · ElapsedTimer · RotatingQuote
+
+**Key decisions made in this part you should be able to explain:**
+
+1. Why FareHeroCard uses accent color for the amount
+2. Why SavingsHeroCard has the ONE numerical animation in the app
+3. Why ElapsedTimer uses server timestamp not client-side start time
+4. Why CANCELLED badge is outlined not filled
+5. Why RotatingQuote is center-aligned when everything else is left-aligned
+
+**Before Part 3, one question:**
+
+The PrimaryButton (filled, accent background) appears on:
+- Home screen: "Request Ride"
+- Trip screen: "Complete Trip"
+
+These two buttons have the same visual treatment but different consequences.
+"Request Ride" is easily reversible — user can cancel after.
+"Complete Trip" is NOT reversible — it finalizes the trip for everyone.
+
+Do you want Complete Trip to have any additional friction beyond
+the filled button style? Options:
+- A: No extra friction — single click completes
+- B: Single click → button changes to "Tap again to confirm" → second click confirms
+- C: Opens a small inline confirmation (not a modal) below the button
+
+Your UX doc says modal is only for cascade cancel because that affects other users.
+Trip completion only affects the current user's state.
+
+What feels right?
