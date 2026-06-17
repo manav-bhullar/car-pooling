@@ -57,22 +57,31 @@ const getPinSVG = (color) => encodeURIComponent(`
 </svg>
 `);
 
-const getMarkerIcon = (type) => {
+const getMarkerIcon = (type, isMyStop = true) => {
   // M3 Expressive Baseline colors: Azure Blue for Pickup, Crimson Red for Dropoff
-  const color = type === 'PICKUP' ? '#0A56D1' : '#B3261E'; 
+  let color = type === 'PICKUP' ? '#0A56D1' : '#B3261E'; 
+  let scale = 1;
+
+  if (!isMyStop) {
+    color = '#9E9E9E'; // Material Grey 500 for other passengers' stops
+    scale = 0.75;
+  }
+  
+  const width = 28 * scale;
+  const height = 42 * scale;
   
   return L.icon({
     iconUrl: `data:image/svg+xml;utf8,${getPinSVG(color)}`,
-    iconSize: [28, 42],
-    iconAnchor: [14, 42],
-    popupAnchor: [0, -42],
+    iconSize: [width, height],
+    iconAnchor: [width / 2, height],
+    popupAnchor: [0, -height],
     shadowUrl: markerShadow,
-    shadowSize: [41, 41],
-    shadowAnchor: [13, 41]
+    shadowSize: [41 * scale, 41 * scale],
+    shadowAnchor: [13 * scale, 41 * scale]
   });
 };
 
-export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter }) {
+export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, myRideRequestId }) {
   const sortedStops = useMemo(() => (
     (stops || [])
       .slice()
@@ -96,13 +105,19 @@ export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter })
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {sortedStops.map((s) => (
-          <Marker key={s.stopOrder} position={[s.lat, s.lng]} icon={getMarkerIcon(s.type)}>
-            <Popup>
-              {s.type === 'PICKUP' ? `Pickup (stop ${s.stopOrder})` : `Dropoff (stop ${s.stopOrder})`}
-            </Popup>
-          </Marker>
-        ))}
+        {sortedStops.map((s) => {
+          const isMyStop = myRideRequestId ? s.rideRequestId === myRideRequestId : true;
+          return (
+            <Marker key={s.stopOrder} position={[s.lat, s.lng]} icon={getMarkerIcon(s.type, isMyStop)}>
+              <Popup>
+                {isMyStop 
+                  ? (s.type === 'PICKUP' ? `Your Pickup` : `Your Dropoff`)
+                  : (s.type === 'PICKUP' ? `Co-rider Pickup` : `Co-rider Dropoff`)
+                } (Stop {s.stopOrder})
+              </Popup>
+            </Marker>
+          );
+        })}
 
         <Polyline positions={positions} pathOptions={{ color: '#000000', weight: 4, dashArray: '10, 10' }} />
 

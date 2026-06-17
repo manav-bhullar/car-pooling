@@ -64,6 +64,14 @@ export default function TripScreen() {
   const trip = state.trip;
   const me = (trip.passengers || []).find(p => p.userId === state.userId) || {};
   
+  const displayDistance = typeof me.distanceKm === 'number' && me.distanceKm > 0
+    ? me.distanceKm
+    : trip.totalDistanceKm;
+
+  const displayEtaMinutes = typeof me.etaMinutes === 'number' && me.etaMinutes >= 0
+    ? me.etaMinutes
+    : trip.estimatedEtaMinutes;
+
   // Status chip styles based on M3 Expressive states
   let statusClass = "trip-status-chip--pending";
   if (trip.status === "ACTIVE") statusClass = "trip-status-chip--active";
@@ -73,7 +81,7 @@ export default function TripScreen() {
     <div className="trip-screen-expressive">
       {/* Top 55% Full-Bleed Map */}
       <div className="trip-map-container">
-        <TripMap stops={trip.stops} />
+        <TripMap stops={trip.stops} myRideRequestId={me.rideRequestId} />
       </div>
 
       {/* Persistent Bottom Sheet */}
@@ -90,13 +98,13 @@ export default function TripScreen() {
           </div>
 
           <div className="trip-eta-block">
-            <span className="trip-eta-value">{trip.estimatedEtaMinutes}</span>
+            <span className="trip-eta-value">{displayEtaMinutes}</span>
             <span className="trip-eta-label">min</span>
           </div>
 
           <div className="trip-driver-card glass-card">
             <h3>Your Fare: ${me.fareShare?.toFixed(2)}</h3>
-            <p>Total Distance: {trip.totalDistanceKm?.toFixed(2)} km</p>
+            <p>Total Distance: {displayDistance?.toFixed(2)} km</p>
           </div>
 
           <div className="trip-passengers">
