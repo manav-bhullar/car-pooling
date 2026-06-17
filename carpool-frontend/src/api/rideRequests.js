@@ -1,86 +1,45 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
+import { apiClient } from './apiClient';
 
-function getHeaders(userId) {
-  return {
-    'Content-Type': 'application/json',
-    'x-user-id': userId,
-  };
-}
+// Note: userId is kept in the signature for backward compatibility with calling components,
+// but it is no longer used for headers. The backend extracts it from the JWT access token.
 
 export async function createRideRequest(userId, data) {
-  const res = await fetch(`${BASE_URL}/ride-requests`, {
+  const res = await apiClient.fetch(`/ride-requests`, {
     method: 'POST',
-    headers: getHeaders(userId),
     body: JSON.stringify(data),
   });
 
   const json = await res.json();
-
-  if (!json.success) {
-    throw {
-      status: res.status,
-      message: json.error?.message || 'Create failed',
-    };
-  }
-
+  if (!json.success) throw { status: res.status, message: json.error?.message || 'Create failed' };
   return json.data;
 }
 
 export async function getRideRequests(userId, status = null) {
   const url = status
-    ? `${BASE_URL}/ride-requests?status=${status}`
-    : `${BASE_URL}/ride-requests`;
+    ? `/ride-requests?status=${status}`
+    : `/ride-requests`;
 
-  const res = await fetch(url, {
-    headers: getHeaders(userId),
-  });
+  const res = await apiClient.fetch(url);
 
   const json = await res.json();
-
-  if (!json.success) {
-    throw {
-      status: res.status,
-      message: json.error?.message || 'Fetch failed',
-    };
-  }
-
+  if (!json.success) throw { status: res.status, message: json.error?.message || 'Fetch failed' };
   return json.data;
 }
 
 export async function getCurrentRideRequest(userId) {
-  const res = await fetch(`${BASE_URL}/ride-requests/current`, {
-    headers: getHeaders(userId),
-  });
+  const res = await apiClient.fetch(`/ride-requests/current`);
 
   const json = await res.json();
-
-  if (!json.success) {
-    throw {
-      status: res.status,
-      message: json.error?.message || 'Fetch failed',
-    };
-  }
-
+  if (!json.success) throw { status: res.status, message: json.error?.message || 'Fetch failed' };
   return json.data;
 }
 
 export async function cancelRideRequest(userId, rideRequestId) {
-  const res = await fetch(
-    `${BASE_URL}/ride-requests/${rideRequestId}/cancel`,
-    {
-      method: 'POST',
-      headers: getHeaders(userId),
-    }
-  );
+  const res = await apiClient.fetch(`/ride-requests/${rideRequestId}/cancel`, {
+    method: 'POST',
+  });
 
   const json = await res.json();
-
-  if (!json.success) {
-    throw {
-      status: res.status,
-      message: json.error?.message || 'Cancel failed',
-    };
-  }
-
+  if (!json.success) throw { status: res.status, message: json.error?.message || 'Cancel failed' };
   return json.data;
 }

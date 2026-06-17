@@ -1,23 +1,28 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useApp } from './context/AppContext';
+import { useAuth } from './context/AuthContext';
 import { getRouteForUiState, isRouteValidForUiState, ROUTES } from './utils/routeUtils';
 
 export default function ProtectedRoute({ children }) {
   const { state } = useApp();
+  const { isAuthenticated, isVerified, loading: authLoading } = useAuth();
   const location = useLocation();
   const pathname = location.pathname;
 
-  if (state.loading.init) {
+  if (state.loading.init || authLoading) {
     return null;
   }
 
-  const userId = (state.user && state.user.id) || state.userId;
-
-  if (!userId) {
-    if (pathname === ROUTES.ROOT || pathname === ROUTES.ADMIN) {
+  if (!isAuthenticated) {
+    if (pathname === ROUTES.ADMIN) {
       return children;
     }
-    return <Navigate to={ROUTES.ROOT} replace />;
+    // Save intended destination
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (!isVerified) {
+    return <Navigate to="/verify-email" replace />;
   }
 
   if (isRouteValidForUiState(pathname, state)) {

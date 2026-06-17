@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { completeTrip } from '../api/trips';
 import { cancelRideRequest } from '../api/rideRequests';
 import TripMap from '../components/TripMap';
@@ -9,13 +10,14 @@ import './TripScreen.css';
 
 export default function TripScreen() {
   const { state, dispatch } = useApp();
+  const { user } = useAuth();
   const [showCancelModal, setShowCancelModal] = useState(false);
 
   async function handleComplete() {
     if (!window.confirm('Completing this trip will finalize it for all riders. Are you sure?')) return;
 
     try {
-      const data = await completeTrip(state.userId, state.trip.id);
+      const data = await completeTrip(user?.id, state.trip.id);
       const updatedTrip = { ...state.trip, ...data, status: 'COMPLETED' };
       dispatch({ type: 'SET_TRIP', payload: updatedTrip });
       dispatch({ type: 'SET_UI_STATE', payload: 'TRIP_COMPLETED' });
@@ -36,7 +38,7 @@ export default function TripScreen() {
 
   async function confirmCancel() {
     try {
-      await cancelRideRequest(state.userId, state.rideRequest?.id || state.trip?.rideRequestId);
+      await cancelRideRequest(user?.id, state.rideRequest?.id || state.trip?.rideRequestId);
       dispatch({ type: 'RESET' });
       dispatch({
         type: 'SET_NOTIFICATION',
@@ -62,7 +64,7 @@ export default function TripScreen() {
   }
 
   const trip = state.trip;
-  const me = (trip.passengers || []).find(p => p.userId === state.userId) || {};
+  const me = (trip.passengers || []).find(p => p.userId === user?.id) || {};
   
   const displayDistance = typeof me.distanceKm === 'number' && me.distanceKm > 0
     ? me.distanceKm
@@ -109,7 +111,7 @@ export default function TripScreen() {
 
           <div className="trip-passengers">
             <h3>Co-riders</h3>
-            <PassengerList passengers={trip.passengers} currentUserId={state.userId} />
+            <PassengerList passengers={trip.passengers} currentUserId={user?.id} />
           </div>
 
           <div className="trip-actions-row">

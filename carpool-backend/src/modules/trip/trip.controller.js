@@ -61,10 +61,7 @@ function serializeTrip(trip, userId) {
  */
 exports.getTrips = async (req, res) => {
 	try {
-		const userId = req.headers['x-user-id'];
-		if (!userId) {
-			return error(res, 'Missing x-user-id header', 400);
-		}
+		const userId = req.userId;
 
 		const trips = await prisma.trip.findMany({
 			where: {
@@ -109,11 +106,8 @@ exports.getTrips = async (req, res) => {
  */
 exports.getTripById = async (req, res) => {
 	try {
-		const userId = req.headers['x-user-id'];
+		const userId = req.userId;
 		const { id } = req.params;
-		if (!userId) {
-			return error(res, 'Missing x-user-id header', 400);
-		}
 		if (!id) {
 			return error(res, 'Missing trip id', 400);
 		}
@@ -133,10 +127,7 @@ exports.getTripById = async (req, res) => {
 
 exports.getCurrent = async (req, res) => {
 	try {
-		const userId = req.headers['x-user-id'];
-		if (!userId) {
-			return error(res, 'Missing x-user-id header', 400);
-		}
+		const userId = req.userId;
 
 		const trip = await service.getCurrentTrip(userId);
 		if (!trip) {
@@ -153,11 +144,8 @@ exports.getCurrent = async (req, res) => {
 
 exports.completeTrip = async (req, res) => {
 	try {
-		const userId = req.headers['x-user-id'];
+		const userId = req.userId;
 		const { id } = req.params;
-		if (!userId) {
-			return error(res, 'Missing x-user-id header', 400);
-		}
 		if (!id) {
 			return error(res, 'Missing trip id', 400);
 		}

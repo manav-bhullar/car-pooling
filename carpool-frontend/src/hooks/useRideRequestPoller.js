@@ -1,14 +1,16 @@
 import { useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { getCurrentRideRequest } from '../api/rideRequests';
 import { getCurrentTrip } from '../api/trips';
 
 // Poll ride requests only when UI lifecycle is PENDING or MATCHED.
 export function useRideRequestPoller() {
   const { state, dispatch } = useApp();
+  const { user } = useAuth();
   const intervalRef = useRef(null);
 
-  const userId = (state.user && state.user.id) || state.userId;
+  const userId = user?.id;
   const uiState = state.uiState;
 
   useEffect(() => {

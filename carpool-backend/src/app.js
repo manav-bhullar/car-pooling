@@ -1,16 +1,25 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const rideRequestRoutes = require('./modules/rideRequest/rideRequest.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const tripRoutes = require('./modules/trip/trip.routes');
+const authRoutes = require('./modules/auth/auth.routes');
+const { authenticate } = require('./middleware/auth.middleware');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
+}));
 app.use(express.json());
+app.use(cookieParser());
 
-app.use('/api/ride-requests', rideRequestRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/trips', tripRoutes);
+app.use('/api/auth', authRoutes);
+
+app.use('/api/ride-requests', authenticate, rideRequestRoutes);
+app.use('/api/admin', authenticate, adminRoutes);
+app.use('/api/trips', authenticate, tripRoutes);
 
 module.exports = app;

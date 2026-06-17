@@ -1,4 +1,5 @@
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import TripCard from '../components/TripCard';
 import { formatTime } from '../utils/time';
 import './SummaryScreen.css';
@@ -23,6 +24,7 @@ function Confetti() {
 
 export default function SummaryScreen() {
   const { state, dispatch } = useApp();
+  const { user } = useAuth();
 
   function handleGoHome() {
     dispatch({ type: 'RESET' });
@@ -55,7 +57,7 @@ export default function SummaryScreen() {
           {state.trip && (
             <TripCard
               trip={state.trip}
-              currentUserId={state.userId}
+              currentUserId={user?.id}
             />
           )}
         </div>

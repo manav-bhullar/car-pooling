@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import RideRequestForm from '../components/RideRequestForm';
 import TripMap from '../components/TripMap';
 import 'leaflet/dist/leaflet.css';
@@ -7,6 +8,7 @@ import './HomeScreen.css';
 
 export default function HomeScreen() {
   const { state } = useApp();
+  const { user } = useAuth();
   const [activeStop, setActiveStop] = useState([]);
 
   // University coordinates as default wallpaper center
@@ -46,7 +48,7 @@ export default function HomeScreen() {
       {/* Foreground Content */}
       <div className="home-content-layer">
         <div className="home-glass-card glass-card">
-          <h1 className="home-headline">Where to next, {state.userName}?</h1>
+          <h1 className="home-headline">Where to next, {user?.name}?</h1>
           <RideRequestForm onLocationSelect={handleLocationSelect} />
         </div>
       </div>

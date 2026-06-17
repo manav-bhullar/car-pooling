@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from './context/AppContext';
+import { useAuth } from './context/AuthContext';
 import { useAppInit } from './hooks/useAppInit';
 import { useRideRequestPoller } from './hooks/useRideRequestPoller';
 import { useTripPoller } from './hooks/useTripPoller';
@@ -8,7 +9,9 @@ import { getCurrentTrip } from './api/trips';
 import { getRouteForUiState } from './utils/routeUtils';
 import ProtectedRoute from './ProtectedRoute';
 
-import UserSelectorScreen from './pages/UserSelectorScreen';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import HomeScreen from './pages/HomeScreen';
 import WaitingScreen from './pages/WaitingScreen';
 import TripScreen from './pages/TripScreen';
@@ -19,14 +22,16 @@ import LoadingState from './components/LoadingState';
 
 export default function App() {
   const { state, dispatch } = useApp();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useAppInit();
   useRideRequestPoller();
   useTripPoller();
 
-  const userId = (state.user && state.user.id) || state.userId;
-  const targetRoute = userId ? getRouteForUiState(state.uiState, state.trip?.id) : '/';
+  const userId = user?.id;
+  const targetRoute = userId ? getRouteForUiState(state.uiState, state.trip?.id) : null;
 
   useEffect(() => {
     if (!userId) return;
@@ -50,13 +55,17 @@ export default function App() {
     if (!userId) return;
     if (state.loading.init) return;
 
-    if (targetRoute) {
+    // Don't auto-redirect if we're on login, register, or verify-email
+    const authRoutes = ['/login', '/register', '/verify-email'];
+    if (authRoutes.includes(location.pathname)) return;
+
+    if (targetRoute && location.pathname !== targetRoute) {
       navigate(targetRoute, { replace: true });
     }
-  }, [userId, state.loading.init, state.uiState, state.trip?.id, targetRoute, navigate]);
+  }, [userId, state.loading.init, state.uiState, state.trip?.id, targetRoute, navigate, location.pathname]);
 
   // Initial loading / hydration
-  if (state.loading.init) {
+  if (authLoading || state.loading.init) {
     return <LoadingState message="Loading your session..." />;
   }
 
@@ -65,14 +74,10 @@ export default function App() {
       <StatusBanner />
 
       <Routes>
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <UserSelectorScreen />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/" element={<Navigate to="/home" replace />} />
         <Route
           path="/home"
           element={

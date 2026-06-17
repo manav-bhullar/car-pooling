@@ -1,34 +1,37 @@
 import { useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { getCurrentRideRequest } from '../api/rideRequests';
 import { getCurrentTrip } from '../api/trips';
 
 export function useAppInit() {
   const { state, dispatch } = useApp();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    const userId = (state.user && state.user.id) || state.userId;
+    // Don't initialize app state until auth is resolved
+    if (authLoading) return;
 
-    // If there is no user, we still need to complete initialization so
-    // the app can show the user selector instead of remaining stuck on loading.
-    if (!userId && state.loading.init) {
-      dispatch({ type: 'INIT_COMPLETE', payload: { rideRequest: null, trip: null } });
+    // If there is no authenticated user, complete initialization immediately
+    if (!isAuthenticated) {
+      if (state.loading.init) {
+        dispatch({ type: 'INIT_COMPLETE', payload: { rideRequest: null, trip: null } });
+      }
       return;
     }
 
     // Only run while init flag is true
     if (!state.loading.init) return;
 
-    if (!userId) return;
-
     let mounted = true;
 
     async function init() {
       try {
         // Fetch only the current lifecycle state from backend
+        // Note: userId is no longer needed in the request body/headers since it's in the JWT
         const [rideRequest, trip] = await Promise.all([
-          getCurrentRideRequest(userId),
-          getCurrentTrip(userId),
+          getCurrentRideRequest(user.id),
+          getCurrentTrip(user.id),
         ]);
 
         if (!mounted) return;
@@ -52,7 +55,9 @@ export function useAppInit() {
       mounted = false;
     };
   }, [
-    (state.user && state.user.id) || state.userId,
+    isAuthenticated,
+    authLoading,
+    user?.id,
     state.loading.init,
     dispatch,
   ]);

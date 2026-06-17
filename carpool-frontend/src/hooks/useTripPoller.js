@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { getCurrentTrip } from '../api/trips';
 
 // Poll trips only when UI lifecycle is TRIP_ACTIVE.
 export function useTripPoller() {
   const { state, dispatch } = useApp();
+  const { user } = useAuth();
   const intervalRef = useRef(null);
 
-  const userId = (state.user && state.user.id) || state.userId;
+  const userId = user?.id;
   const uiState = state.uiState;
 
   useEffect(() => {

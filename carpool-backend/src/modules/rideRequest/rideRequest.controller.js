@@ -8,7 +8,7 @@ exports.create = async(req, res) =>{
         if(validationError){
             return error(res, validationError);
         }
-        const userId = req.headers['x-user-id'];
+        const userId = req.userId;
 
         const result = await service.createRideRequest(userId, req.body);
         return success(res, result, 201);
@@ -20,7 +20,7 @@ exports.create = async(req, res) =>{
 
 exports.getAll = async(req,res) =>{
     try{
-        const userId = req.headers['x-user-id'];
+        const userId = req.userId;
         const {status} = req.query;
 
         const data = await service.getRideRequests(userId, status);
@@ -34,10 +34,7 @@ exports.getAll = async(req,res) =>{
 
 exports.getCurrent = async(req,res) => {
     try {
-        const userId = req.headers['x-user-id'];
-        if (!userId) {
-            return error(res, 'Missing x-user-id header', 400);
-        }
+        const userId = req.userId;
 
         const data = await service.getCurrentRideRequest(userId);
         return success(res, data);
@@ -49,7 +46,7 @@ exports.getCurrent = async(req,res) => {
 
 exports.cancel = async(req, res) => {
     try{
-        const userId = req.headers['x-user-id'];
+        const userId = req.userId;
         const {id} = req.params;
 
         const data = await service.cancelRideRequest(id, userId);
