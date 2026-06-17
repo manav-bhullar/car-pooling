@@ -19,6 +19,7 @@ import SummaryScreen from './pages/SummaryScreen';
 
 import StatusBanner from './components/StatusBanner';
 import LoadingState from './components/LoadingState';
+import TopNav from './components/TopNav';
 
 export default function App() {
   const { state, dispatch } = useApp();
@@ -72,6 +73,7 @@ export default function App() {
   return (
     <>
       <StatusBanner />
+      <TopNav />
 
       <Routes>
         <Route path="/login" element={<LoginPage />} />

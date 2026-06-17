@@ -184,6 +184,41 @@
    background: var(--color-md-surface-container);
 }
 
+/* Custom Datetime Expressive Styles */
+.md3-input-group.datetime-input-group {
+   position: relative;
+}
+
+.md3-input.datetime-expressive {
+   padding-right: 48px;
+   font-family: inherit;
+}
+
+/* Hide default calendar icon but stretch its click target over the custom icon */
+.md3-input.datetime-expressive::-webkit-calendar-picker-indicator {
+   position: absolute;
+   right: 0;
+   bottom: 0;
+   width: 56px; /* give it a good width to be clickable */
+   height: 56px;
+   opacity: 0;
+   cursor: pointer;
+   z-index: 2;
+}
+
+.datetime-icon {
+   position: absolute;
+   right: 16px;
+   bottom: 28px;
+   transform: translateY(50%);
+   color: var(--color-md-primary);
+   pointer-events: none;
+   z-index: 1;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
 
 /* ============================================================
    MODALS / DIALOGS

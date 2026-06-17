@@ -51,11 +51,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="auth-screen">
+    <div className="auth-screen-expressive">
       <div className="blur-shape auth-blur-1"></div>
       <div className="blur-shape auth-blur-2"></div>
       
-      <div className="auth-card glass-card">
+      <div className="auth-content-layer">
+        <div className="auth-card glass-card">
         <div className="auth-header">
           <h1>Create Account</h1>
           <p>Join our carpool community</p>
@@ -131,6 +132,7 @@ export default function RegisterPage() {
 
         <div className="auth-footer">
           <p>Already have an account? <Link to="/login">Sign in</Link></p>
+        </div>
         </div>
       </div>
     </div>
