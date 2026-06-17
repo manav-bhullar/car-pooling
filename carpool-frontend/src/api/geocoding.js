@@ -42,3 +42,38 @@ export async function searchLocation(query) {
     lng: parseFloat(item.lon),
   }));
 }
+
+/**
+ * Reverse geocode a latitude and longitude using Nominatim.
+ * Returns { displayName, lat, lng } or null.
+ */
+export async function reverseGeocode(lat, lng) {
+  const params = new URLSearchParams({
+    lat,
+    lon: lng,
+    format: 'json',
+  });
+
+  const url = `https://nominatim.openstreetmap.org/reverse?${params}`;
+
+  const res = await fetch(url, {
+    headers: {
+      'Accept-Language': 'en',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error('Reverse geocoding failed');
+  }
+
+  const data = await res.json();
+  
+  if (data && data.display_name) {
+    return {
+      displayName: data.display_name,
+      lat: parseFloat(data.lat),
+      lng: parseFloat(data.lon)
+    };
+  }
+  return null;
+}
