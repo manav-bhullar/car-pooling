@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { cancelRideRequest } from '../api/rideRequests';
 import { getElapsedSeconds, formatElapsed } from '../utils/time';
@@ -48,12 +48,18 @@ export default function WaitingScreen() {
     { stopOrder: 2, type: 'DROPOFF', lat: rideRequest.dropLat, lng: rideRequest.dropLng }
   ];
 
+  // Shift the map's visual center to the right and zoom out slightly by increasing padding
+  const fitBoundsOptions = React.useMemo(() => ({
+    paddingTopLeft: window.innerWidth >= 768 ? [600, 150] : [100, 100],
+    paddingBottomRight: [100, 150]
+  }), []);
+
   return (
     <div className={`waiting-screen-expressive ${isMatched ? 'is-matched' : ''}`}>
-      
+
       {/* Map as Wallpaper */}
       <div className="waiting-map-layer">
-        <TripMap stops={stops} />
+        <TripMap stops={stops} fitBoundsOptions={fitBoundsOptions} />
       </div>
 
       {/* Atmospheric Blur Shapes */}
@@ -63,7 +69,7 @@ export default function WaitingScreen() {
       {/* Foreground Content */}
       <div className="waiting-content-layer">
         <div className="waiting-glass-card glass-card">
-          
+
           <h1 className="waiting-primary-msg">
             {isMatched ? 'Match found!' : 'Finding your ride...'}
           </h1>
@@ -88,8 +94,8 @@ export default function WaitingScreen() {
           {/* Cancel Action */}
           <div className="waiting-cancel-zone">
             {!showCancelConfirm ? (
-              <button 
-                className="btn btn-outlined btn-danger" 
+              <button
+                className="btn btn-outlined btn-danger"
                 onClick={() => setShowCancelConfirm(true)}
                 disabled={isMatched || cancelling}
               >

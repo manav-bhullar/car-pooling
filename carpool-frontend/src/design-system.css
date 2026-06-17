@@ -5,32 +5,35 @@
 
 :root {
    /* ==========================================================
-     M3 EXPRESSIVE COLORS (Purple Seed: #6750A4)
+     M3 EXPRESSIVE COLORS (Google Design Light Theme)
      ========================================================== */
-   --color-md-primary:              #6750A4;
-   --color-md-on-primary:           #FFFFFF;
-   --color-md-primary-container:    #EADDFF;
-   --color-md-on-primary-container: #21005D;
+   --color-md-primary:              #fae366; /* Glimmer yellow */
+   --color-md-on-primary:           #000000; /* Ink black */
+   --color-md-primary-container:    #fff3a6; /* Light glimmer */
+   --color-md-on-primary-container: #000000;
 
-   --color-md-secondary:            #625B71;
-   --color-md-secondary-container:  #E8DEF8;
-   --color-md-on-secondary-container: #1D192B;
+   --color-md-secondary:            #000000;
+   --color-md-secondary-container:  #e0e0e0;
+   --color-md-on-secondary-container: #000000;
 
-   --color-md-tertiary:             #7D5260;
-   --color-md-tertiary-container:   #FFD8E4;
-   --color-md-on-tertiary-container:#31111D;
+   --color-md-tertiary:             #32302a;
+   --color-md-tertiary-container:   #fae366;
+   --color-md-on-tertiary-container:#000000;
 
-   --color-md-surface:              #FFFBFE;
-   --color-md-surface-container:    #F3EDF7;
-   --color-md-surface-container-low:#E7E0EC;
-   --color-md-on-surface:           #1C1B1F;
-   --color-md-on-surface-variant:   #49454F;
-   --color-md-outline:              #79747E;
+   --color-md-surface:              #ffffff; /* Pure white */
+   --color-md-surface-container:    #f5f5f5; /* Light gray */
+   --color-md-surface-container-low:#fafafa; /* Input backgrounds */
+   --color-md-surface-container-high:#ebebeb; /* Modals */
+   --color-md-surface-container-highest:#e0e0e0; /* Hover states */
+   
+   --color-md-on-surface:           #000000;
+   --color-md-on-surface-variant:   #555555;
+   --color-md-outline:              #cccccc;
 
    /* Expressive additions — tonal fills for status states */
-   --color-md-express-ride-active:  #D0BCFF;  /* Seat confirmed — primary container tint */
-   --color-md-express-ride-pending: #FFD8E4;  /* Awaiting driver — tertiary container */
-   --color-md-express-ride-done:    #CCEFCC;  /* Trip complete — custom success tint */
+   --color-md-express-ride-active:  #fae366;  /* Seat confirmed */
+   --color-md-express-ride-pending: #f5f5f5;  /* Awaiting driver */
+   --color-md-express-ride-done:    #5CC899;  /* Trip complete */
 
    /* ==========================================================
      TYPOGRAPHY (Roboto + M3 Scale)
@@ -136,10 +139,10 @@ body {
 }
 
 .glass-card {
-   background: rgba(243, 237, 247, 0.90); /* bg-surface-container/90 */
+   background: rgba(255, 255, 255, 0.85); /* Light surface-container with opacity */
    backdrop-filter: blur(12px);
    -webkit-backdrop-filter: blur(12px);
-   border: 1px solid rgba(255, 255, 255, 0.4);
+   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .blur-shape {

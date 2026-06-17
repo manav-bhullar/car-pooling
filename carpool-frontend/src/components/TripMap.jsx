@@ -15,7 +15,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-function FitBounds({ positions }) {
+function FitBounds({ positions, fitBoundsOptions }) {
   const map = useMap();
 
   useEffect(() => {
@@ -25,13 +25,13 @@ function FitBounds({ positions }) {
       return;
     }
     const bounds = positions.map((p) => [p[0], p[1]]);
-    map.fitBounds(bounds, { padding: [40, 40] });
-  }, [map, positions]);
+    map.fitBounds(bounds, fitBoundsOptions || { padding: [40, 40] });
+  }, [map, positions, fitBoundsOptions]);
 
   return null;
 }
 
-export default function TripMap({ stops = [] }) {
+export default function TripMap({ stops = [], fitBoundsOptions }) {
   const sortedStops = useMemo(() => (
     (stops || [])
       .slice()
@@ -65,7 +65,7 @@ export default function TripMap({ stops = [] }) {
 
         <Polyline positions={positions} pathOptions={{ color: '#1976d2', weight: 4 }} />
 
-        <FitBounds positions={positions} />
+        <FitBounds positions={positions} fitBoundsOptions={fitBoundsOptions} />
       </MapContainer>
     </div>
   );
