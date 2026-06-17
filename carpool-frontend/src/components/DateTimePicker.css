@@ -1,0 +1,161 @@
+.dt-backdrop {
+  z-index: 2000; /* Ensure it's above everything */
+}
+
+.expressive-calendar-modal {
+  padding: 24px;
+  max-width: 340px;
+  background: var(--color-md-surface-container-high);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-elevation-3);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  user-select: none;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.calendar-header h3 {
+  margin: 0;
+  font: var(--type-title-large);
+  color: var(--color-md-on-surface);
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  color: var(--color-md-on-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--duration-short);
+}
+
+.icon-btn:hover {
+  background: var(--color-md-surface-container-highest);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+
+.days-of-week {
+  font: var(--type-label-medium);
+  color: var(--color-md-on-surface-variant);
+  margin-bottom: 8px;
+}
+
+.calendar-day {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: var(--type-body-large);
+  color: var(--color-md-on-surface);
+  margin: 0 auto;
+  transition: background var(--duration-short), color var(--duration-short);
+}
+
+.calendar-day:not(.empty):hover {
+  background: var(--color-md-surface-container-highest);
+}
+
+.calendar-day.today {
+  border: 1px solid var(--color-md-primary);
+  color: var(--color-md-primary);
+}
+
+.calendar-day.selected {
+  background: var(--color-md-primary);
+  color: var(--color-md-on-primary);
+}
+
+.calendar-day.empty {
+  cursor: default;
+}
+
+.time-picker-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-md-surface-container);
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  margin-top: 8px;
+}
+
+.time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.time-input-wrap {
+  background: var(--color-md-surface-container-highest);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+}
+
+.time-input {
+  width: 48px;
+  background: transparent;
+  border: none;
+  font: var(--type-headline-medium);
+  color: var(--color-md-on-surface);
+  text-align: center;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.time-input::-webkit-outer-spin-button,
+.time-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.time-colon {
+  font: var(--type-headline-medium);
+  color: var(--color-md-on-surface);
+}
+
+.ampm-toggle {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-md-surface-container-highest);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--color-md-outline);
+}
+
+.ampm-btn {
+  background: transparent;
+  border: none;
+  padding: 6px 12px;
+  font: var(--type-label-medium);
+  color: var(--color-md-on-surface-variant);
+  cursor: pointer;
+  transition: background var(--duration-short);
+}
+
+.ampm-btn.active {
+  background: var(--color-md-tertiary-container);
+  color: var(--color-md-on-tertiary-container);
+  font-weight: 600;
+}

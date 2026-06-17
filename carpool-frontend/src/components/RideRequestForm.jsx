@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { createRideRequest, getRideRequests } from '../api/rideRequests';
 import { searchLocation, reverseGeocode } from '../api/geocoding';
+import DateTimePickerModal from './DateTimePickerModal';
 
 function LocationInput({ label, value, onSelect, allowCurrentLocation }) {
   const [query, setQuery] = useState(value?.displayName || '');
@@ -193,6 +194,21 @@ export default function RideRequestForm({ onLocationSelect }) {
   const [preferredTime, setPreferredTime] = useState(getDefaultTime());
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isDatePickerOpen, setDatePickerOpen] = useState(false);
+
+  const formatDisplayTime = (isoString) => {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric', 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      hour12: true 
+    });
+  };
 
   const handlePickupSelect = (loc) => {
     setPickup(loc);
@@ -288,18 +304,30 @@ export default function RideRequestForm({ onLocationSelect }) {
 
       <div className="md3-input-group datetime-input-group">
         <label className="md3-label">Preferred Time</label>
-        <input
+        <button
+          type="button"
           className="md3-input datetime-expressive"
-          type="datetime-local"
-          value={preferredTime}
-          onChange={e => setPreferredTime(e.target.value)}
-        />
+          onClick={() => setDatePickerOpen(true)}
+          style={{ textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+        >
+          {formatDisplayTime(preferredTime)}
+        </button>
         <div className="datetime-icon">
           <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
             <path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm-40-120 200-200-56-56-144 144v-208h-80v240l80 80Z"/>
           </svg>
         </div>
       </div>
+
+      <DateTimePickerModal 
+        isOpen={isDatePickerOpen} 
+        onClose={() => setDatePickerOpen(false)}
+        initialDate={preferredTime}
+        onConfirm={(newTime) => {
+          setPreferredTime(newTime);
+          setDatePickerOpen(false);
+        }}
+      />
 
       {error && <p className="form-error">{error}</p>}
 
