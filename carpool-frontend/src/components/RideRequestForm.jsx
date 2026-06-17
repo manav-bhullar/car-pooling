@@ -67,15 +67,17 @@ function LocationInput({ label, value, onSelect }) {
 
   return (
     <div className="location-input-wrapper" ref={wrapperRef}>
-      <label className="form-label">{label}</label>
-      <input
-        className="form-input"
-        type="text"
-        placeholder="Search for a location..."
-        value={query}
-        onChange={handleChange}
-        autoComplete="off"
-      />
+      <div className="md3-input-group">
+        <label className="md3-label">{label}</label>
+        <input
+          className="md3-input"
+          type="text"
+          placeholder="Search for a location..."
+          value={query}
+          onChange={handleChange}
+          autoComplete="off"
+        />
+      </div>
 
       {open && (
         <div className="location-dropdown">
@@ -203,10 +205,10 @@ export default function RideRequestForm() {
         onSelect={setDrop}
       />
 
-      <div className="form-group">
-        <label className="form-label">Preferred Time</label>
+      <div className="md3-input-group">
+        <label className="md3-label">Preferred Time</label>
         <input
-          className="form-input"
+          className="md3-input"
           type="datetime-local"
           value={preferredTime}
           onChange={e => setPreferredTime(e.target.value)}
@@ -217,7 +219,8 @@ export default function RideRequestForm() {
 
       <button
         type="submit"
-        className="submit-button"
+        className="fab-extended"
+        style={{ width: '100%', marginTop: '16px' }}
         disabled={!canSubmit}
       >
         {loading ? 'Finding your ride...' : 'Request Ride'}

@@ -4,65 +4,26 @@ import { useApp } from '../context/AppContext';
 import { SEEDED_USERS } from '../constants/users';
 import './UserSelectorScreen.css';
 
-function LogoMark({ size = 24 }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="wordmark-icon"
-    >
-      <path d="M9 9h6v6H9z" />
-      <path d="M9 9a3 3 0 1 1-3 3v-3h3z" />
-      <path d="M15 9a3 3 0 1 0 3 3v-3h-3z" />
-      <path d="M15 15a3 3 0 1 1 3-3v3h-3z" />
-      <path d="M9 15a3 3 0 1 0-3-3v3h3z" />
-    </svg>
-  );
-}
-
-function StarBadge() {
-  return (
-    <div className="avatar-badge" />
-  );
-}
-
-function ProfileCard({ profile, isSelected, tabIndex, onSelect, onKeyDown, btnRef, animDelay = 0 }) {
+function ProfileCard({ profile, isSelected, tabIndex, onSelect, onKeyDown, btnRef, index }) {
   const firstName = profile.name.split(' ')[0];
   const imgUrl = `/avatars/${firstName.toLowerCase()}.png`;
 
   return (
-    <div
-      className={`profile-card${isSelected ? ' profile-card--selected' : ''}`}
-      style={{ animationDelay: `${animDelay}ms` }}
+    <button
+      ref={btnRef}
+      className={`profile-selection-card${isSelected ? ' profile-selection-card--selected' : ''}`}
+      aria-label={`Continue as ${profile.name}`}
+      aria-pressed={isSelected}
+      tabIndex={tabIndex}
+      onClick={() => onSelect(profile)}
+      onKeyDown={onKeyDown}
+      style={{ '--i': index }}
     >
-      <div className="profile-card__avatar-container">
-        <img src={imgUrl} alt={profile.name} className="profile-card__avatar" />
-        <StarBadge />
+      <div className="profile-selection-avatar-container">
+        <img src={imgUrl} alt="" className="profile-selection-avatar" />
       </div>
-
-      <div className="profile-card__info">
-        <span className="profile-card__name">{profile.name}</span>
-      </div>
-
-      <button
-        ref={btnRef}
-        type="button"
-        className="profile-card__btn"
-        aria-label={`Continue as ${profile.name}`}
-        aria-pressed={isSelected}
-        tabIndex={tabIndex}
-        onClick={() => onSelect(profile)}
-        onKeyDown={onKeyDown}
-      >
-        Select {firstName}
-      </button>
-    </div>
+      <span className="profile-selection-name">{profile.name}</span>
+    </button>
   );
 }
 
@@ -88,45 +49,38 @@ export default function UserSelectorScreen() {
   function handleSelect(profile) {
     if (selectedId) return;
     setSelectedId(profile.id);
+    // Let spring animation play out
     setTimeout(() => {
       dispatch({ type: 'SELECT_USER', payload: profile });
       navigate('/home');
-    }, 300);
+    }, 400); 
   }
 
   return (
-    <>
-      <div className="screen-root-selector">
-        {/* MD3 Organic blur shapes — atmospheric background */}
-        <div className="selector-blur-shape-1" aria-hidden="true" />
-        <div className="selector-blur-shape-2" aria-hidden="true" />
-        <div className="selector-blur-shape-3" aria-hidden="true" />
+    <div className="screen-root-selector">
+      {/* 3 M3 Expressive Blur Shapes */}
+      <div className="blur-shape selector-blur-1"></div>
+      <div className="blur-shape selector-blur-2"></div>
+      <div className="blur-shape selector-blur-3"></div>
 
-        <div className="selector-header-zone">
-          <div className="wordmark-row">
-            <LogoMark size={24} />
-            <span className="wordmark-text">University Rides</span>
-          </div>
-
-          <h1 className="panel-title">Select a Profile</h1>
-          <p className="panel-subtitle">Choose your identity for this trip</p>
-        </div>
-
-        <div className="profile-selection-grid" role="group" aria-label="Select a user profile to continue">
-          {SEEDED_USERS.map((profile, index) => (
-            <ProfileCard
-              key={profile.id}
-              profile={profile}
-              isSelected={selectedId === profile.id}
-              tabIndex={focusedIndex === index ? 0 : -1}
-              btnRef={(el) => { btnRefs.current[index] = el; }}
-              onSelect={handleSelect}
-              onKeyDown={(e) => handleKeyDown(e, index)}
-              animDelay={index * 60}
-            />
-          ))}
-        </div>
+      <div className="selector-header-zone">
+        <h1 className="selector-title">Select a Profile</h1>
       </div>
-    </>
+
+      <div className="profile-selection-grid" role="group" aria-label="Select a user profile to continue">
+        {SEEDED_USERS.map((profile, index) => (
+          <ProfileCard
+            key={profile.id}
+            index={index}
+            profile={profile}
+            isSelected={selectedId === profile.id}
+            tabIndex={focusedIndex === index ? 0 : -1}
+            btnRef={(el) => { btnRefs.current[index] = el; }}
+            onSelect={handleSelect}
+            onKeyDown={(e) => handleKeyDown(e, index)}
+          />
+        ))}
+      </div>
+    </div>
   );
 }

@@ -1,395 +1,95 @@
 /* ============================================================
    CarpoolTU Design System — CSS Custom Properties
-   Theme: M3 Expressive Dark — Electric Mint + Warm Amber
-   Platform: Desktop-first web
-   Source of truth: theme-tokens.json
-   
-   Import this file once at the root of your app.
-   In main.jsx: import './design-system.css'
-   
-   Usage in components:
-   background: var(--color-bg-primary);
-   font-size: var(--text-body);
-   border-radius: var(--radius-lg);
+   Theme: Material 3 Expressive (Light / Purple Seed)
    ============================================================ */
-
-/* ============================================================
-   GOOGLE FONTS IMPORT
-   Load all three font families before anything renders.
-   Add this to index.html <head> instead if you prefer.
-   ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
+   /* ==========================================================
+     M3 EXPRESSIVE COLORS (Purple Seed: #6750A4)
+     ========================================================== */
+   --color-md-primary:              #6750A4;
+   --color-md-on-primary:           #FFFFFF;
+   --color-md-primary-container:    #EADDFF;
+   --color-md-on-primary-container: #21005D;
+
+   --color-md-secondary:            #625B71;
+   --color-md-secondary-container:  #E8DEF8;
+   --color-md-on-secondary-container: #1D192B;
+
+   --color-md-tertiary:             #7D5260;
+   --color-md-tertiary-container:   #FFD8E4;
+   --color-md-on-tertiary-container:#31111D;
+
+   --color-md-surface:              #FFFBFE;
+   --color-md-surface-container:    #F3EDF7;
+   --color-md-surface-container-low:#E7E0EC;
+   --color-md-on-surface:           #1C1B1F;
+   --color-md-on-surface-variant:   #49454F;
+   --color-md-outline:              #79747E;
+
+   /* Expressive additions — tonal fills for status states */
+   --color-md-express-ride-active:  #D0BCFF;  /* Seat confirmed — primary container tint */
+   --color-md-express-ride-pending: #FFD8E4;  /* Awaiting driver — tertiary container */
+   --color-md-express-ride-done:    #CCEFCC;  /* Trip complete — custom success tint */
 
    /* ==========================================================
-     COLOR — BACKGROUND
-     Primary-tinted dark surfaces. M3 Expressive surfaces carry
-     a subtle hint of the seed color throughout.
+     TYPOGRAPHY (Roboto + M3 Scale)
      ========================================================== */
-   --color-bg-primary: #0A0F0D;
-   /* M3E dark.background — deepened, primary-tinted */
-   --color-bg-secondary: #111B17;
-   /* M3E dark.surfaceContainerLow */
-   --color-bg-tertiary: #1C2822;
-   /* M3E dark.surfaceContainerHigh */
+   --font-display: 'Roboto Flex', sans-serif;
+   --font-body: 'Roboto', sans-serif;
+
+   --type-display-large:   400 3.5rem/4rem    var(--font-display);
+   --type-headline-large:  500 2rem/2.5rem    var(--font-body);
+   --type-title-large:     500 1.5rem/2rem    var(--font-body);
+   --type-body-large:      400 1.25rem/1.75rem var(--font-body);
+   --type-body-medium:     400 1rem/1.5rem    var(--font-body);
+   --type-label-medium:    500 0.875rem/1.25rem var(--font-body);
 
    /* ==========================================================
-     COLOR — SURFACE
-     Cards and panels. Primary-tinted for atmospheric depth.
+     ANIMATION (Spring Easing)
      ========================================================== */
-   --color-surface: #141E1A;
-   /* M3E dark.surfaceContainer */
-   --color-surface-container: #1C2822;
-   /* M3E dark.surfaceContainerHigh */
-   --color-surface-elevated: #263430;
-   /* M3E dark.surfaceContainerHighest */
+   --ease-standard:     cubic-bezier(0.2, 0, 0, 1);      /* Standard M3 */
+   --ease-spring:       cubic-bezier(0.05, 0.7, 0.1, 1.0); /* Expressive spring */
+   --ease-overshoot:    cubic-bezier(0.34, 1.56, 0.64, 1); /* Slight overshoot */
+
+   --duration-short:    200ms;
+   --duration-medium:   300ms;
+   --duration-long:     500ms;
+   --duration-spring:   400ms;
 
    /* ==========================================================
-     COLOR — ACCENT (Primary)
-     Electric mint-teal. Vibrant, energetic, M3 Expressive.
-     Used on: CTA buttons, route line, matched badge, fare,
-     active states, focus rings.
+     SHAPE SYSTEM (M3 Expressive Radii)
      ========================================================== */
-   --color-accent: #5EEAD4;
-   /* M3E dark.primary — saturated electric mint */
-   --color-accent-dim: #5EEAD420;
-   /* 12% opacity wash. Hover backgrounds. */
-   --color-accent-strong: #99F6E4;
-   /* M3E dark.primaryFixed — bright mint for hover CTAs */
+   --radius-xs:    8px;
+   --radius-sm:    12px;
+   --radius-md:    16px;
+   --radius-lg:    24px;   /* Standard cards */
+   --radius-xl:    28px;   /* Dialogs, sheets */
+   --radius-2xl:   32px;   /* Hero containers */
+   --radius-hero:  48px;   /* Major sections */
+   --radius-full:  9999px; /* All buttons, all chips, badges */
+
+   /* Expressive asymmetric — use on feature cards */
+   --radius-express-card: 24px 24px 48px 8px;
 
    /* ==========================================================
-     COLOR — SECONDARY ACCENT
-     Warm amber. Adds communal warmth to the cool primary.
-     Used on: secondary badges, highlight moments, pricing.
+     ELEVATION & GLOW
      ========================================================== */
-   --color-secondary: #FBBF24;
-   /* M3E dark.secondary — warm golden amber */
-   --color-secondary-dim: #FBBF2418;
-   /* 9% opacity. Secondary backgrounds. */
-   --color-on-secondary: #422006;
-   /* Dark amber for text on secondary. */
-
-   /* ==========================================================
-     COLOR — TERTIARY ACCENT
-     Soft violet. For special, celebratory moments.
-     Used on: match-found reveal, trip complete, star badges.
-     ========================================================== */
-   --color-tertiary: #A78BFA;
-   /* M3E dark.tertiary — soft lavender-violet */
-   --color-tertiary-dim: #A78BFA18;
-   /* 9% opacity. Tertiary backgrounds. */
-   --color-on-tertiary: #1E1145;
-   /* Deep violet for text on tertiary. */
-
-   /* ==========================================================
-     COLOR — TEXT
-     Four levels. Primary-tinted for cohesion.
-     ========================================================== */
-   --color-text-primary: #E5EDEA;
-   /* M3E dark.onBackground — tinted off-white */
-   --color-text-secondary: #9FB5AF;
-   /* M3E dark.onSurfaceVariant — visible but secondary */
-   --color-text-tertiary: #6B8079;
-   /* M3E dark.outline — muted, for labels/captions */
-   --color-text-on-accent: #022C22;
-   /* M3E dark.onPrimary — deep teal on mint accent */
-
-   /* ==========================================================
-     COLOR — SEMANTIC
-     Vibrant, modern semantic colors. M3E uses more saturated
-     states than standard M3.
-     ========================================================== */
-   --color-success: #34D399;
-   /* COMPLETED state. Emerald green. Crisp and confident. */
-   --color-success-dim: #34D39918;
-   /* 9% opacity. Success backgrounds. */
-
-   --color-warning: #FBBF24;
-   /* Re-queue, expiry. Golden amber. */
-   --color-warning-dim: #FBBF2415;
-   /* 8% opacity. Warning backgrounds. */
-
-   --color-error: #FB7185;
-   /* Destructive actions. Vibrant rose-pink. */
-   --color-error-dim: #FB718515;
-   /* 8% opacity. Error backgrounds. */
-
-   /* ==========================================================
-     COLOR — OUTLINE
-     Primary-tinted borders for cohesion with surface system.
-     ========================================================== */
-   --color-outline: #2E4A42;
-   /* M3E dark.outlineVariant — teal-tinted borders */
-   --color-outline-focus: #5EEAD4;
-   /* M3E dark.primary — focus ring */
-   --color-outline-subtle: #141E1A;
-   /* M3E dark.surfaceContainer — barely visible dividers */
-
-   /* ==========================================================
-     COLOR — LIFECYCLE STATES
-     Status badge colors. M3E uses more saturated state colors.
-     ========================================================== */
-   --color-state-pending: #94A3B8;
-   /* Soft slate. Neutral waiting. */
-   --color-state-matched: #5EEAD4;
-   /* Primary mint. Positive confirmation. */
-   --color-state-active: #34D399;
-   /* Emerald green. Live trip. */
-   --color-state-completed: #34D399;
-   /* Emerald green. Done. */
-   --color-state-cancelled: #64748B;
-   /* Medium slate. Muted. Closed. */
-
-   /* ==========================================================
-     TYPOGRAPHY — FONT FAMILIES
-     Three families. Each has exactly one job.
-     Display: emotional headings (Fraunces)
-     Body: UI text that disappears (DM Sans)
-     Data: numbers that feel precise (DM Mono)
-     ========================================================== */
-   --font-display: 'Fraunces', Georgia, serif;
-   --font-body: 'DM Sans', system-ui, sans-serif;
-   --font-data: 'DM Mono', 'Courier New', monospace;
-
-   /* ==========================================================
-     TYPOGRAPHY — SIZE SCALE
-     7 sizes. Never use a size not in this list.
-     If you find yourself wanting 14px — use 13px or 15px.
-     ========================================================== */
-   --text-xs: 11px;
-   /* Timestamps, captions, legal */
-   --text-sm: 13px;
-   /* Labels, badges, helper text */
-   --text-base: 15px;
-   /* Body text, form inputs */
-   --text-lg: 16px;
-   /* Body large, prominent descriptions */
-   --text-xl: 17px;
-   /* Titles, button labels */
-   --text-2xl: 22px;
-   /* Headlines, card titles */
-   --text-3xl: 28px;
-   /* Display small, screen subtitles */
-   --text-4xl: 36px;
-   /* Display medium, waiting screen message */
-   --text-hero: 48px;
-   /* Display large, trip complete heading */
-
-   /* ==========================================================
-     TYPOGRAPHY — DATA SIZES (DM Mono only)
-     Numbers get their own scale — tighter letter-spacing.
-     ========================================================== */
-   --text-data-sm: 24px;
-   /* Secondary data: distance, cycles */
-   --text-data-hero: 40px;
-   /* Primary data: fare amount, ETA number */
-
-   /* ==========================================================
-     TYPOGRAPHY — WEIGHT
-     Named weights only. Never use a number not in this list.
-     ========================================================== */
-   --weight-regular: 400;
-   --weight-medium: 500;
-   --weight-semibold: 600;
-   --weight-bold: 700;
-
-   /* ==========================================================
-     TYPOGRAPHY — LINE HEIGHT
-     ========================================================== */
-   --leading-tight: 1.1;
-   /* Display large headings */
-   --leading-snug: 1.2;
-   /* Display medium, data numbers */
-   --leading-normal: 1.4;
-   /* Labels, captions */
-   --leading-relaxed: 1.55;
-   /* Body text */
-   --leading-loose: 1.6;
-   /* Body large, descriptions */
-
-   /* ==========================================================
-     TYPOGRAPHY — LETTER SPACING
-     ========================================================== */
-   --tracking-tight: -0.02em;
-   /* Large display, hero numbers */
-   --tracking-snug: -0.01em;
-   /* Medium display */
-   --tracking-normal: 0;
-   /* Body, titles */
-   --tracking-wide: 0.01em;
-   /* Small labels */
-   --tracking-wider: 0.02em;
-   /* Captions, section labels */
-   --tracking-widest: 0.05em;
-   /* Status badges (small caps feel) */
-
-   /* ==========================================================
-     SPACING
-     Base-4 system. Every value is a multiple of 4.
-     Never use a spacing value not in this list.
-     If something feels wrong, the spacing is probably right
-     and the component structure needs adjustment.
-     ========================================================== */
-   --space-1: 4px;
-   --space-2: 8px;
-   --space-3: 12px;
-   --space-4: 16px;
-   --space-5: 20px;
-   --space-6: 24px;
-   --space-8: 32px;
-   --space-10: 40px;
-   --space-12: 48px;
-   --space-16: 64px;
-   --space-20: 80px;
-
-   /* ==========================================================
-     BORDER RADIUS
-     Soft but not bubbly. Considered rounding.
-     ========================================================== */
-   --radius-none: 0px;
-   --radius-xs: 4px;
-   /* Small badges, skeleton blocks */
-   --radius-sm: 8px;
-   /* Buttons, inputs, small cards */
-   --radius-md: 12px;
-   /* Standard cards — most common */
-   --radius-lg: 16px;
-   /* Large cards, modals, main panels */
-   --radius-xl: 24px;
-   /* Full-width cards, bottom sheets */
-   --radius-full: 9999px;
-   /* Pills: status badges, chips, toggles */
-
-   /* ==========================================================
-     ELEVATION
-     Dark surfaces get lighter as they elevate.
-     No box-shadow — elevation via background color tint only.
-     Material You principle.
-     ========================================================== */
-   --elevation-0: #1C1C1E;
-   /* Floor. App background. */
-   --elevation-1: #232325;
-   /* Cards. +7 lightness. */
-   --elevation-2: #2A2A2C;
-   /* Contained sections. +14 lightness. */
-   --elevation-3: #323234;
-   /* Modals, drawers. +18 lightness. */
-   --elevation-4: #3A3A3C;
-   /* Tooltips, floating. +22 lightness. */
-
-   /* ==========================================================
-     LAYOUT
-     Content width constraints.
-     ========================================================== */
-   --layout-content-max: 760px;
-   /* Trip screen — widest content */
-   --layout-content-std: 560px;
-   /* Home, Waiting, Summary */
-   --layout-content-narrow: 480px;
-   /* User Selector */
-   --layout-content-pad: 24px;
-   /* Horizontal page padding */
-
-   /* ==========================================================
-     MOTION — DURATION
-     Every animation uses one of these. Never arbitrary ms values.
-     ========================================================== */
-   --duration-instant: 100ms;
-   /* Button press, checkbox */
-   --duration-fast: 200ms;
-   /* Hover states, focus rings */
-   --duration-standard: 300ms;
-   /* Screen fades, card entrance */
-   --duration-expressive: 500ms;
-   /* Matched reveal, hero moments */
-   --duration-slow: 800ms;
-   /* Skeleton shimmer, complex sequences */
-
-   /* ==========================================================
-     MOTION — EASING
-     Named curves. Each has a specific use case.
-     ========================================================== */
-
-   /* Standard: most transitions */
-   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-
-   /* Decelerate: elements entering screen (come in fast, settle) */
-   --ease-decelerate: cubic-bezier(0, 0, 0, 1);
-
-   /* Accelerate: elements leaving screen (start slow, exit fast) */
-   --ease-accelerate: cubic-bezier(0.3, 0, 1, 1);
-
-   /* Expressive: the matched moment. Slight spring overshoot. */
-   /* Used ONLY for the match-found card entrance. */
-   --ease-expressive: cubic-bezier(0.34, 1.56, 0.64, 1);
-
-   /* ==========================================================
-     Z-INDEX STACK
-     Named layers. Never use raw z-index numbers.
-     ========================================================== */
-   --z-base: 0;
-   --z-raised: 10;
-   /* Elevated cards */
-   --z-dropdown: 100;
-   /* Autocomplete dropdown */
-   --z-sticky: 200;
-   /* AppHeader on scroll */
-   --z-modal: 300;
-   /* CancelModal overlay */
-   --z-toast: 400;
-   /* NotificationBanner */
-
-   /* ==========================================================
-     MD3E — STATE LAYER COLORS
-     Transparent overlays for hover/press/focus states.
-     M3 Expressive uses the primary mint for state layers.
-     ========================================================== */
-   --color-state-hover:    rgba(94, 234, 212, 0.08);
-   --color-state-pressed:  rgba(94, 234, 212, 0.12);
-   --color-state-focus:    rgba(94, 234, 212, 0.12);
-   --color-state-dragged:  rgba(94, 234, 212, 0.16);
-
-   /* ==========================================================
-     MD3E — SURFACE TONAL LAYERS
-     Additional surface tones for atmospheric depth.
-     ========================================================== */
-   --color-surface-dim:    #070C0A;
-   --color-surface-bright: #2A3832;
-
-   /* ==========================================================
-     MD3E — GLOW / BLUR EFFECT COLORS
-     Three-color glow system: mint, amber, violet.
-     Used for organic decorative shapes and aura effects.
-     ========================================================== */
-   --color-glow-primary:   rgba(94, 234, 212, 0.15);
-   --color-glow-secondary: rgba(251, 191, 36, 0.10);
-   --color-glow-tertiary:  rgba(167, 139, 250, 0.10);
-
-   /* ==========================================================
-     MD3E — ADDITIONAL RADII
-     Organic, generous rounding for hero sections.
-     ========================================================== */
-   --radius-2xl: 32px;
-   --radius-3xl: 48px;
-
-   /* ==========================================================
-     MD3E — GLASS EFFECT
-     Glassmorphism variables for elevated containers.
-     ========================================================== */
-   --glass-bg:     rgba(20, 30, 26, 0.65);
-   --glass-border: rgba(94, 234, 212, 0.10);
-   --glass-blur:   12px;
-
+   --shadow-elevation-1: 0 1px 2px rgba(0,0,0,0.08);
+   --shadow-elevation-2: 0 2px 8px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+   --shadow-elevation-3: 0 4px 16px rgba(0,0,0,0.16), 0 2px 4px rgba(0,0,0,0.08);
+   --shadow-glow-primary: 0 0 24px rgba(103,80,164,0.25);
+   --shadow-glow-tertiary: 0 0 24px rgba(125,82,96,0.25);
+   
+   /* Content widths */
+   --layout-content-std: 800px;
+   --layout-content-narrow: 500px;
 }
 
 /* ============================================================
    BASE RESET + GLOBAL STYLES
-   Minimal reset. Does not override component styles.
    ============================================================ */
-*,
-*::before,
-*::after {
+*, *::before, *::after {
    box-sizing: border-box;
    margin: 0;
    padding: 0;
@@ -399,137 +99,49 @@ html {
    font-size: 16px;
    -webkit-font-smoothing: antialiased;
    -moz-osx-font-smoothing: grayscale;
-   text-rendering: optimizeLegibility;
 }
 
 body {
-   font-family: var(--font-body);
-   font-size: var(--text-base);
-   font-weight: var(--weight-regular);
-   line-height: var(--leading-relaxed);
-   color: var(--color-text-primary);
-   background-color: var(--color-bg-primary);
+   background-color: var(--color-md-surface);
+   color: var(--color-md-on-surface);
+   font: var(--type-body-medium);
    min-height: 100vh;
+   overflow-x: hidden;
 }
 
 /* ============================================================
-   FOCUS RING — GLOBAL
-   Applies to all interactive elements.
-   Component-level focus styles extend this.
+   FOCUS RINGS & UTILITIES
    ============================================================ */
 :focus-visible {
-   outline: 2px solid var(--color-outline-focus);
+   outline: 2px solid var(--color-md-primary);
    outline-offset: 2px;
 }
-
-/* Remove default focus for mouse users */
 :focus:not(:focus-visible) {
    outline: none;
 }
 
-/* ============================================================
-   REDUCED MOTION
-   All animations respect this preference.
-   Components check this via CSS or matchMedia.
-   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-
-   *,
-   *::before,
-   *::after {
+   *, *::before, *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
    }
 }
 
-/* ============================================================
-   CONTENT LAYOUT UTILITY CLASSES
-   Used by screen-level components to constrain content width.
-   ============================================================ */
 .content-std {
    width: 100%;
    max-width: var(--layout-content-std);
    margin-left: auto;
    margin-right: auto;
-   padding-left: var(--layout-content-pad);
-   padding-right: var(--layout-content-pad);
 }
 
-.content-max {
-   width: 100%;
-   max-width: var(--layout-content-max);
-   margin-left: auto;
-   margin-right: auto;
-   padding-left: var(--layout-content-pad);
-   padding-right: var(--layout-content-pad);
-}
-
-.content-narrow {
-   width: 100%;
-   max-width: var(--layout-content-narrow);
-   margin-left: auto;
-   margin-right: auto;
-   padding-left: var(--layout-content-pad);
-   padding-right: var(--layout-content-pad);
-}
-
-/* ============================================================
-   MD3 — STATE LAYER UTILITY
-   Transparent overlay for hover/press without changing bg color.
-   Apply .state-layer to any interactive element.
-   ============================================================ */
-.state-layer {
-   position: relative;
-   overflow: hidden;
-}
-
-.state-layer::after {
-   content: '';
-   position: absolute;
-   inset: 0;
-   border-radius: inherit;
-   background: var(--color-accent);
-   opacity: 0;
-   transition: opacity var(--duration-fast) var(--ease-standard);
-   pointer-events: none;
-}
-
-.state-layer:hover::after {
-   opacity: 0.08;
-}
-
-.state-layer:active::after {
-   opacity: 0.12;
-}
-
-/* ============================================================
-   MD3 — PRESS FEEDBACK
-   Tactile scale-down on press. Apply to all clickable elements.
-   ============================================================ */
-.press-feedback {
-   transition: transform var(--duration-instant) var(--ease-standard);
-}
-
-.press-feedback:active {
-   transform: scale(0.95);
-}
-
-/* ============================================================
-   MD3 — GLASS CARD UTILITY
-   Glassmorphism container with backdrop blur.
-   ============================================================ */
 .glass-card {
-   background: var(--glass-bg);
-   backdrop-filter: blur(var(--glass-blur));
-   -webkit-backdrop-filter: blur(var(--glass-blur));
-   border: 1px solid var(--glass-border);
+   background: rgba(243, 237, 247, 0.90); /* bg-surface-container/90 */
+   backdrop-filter: blur(12px);
+   -webkit-backdrop-filter: blur(12px);
+   border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-/* ============================================================
-   MD3 — ORGANIC BLUR SHAPE
-   Decorative background element. Must have aria-hidden="true".
-   ============================================================ */
 .blur-shape {
    position: absolute;
    border-radius: 50%;
@@ -539,105 +151,35 @@ body {
 }
 
 /* ============================================================
-   MD3 — ENTRANCE ANIMATION UTILITY
-   Apply to elements that should fade-in on mount.
+   KEYFRAMES
    ============================================================ */
-.md3-enter {
-   animation: md3-fade-in var(--duration-standard) var(--ease-decelerate) both;
-}
-
-/* ============================================================
-   SCROLLBAR STYLING
-   Minimal dark scrollbar consistent with theme.
-   ============================================================ */
-::-webkit-scrollbar {
-   width: 6px;
-   height: 6px;
-}
-
-::-webkit-scrollbar-track {
-   background: var(--color-bg-primary);
-}
-
-::-webkit-scrollbar-thumb {
-   background: var(--color-outline);
-   border-radius: var(--radius-full);
-}
-
-::-webkit-scrollbar-thumb:hover {
-   background: var(--color-text-tertiary);
-}
-
-/* ============================================================
-   SELECTION COLOR
-   ============================================================ */
-::selection {
-   background: var(--color-accent-dim);
-   color: var(--color-text-primary);
-}
-
-/* ============================================================
-   MD3 — KEYFRAME ANIMATIONS
-   Named animations used by components and screens.
-   ============================================================ */
-
-/* Circular spinner rotation */
 @keyframes md3-spin {
    to { transform: rotate(360deg); }
 }
 
-/* Fade-in with upward slide — standard entrance */
 @keyframes md3-fade-in {
-   from {
-      opacity: 0;
-      transform: translateY(12px);
-   }
-   to {
-      opacity: 1;
-      transform: translateY(0);
-   }
+   from { opacity: 0; transform: translateY(20px); }
+   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Breathing pulse — used for waiting/loading states */
 @keyframes md3-pulse {
    0%, 100% { opacity: 0.4; }
-   50%      { opacity: 1; }
+   50% { opacity: 1; }
 }
 
-/* Shimmer sweep — skeleton loading placeholders */
-@keyframes md3-shimmer {
-   from { background-position: -200% 0; }
-   to   { background-position: 200% 0; }
+@keyframes drift {
+   0% { transform: translate(0, 0) scale(1); }
+   33% { transform: translate(20px, -30px) scale(1.1); }
+   66% { transform: translate(-20px, 20px) scale(0.9); }
+   100% { transform: translate(0, 0) scale(1); }
 }
 
-/* Slide-in from top — notification banners */
 @keyframes md3-slide-in-top {
-   from {
-      opacity: 0;
-      transform: translateY(-100%);
-   }
-   to {
-      opacity: 1;
-      transform: translateY(0);
-   }
+   from { opacity: 0; transform: translateY(-100%); }
+   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Gentle drift — decorative blur shapes */
-@keyframes md3-drift {
-   0%, 100% { transform: translate(0, 0) scale(1); }
-   25%      { transform: translate(5px, -8px) scale(1.02); }
-   50%      { transform: translate(-3px, 5px) scale(0.98); }
-   75%      { transform: translate(4px, 3px) scale(1.01); }
-}
-
-/* Scale-in — modal/dialog entrance */
 @keyframes md3-scale-in {
-   from {
-      opacity: 0;
-      transform: scale(0.92);
-   }
-   to {
-      opacity: 1;
-      transform: scale(1);
-   }
+   from { opacity: 0; transform: scale(0.92); }
+   to { opacity: 1; transform: scale(1); }
 }

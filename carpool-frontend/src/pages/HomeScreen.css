@@ -1,93 +1,79 @@
-/* ============================================================
-   HomeScreen — Material Design 3
-   Atmospheric centered layout with ride request form.
-   ============================================================ */
-
-.home-screen {
-   min-height: 100vh;
-   display: flex;
-   flex-direction: column;
-   align-items: center;
-   justify-content: flex-start;
-   padding-top: 8vh;
-   padding-bottom: var(--space-16);
-   padding-left: var(--space-6);
-   padding-right: var(--space-6);
-   background: var(--color-bg-primary);
+.home-screen-expressive {
    position: relative;
+   min-height: 100vh;
+   width: 100vw;
    overflow: hidden;
 }
 
-/* ---------- Organic Blur Shapes ---------- */
-.home-blur-shape-1 {
+/* Map as Wallpaper */
+.home-map-layer {
    position: absolute;
-   width: 350px;
-   height: 350px;
-   border-radius: 50%;
-   background: var(--color-glow-primary);
-   filter: blur(100px);
-   top: -5%;
-   left: -10%;
-   pointer-events: none;
-   animation: md3-drift 22s var(--ease-standard) infinite;
+   inset: 0;
+   z-index: 0;
 }
 
-.home-blur-shape-2 {
-   position: absolute;
-   width: 280px;
-   height: 280px;
-   border-radius: 50%;
-   background: var(--color-glow-secondary);
-   filter: blur(90px);
-   bottom: 10%;
-   right: -8%;
-   pointer-events: none;
-   animation: md3-drift 18s var(--ease-standard) infinite reverse;
+/* Atmospheric Blur Shapes */
+.home-blur-1 {
+   width: 50vw;
+   height: 50vw;
+   background: var(--color-md-primary);
+   opacity: 0.15;
+   top: -10%;
+   right: -10%;
+   animation: drift 20s ease-in-out infinite alternate;
 }
 
-/* ---------- User Info / Welcome ---------- */
-.user-info {
+.home-blur-2 {
+   width: 40vw;
+   height: 40vw;
+   background: var(--color-md-tertiary);
+   opacity: 0.15;
+   bottom: -10%;
+   left: 20%;
+   animation: drift 25s ease-in-out infinite alternate-reverse;
+}
+
+/* Foreground Content */
+.home-content-layer {
    position: relative;
-   z-index: 1;
-   margin-bottom: var(--space-8);
-   animation: md3-fade-in var(--duration-standard) var(--ease-decelerate) both;
+   z-index: 10;
+   min-height: 100vh;
+   display: flex;
+   flex-direction: column;
+   justify-content: flex-end; /* Anchored to bottom */
+   padding: 24px;
+   pointer-events: none; /* Let map be interactive where exposed */
 }
 
-.welcome-message {
-   font-family: var(--font-display);
-   font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl));
-   font-weight: var(--weight-semibold);
-   color: var(--color-text-primary);
-   text-align: center;
-   line-height: var(--leading-snug);
+/* Re-enable pointer events for the form area */
+.home-glass-card {
+   pointer-events: auto;
+   width: 100%;
+   max-width: 500px;
+   border-radius: var(--radius-2xl);
+   padding: 32px;
+   margin-bottom: 24px;
+   box-shadow: var(--shadow-elevation-3);
+   animation: md3-fade-in var(--duration-spring) var(--ease-spring) both;
 }
 
-.welcome-message strong,
-.welcome-message em {
-   color: var(--color-accent);
-   font-style: normal;
+.home-headline {
+   font: var(--type-display-large);
+   color: var(--color-md-on-surface);
+   margin-bottom: 24px;
 }
 
-/* ---------- Form Container ---------- */
-.home-screen .ride-request-form {
-   position: relative;
-   z-index: 1;
-   animation: md3-fade-in var(--duration-standard) var(--ease-decelerate) 100ms both;
+/* Overriding form elements to fit the Glass Card better */
+.home-glass-card .ride-request-form .form-title {
+   display: none; /* Hide the default form title, using home-headline instead */
 }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 600px) {
-   .home-screen {
-      padding-top: 5vh;
+@media (min-width: 768px) {
+   .home-content-layer {
+      justify-content: center;
+      padding-left: 10vw; /* Anchor left on desktop */
    }
-
-   .home-blur-shape-1 {
-      width: 200px;
-      height: 200px;
-   }
-
-   .home-blur-shape-2 {
-      width: 160px;
-      height: 160px;
+   .home-glass-card {
+      margin-bottom: 0;
    }
 }
