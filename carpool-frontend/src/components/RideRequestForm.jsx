@@ -109,7 +109,7 @@ function LocationInput({ label, value, onSelect }) {
   );
 }
 
-export default function RideRequestForm() {
+export default function RideRequestForm({ onLocationSelect }) {
   const { state, dispatch } = useApp();
 
   const getDefaultTime = () => {
@@ -123,6 +123,16 @@ export default function RideRequestForm() {
   const [preferredTime, setPreferredTime] = useState(getDefaultTime());
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const handlePickupSelect = (loc) => {
+    setPickup(loc);
+    if (onLocationSelect) onLocationSelect('PICKUP', loc);
+  };
+
+  const handleDropSelect = (loc) => {
+    setDrop(loc);
+    if (onLocationSelect) onLocationSelect('DROPOFF', loc);
+  };
 
   function validate() {
     if (!pickup) return 'Please select a pickup location';
@@ -196,13 +206,13 @@ export default function RideRequestForm() {
       <LocationInput
         label="Pickup location"
         value={pickup}
-        onSelect={setPickup}
+        onSelect={handlePickupSelect}
       />
 
       <LocationInput
         label="Drop location"
         value={drop}
-        onSelect={setDrop}
+        onSelect={handleDropSelect}
       />
 
       <div className="md3-input-group">
