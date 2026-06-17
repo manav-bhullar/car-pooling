@@ -32,12 +32,15 @@ function StarBadge() {
   );
 }
 
-function ProfileCard({ profile, isSelected, tabIndex, onSelect, onKeyDown, btnRef }) {
+function ProfileCard({ profile, isSelected, tabIndex, onSelect, onKeyDown, btnRef, animDelay = 0 }) {
   const firstName = profile.name.split(' ')[0];
   const imgUrl = `/avatars/${firstName.toLowerCase()}.png`;
 
   return (
-    <div className={`profile-card${isSelected ? ' profile-card--selected' : ''}`}>
+    <div
+      className={`profile-card${isSelected ? ' profile-card--selected' : ''}`}
+      style={{ animationDelay: `${animDelay}ms` }}
+    >
       <div className="profile-card__avatar-container">
         <img src={imgUrl} alt={profile.name} className="profile-card__avatar" />
         <StarBadge />
@@ -94,6 +97,11 @@ export default function UserSelectorScreen() {
   return (
     <>
       <div className="screen-root-selector">
+        {/* MD3 Organic blur shapes — atmospheric background */}
+        <div className="selector-blur-shape-1" aria-hidden="true" />
+        <div className="selector-blur-shape-2" aria-hidden="true" />
+        <div className="selector-blur-shape-3" aria-hidden="true" />
+
         <div className="selector-header-zone">
           <div className="wordmark-row">
             <LogoMark size={24} />
@@ -114,6 +122,7 @@ export default function UserSelectorScreen() {
               btnRef={(el) => { btnRefs.current[index] = el; }}
               onSelect={handleSelect}
               onKeyDown={(e) => handleKeyDown(e, index)}
+              animDelay={index * 60}
             />
           ))}
         </div>

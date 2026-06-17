@@ -1,6 +1,6 @@
 /* ============================================================
    CarpoolTU Design System — CSS Custom Properties
-   Theme: Late Evening Commute
+   Theme: M3 Expressive Dark — Electric Mint + Warm Amber
    Platform: Desktop-first web
    Source of truth: theme-tokens.json
    
@@ -24,96 +24,122 @@
 
    /* ==========================================================
      COLOR — BACKGROUND
-     The floor. Everything sits on top of these.
+     Primary-tinted dark surfaces. M3 Expressive surfaces carry
+     a subtle hint of the seed color throughout.
      ========================================================== */
-   --color-bg-primary: #0E1513;
-   /* M3 dark.background / dark.surface */
-   --color-bg-secondary: #171D1B;
-   /* M3 dark.surfaceContainerLow */
-   --color-bg-tertiary: #252B29;
-   /* M3 dark.surfaceContainerHigh */
+   --color-bg-primary: #0A0F0D;
+   /* M3E dark.background — deepened, primary-tinted */
+   --color-bg-secondary: #111B17;
+   /* M3E dark.surfaceContainerLow */
+   --color-bg-tertiary: #1C2822;
+   /* M3E dark.surfaceContainerHigh */
 
    /* ==========================================================
      COLOR — SURFACE
-     Cards and panels. Distinct from background but not harsh.
+     Cards and panels. Primary-tinted for atmospheric depth.
      ========================================================== */
-   --color-surface: #1B211F;
-   /* M3 dark.surfaceContainer */
-   --color-surface-container: #252B29;
-   /* M3 dark.surfaceContainerHigh */
-   --color-surface-elevated: #303634;
-   /* M3 dark.surfaceContainerHighest */
+   --color-surface: #141E1A;
+   /* M3E dark.surfaceContainer */
+   --color-surface-container: #1C2822;
+   /* M3E dark.surfaceContainerHigh */
+   --color-surface-elevated: #263430;
+   /* M3E dark.surfaceContainerHighest */
 
    /* ==========================================================
-     COLOR — ACCENT
-     The single accent color for the entire app.
-     Desaturated warm teal. Used on: CTA buttons, route line,
-     matched badge, fare amount, active states.
+     COLOR — ACCENT (Primary)
+     Electric mint-teal. Vibrant, energetic, M3 Expressive.
+     Used on: CTA buttons, route line, matched badge, fare,
+     active states, focus rings.
      ========================================================== */
-   --color-accent: #83D5C4;
-   /* M3 dark.primary */
-   --color-accent-dim: #83D5C420;
+   --color-accent: #5EEAD4;
+   /* M3E dark.primary — saturated electric mint */
+   --color-accent-dim: #5EEAD420;
    /* 12% opacity wash. Hover backgrounds. */
-   --color-accent-strong: #9FF2E0;
-   /* M3 dark.primaryFixed / onPrimaryContainer */
+   --color-accent-strong: #99F6E4;
+   /* M3E dark.primaryFixed — bright mint for hover CTAs */
+
+   /* ==========================================================
+     COLOR — SECONDARY ACCENT
+     Warm amber. Adds communal warmth to the cool primary.
+     Used on: secondary badges, highlight moments, pricing.
+     ========================================================== */
+   --color-secondary: #FBBF24;
+   /* M3E dark.secondary — warm golden amber */
+   --color-secondary-dim: #FBBF2418;
+   /* 9% opacity. Secondary backgrounds. */
+   --color-on-secondary: #422006;
+   /* Dark amber for text on secondary. */
+
+   /* ==========================================================
+     COLOR — TERTIARY ACCENT
+     Soft violet. For special, celebratory moments.
+     Used on: match-found reveal, trip complete, star badges.
+     ========================================================== */
+   --color-tertiary: #A78BFA;
+   /* M3E dark.tertiary — soft lavender-violet */
+   --color-tertiary-dim: #A78BFA18;
+   /* 9% opacity. Tertiary backgrounds. */
+   --color-on-tertiary: #1E1145;
+   /* Deep violet for text on tertiary. */
 
    /* ==========================================================
      COLOR — TEXT
-     Four levels. Use the lowest level that is still readable.
+     Four levels. Primary-tinted for cohesion.
      ========================================================== */
-   --color-text-primary: #DEE4E1;
-   /* M3 dark.onBackground / onSurface */
-   --color-text-secondary: #BEC9C5;
-   /* M3 dark.onSurfaceVariant */
-   --color-text-tertiary: #89938F;
-   /* M3 dark.outline */
-   --color-text-on-accent: #00382F;
-   /* M3 dark.onPrimary */
+   --color-text-primary: #E5EDEA;
+   /* M3E dark.onBackground — tinted off-white */
+   --color-text-secondary: #9FB5AF;
+   /* M3E dark.onSurfaceVariant — visible but secondary */
+   --color-text-tertiary: #6B8079;
+   /* M3E dark.outline — muted, for labels/captions */
+   --color-text-on-accent: #022C22;
+   /* M3E dark.onPrimary — deep teal on mint accent */
 
    /* ==========================================================
      COLOR — SEMANTIC
-     State-specific colors. Each has a dim version for backgrounds.
+     Vibrant, modern semantic colors. M3E uses more saturated
+     states than standard M3.
      ========================================================== */
-   --color-success: #4CAF7D;
-   /* COMPLETED state. Sage green. */
-   --color-success-dim: #4CAF7D18;
+   --color-success: #34D399;
+   /* COMPLETED state. Emerald green. Crisp and confident. */
+   --color-success-dim: #34D39918;
    /* 9% opacity. Success backgrounds. */
 
-   --color-warning: #F0A500;
-   /* Re-queue, expiry, co-rider cancel. */
-   --color-warning-dim: #F0A50015;
+   --color-warning: #FBBF24;
+   /* Re-queue, expiry. Golden amber. */
+   --color-warning-dim: #FBBF2415;
    /* 8% opacity. Warning backgrounds. */
 
-   --color-error: #FFB4AB;
-   /* Destructive actions. Cancel trip. */
-   --color-error-dim: #FFB4AB15;
+   --color-error: #FB7185;
+   /* Destructive actions. Vibrant rose-pink. */
+   --color-error-dim: #FB718515;
    /* 8% opacity. Error backgrounds. */
 
    /* ==========================================================
      COLOR — OUTLINE
-     Borders and dividers. Three levels of visibility.
+     Primary-tinted borders for cohesion with surface system.
      ========================================================== */
-   --color-outline: #3F4946;
-   /* M3 dark.outlineVariant — card borders */
-   --color-outline-focus: #83D5C4;
-   /* M3 dark.primary — focus ring */
-   --color-outline-subtle: #1B211F;
-   /* M3 dark.surfaceContainer — barely visible dividers */
+   --color-outline: #2E4A42;
+   /* M3E dark.outlineVariant — teal-tinted borders */
+   --color-outline-focus: #5EEAD4;
+   /* M3E dark.primary — focus ring */
+   --color-outline-subtle: #141E1A;
+   /* M3E dark.surfaceContainer — barely visible dividers */
 
    /* ==========================================================
      COLOR — LIFECYCLE STATES
-     Status badge colors. Each maps to a lifecycle state.
+     Status badge colors. M3E uses more saturated state colors.
      ========================================================== */
-   --color-state-pending: #AEAEB2;
-   /* Grey. Neutral waiting. */
-   --color-state-matched: #5EBFAD;
-   /* Accent. Positive confirmation. */
-   --color-state-active: #4CAF7D;
-   /* Success green. Live trip. */
-   --color-state-completed: #4CAF7D;
-   /* Success green. Done. */
-   --color-state-cancelled: #6C6C70;
-   /* Tertiary. Muted. Closed. */
+   --color-state-pending: #94A3B8;
+   /* Soft slate. Neutral waiting. */
+   --color-state-matched: #5EEAD4;
+   /* Primary mint. Positive confirmation. */
+   --color-state-active: #34D399;
+   /* Emerald green. Live trip. */
+   --color-state-completed: #34D399;
+   /* Emerald green. Done. */
+   --color-state-cancelled: #64748B;
+   /* Medium slate. Muted. Closed. */
 
    /* ==========================================================
      TYPOGRAPHY — FONT FAMILIES
@@ -314,6 +340,47 @@
    --z-toast: 400;
    /* NotificationBanner */
 
+   /* ==========================================================
+     MD3E — STATE LAYER COLORS
+     Transparent overlays for hover/press/focus states.
+     M3 Expressive uses the primary mint for state layers.
+     ========================================================== */
+   --color-state-hover:    rgba(94, 234, 212, 0.08);
+   --color-state-pressed:  rgba(94, 234, 212, 0.12);
+   --color-state-focus:    rgba(94, 234, 212, 0.12);
+   --color-state-dragged:  rgba(94, 234, 212, 0.16);
+
+   /* ==========================================================
+     MD3E — SURFACE TONAL LAYERS
+     Additional surface tones for atmospheric depth.
+     ========================================================== */
+   --color-surface-dim:    #070C0A;
+   --color-surface-bright: #2A3832;
+
+   /* ==========================================================
+     MD3E — GLOW / BLUR EFFECT COLORS
+     Three-color glow system: mint, amber, violet.
+     Used for organic decorative shapes and aura effects.
+     ========================================================== */
+   --color-glow-primary:   rgba(94, 234, 212, 0.15);
+   --color-glow-secondary: rgba(251, 191, 36, 0.10);
+   --color-glow-tertiary:  rgba(167, 139, 250, 0.10);
+
+   /* ==========================================================
+     MD3E — ADDITIONAL RADII
+     Organic, generous rounding for hero sections.
+     ========================================================== */
+   --radius-2xl: 32px;
+   --radius-3xl: 48px;
+
+   /* ==========================================================
+     MD3E — GLASS EFFECT
+     Glassmorphism variables for elevated containers.
+     ========================================================== */
+   --glass-bg:     rgba(20, 30, 26, 0.65);
+   --glass-border: rgba(94, 234, 212, 0.10);
+   --glass-blur:   12px;
+
 }
 
 /* ============================================================
@@ -408,6 +475,78 @@ body {
 }
 
 /* ============================================================
+   MD3 — STATE LAYER UTILITY
+   Transparent overlay for hover/press without changing bg color.
+   Apply .state-layer to any interactive element.
+   ============================================================ */
+.state-layer {
+   position: relative;
+   overflow: hidden;
+}
+
+.state-layer::after {
+   content: '';
+   position: absolute;
+   inset: 0;
+   border-radius: inherit;
+   background: var(--color-accent);
+   opacity: 0;
+   transition: opacity var(--duration-fast) var(--ease-standard);
+   pointer-events: none;
+}
+
+.state-layer:hover::after {
+   opacity: 0.08;
+}
+
+.state-layer:active::after {
+   opacity: 0.12;
+}
+
+/* ============================================================
+   MD3 — PRESS FEEDBACK
+   Tactile scale-down on press. Apply to all clickable elements.
+   ============================================================ */
+.press-feedback {
+   transition: transform var(--duration-instant) var(--ease-standard);
+}
+
+.press-feedback:active {
+   transform: scale(0.95);
+}
+
+/* ============================================================
+   MD3 — GLASS CARD UTILITY
+   Glassmorphism container with backdrop blur.
+   ============================================================ */
+.glass-card {
+   background: var(--glass-bg);
+   backdrop-filter: blur(var(--glass-blur));
+   -webkit-backdrop-filter: blur(var(--glass-blur));
+   border: 1px solid var(--glass-border);
+}
+
+/* ============================================================
+   MD3 — ORGANIC BLUR SHAPE
+   Decorative background element. Must have aria-hidden="true".
+   ============================================================ */
+.blur-shape {
+   position: absolute;
+   border-radius: 50%;
+   filter: blur(80px);
+   pointer-events: none;
+   z-index: 0;
+}
+
+/* ============================================================
+   MD3 — ENTRANCE ANIMATION UTILITY
+   Apply to elements that should fade-in on mount.
+   ============================================================ */
+.md3-enter {
+   animation: md3-fade-in var(--duration-standard) var(--ease-decelerate) both;
+}
+
+/* ============================================================
    SCROLLBAR STYLING
    Minimal dark scrollbar consistent with theme.
    ============================================================ */
@@ -435,4 +574,70 @@ body {
 ::selection {
    background: var(--color-accent-dim);
    color: var(--color-text-primary);
+}
+
+/* ============================================================
+   MD3 — KEYFRAME ANIMATIONS
+   Named animations used by components and screens.
+   ============================================================ */
+
+/* Circular spinner rotation */
+@keyframes md3-spin {
+   to { transform: rotate(360deg); }
+}
+
+/* Fade-in with upward slide — standard entrance */
+@keyframes md3-fade-in {
+   from {
+      opacity: 0;
+      transform: translateY(12px);
+   }
+   to {
+      opacity: 1;
+      transform: translateY(0);
+   }
+}
+
+/* Breathing pulse — used for waiting/loading states */
+@keyframes md3-pulse {
+   0%, 100% { opacity: 0.4; }
+   50%      { opacity: 1; }
+}
+
+/* Shimmer sweep — skeleton loading placeholders */
+@keyframes md3-shimmer {
+   from { background-position: -200% 0; }
+   to   { background-position: 200% 0; }
+}
+
+/* Slide-in from top — notification banners */
+@keyframes md3-slide-in-top {
+   from {
+      opacity: 0;
+      transform: translateY(-100%);
+   }
+   to {
+      opacity: 1;
+      transform: translateY(0);
+   }
+}
+
+/* Gentle drift — decorative blur shapes */
+@keyframes md3-drift {
+   0%, 100% { transform: translate(0, 0) scale(1); }
+   25%      { transform: translate(5px, -8px) scale(1.02); }
+   50%      { transform: translate(-3px, 5px) scale(0.98); }
+   75%      { transform: translate(4px, 3px) scale(1.01); }
+}
+
+/* Scale-in — modal/dialog entrance */
+@keyframes md3-scale-in {
+   from {
+      opacity: 0;
+      transform: scale(0.92);
+   }
+   to {
+      opacity: 1;
+      transform: scale(1);
+   }
 }

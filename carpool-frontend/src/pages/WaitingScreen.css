@@ -1,0 +1,114 @@
+/* ============================================================
+   WaitingScreen — Material Design 3
+   Centered, breathing, atmospheric waiting state.
+   ============================================================ */
+
+.waiting-screen {
+   min-height: 100vh;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   padding: var(--space-8) var(--space-6);
+   background: var(--color-bg-primary);
+   position: relative;
+   overflow: hidden;
+   gap: var(--space-5);
+}
+
+/* ---------- Organic Blur Shapes ---------- */
+.waiting-blur-shape-1 {
+   position: absolute;
+   width: 400px;
+   height: 400px;
+   border-radius: 50%;
+   background: var(--color-glow-primary);
+   filter: blur(120px);
+   top: 20%;
+   left: -15%;
+   pointer-events: none;
+   animation: md3-drift 15s var(--ease-standard) infinite;
+}
+
+.waiting-blur-shape-2 {
+   position: absolute;
+   width: 300px;
+   height: 300px;
+   border-radius: 50%;
+   background: var(--color-glow-secondary);
+   filter: blur(100px);
+   bottom: 15%;
+   right: -10%;
+   pointer-events: none;
+   animation: md3-drift 20s var(--ease-standard) infinite reverse;
+}
+
+/* ---------- Content ---------- */
+.waiting-screen .loading-state {
+   position: relative;
+   z-index: 1;
+}
+
+.waiting-screen .loading-spinner {
+   width: 56px;
+   height: 56px;
+   border-width: 4px;
+}
+
+.waiting-time {
+   font-family: var(--font-data);
+   font-size: var(--text-data-sm);
+   font-weight: var(--weight-medium);
+   color: var(--color-accent);
+   letter-spacing: var(--tracking-tight);
+   position: relative;
+   z-index: 1;
+   animation: md3-fade-in var(--duration-standard) var(--ease-decelerate) 100ms both;
+}
+
+.waiting-cycles {
+   font-family: var(--font-body);
+   font-size: var(--text-sm);
+   font-weight: var(--weight-medium);
+   color: var(--color-text-secondary);
+   background: var(--color-accent-dim);
+   padding: var(--space-1) var(--space-4);
+   border-radius: var(--radius-full);
+   position: relative;
+   z-index: 1;
+}
+
+.waiting-hint {
+   font-family: var(--font-body);
+   font-size: var(--text-base);
+   color: var(--color-text-secondary);
+   text-align: center;
+   max-width: 400px;
+   line-height: var(--leading-relaxed);
+   position: relative;
+   z-index: 1;
+   animation: md3-fade-in var(--duration-standard) var(--ease-decelerate) 200ms both;
+}
+
+.waiting-screen .cancel-button {
+   position: relative;
+   z-index: 1;
+   margin-top: var(--space-4);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 600px) {
+   .waiting-blur-shape-1 {
+      width: 250px;
+      height: 250px;
+   }
+
+   .waiting-blur-shape-2 {
+      width: 180px;
+      height: 180px;
+   }
+
+   .waiting-time {
+      font-size: var(--text-lg);
+   }
+}

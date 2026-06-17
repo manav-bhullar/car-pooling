@@ -4,6 +4,7 @@ import { cancelRideRequest } from '../api/rideRequests';
 import LoadingState from '../components/LoadingState';
 import CancelButton from '../components/CancelButton';
 import { getElapsedSeconds, formatElapsed } from '../utils/time';
+import './WaitingScreen.css';
 
 export default function WaitingScreen() {
   const { state, dispatch } = useApp();
@@ -58,6 +59,10 @@ export default function WaitingScreen() {
 
   return (
     <div className="waiting-screen">
+      {/* MD3 Organic blur shapes */}
+      <div className="waiting-blur-shape-1" aria-hidden="true" />
+      <div className="waiting-blur-shape-2" aria-hidden="true" />
+
       <LoadingState message="Finding you a ride..." />
 
       <p className="waiting-time">Waiting for {formatElapsed(elapsed)}</p>

@@ -8,6 +8,7 @@ import CancelModal from '../components/CancelModal';
 import FareBadge from '../components/FareBadge';
 import StopList from '../components/StopList';
 import PassengerList from '../components/PassengerList';
+import './TripScreen.css';
 
 export default function TripScreen() {
   const { state, dispatch } = useApp();
@@ -68,6 +69,10 @@ export default function TripScreen() {
 
   return (
     <div className="trip-screen two-panel">
+      {/* MD3 Organic blur shapes */}
+      <div className="trip-blur-shape-1" aria-hidden="true" />
+      <div className="trip-blur-shape-2" aria-hidden="true" />
+
       <div className="left-panel">
         <div className="fare-header">
           <h2>Your fare</h2>
