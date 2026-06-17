@@ -10,6 +10,7 @@ function LocationInput({ label, value, onSelect, allowCurrentLocation }) {
   const [open, setOpen] = useState(false);
   const debounceRef = useRef(null);
   const wrapperRef = useRef(null);
+  const latestQueryRef = useRef('');
 
   useEffect(() => {
     setQuery(value?.displayName || '');
@@ -29,6 +30,7 @@ function LocationInput({ label, value, onSelect, allowCurrentLocation }) {
   function handleChange(e) {
     const val = e.target.value;
     setQuery(val);
+    latestQueryRef.current = val;
     setOpen(true);
 
     if (value?.displayName && val !== value.displayName) {
@@ -52,13 +54,19 @@ function LocationInput({ label, value, onSelect, allowCurrentLocation }) {
       setLoading(true);
       try {
         const found = await searchLocation(val);
-        setResults(found);
+        if (latestQueryRef.current === val) {
+          setResults(found);
+        }
       } catch {
-        setResults([]);
+        if (latestQueryRef.current === val) {
+          setResults([]);
+        }
       } finally {
-        setLoading(false);
+        if (latestQueryRef.current === val) {
+          setLoading(false);
+        }
       }
-    }, 300);
+    }, 600);
   }
 
   function handleSelect(place) {

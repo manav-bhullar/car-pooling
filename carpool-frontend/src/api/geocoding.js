@@ -16,6 +16,7 @@ export async function searchLocation(query) {
     limit: '5',
     viewbox: PATIALA_VIEWBOX,
     addressdetails: '0',
+    countrycodes: 'in',
   });
 
   const url = `${NOMINATIM_BASE}?${params}`;
