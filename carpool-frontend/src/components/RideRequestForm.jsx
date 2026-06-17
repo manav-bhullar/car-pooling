@@ -91,10 +91,25 @@ function LocationInput({ label, value, onSelect, allowCurrentLocation }) {
       } finally {
         setLoading(false);
       }
-    }, () => {
+    }, (error) => {
       setLoading(false);
       setQuery('');
-      alert('Unable to retrieve your location.');
+      
+      let errorMessage = 'Unable to retrieve your location.';
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          errorMessage = 'Location permission denied. Please enable location access in your browser/system settings.';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMessage = 'Location information is unavailable.';
+          break;
+        case error.TIMEOUT:
+          errorMessage = 'The request to get user location timed out.';
+          break;
+      }
+      
+      console.error("Geolocation error:", error.message);
+      alert(errorMessage);
     });
   }
 
