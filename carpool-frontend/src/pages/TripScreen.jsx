@@ -2,19 +2,16 @@ import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { completeTrip } from '../api/trips';
 import { cancelRideRequest } from '../api/rideRequests';
-import TripCard from '../components/TripCard';
 import TripMap from '../components/TripMap';
 import CancelModal from '../components/CancelModal';
-import FareBadge from '../components/FareBadge';
-import StopList from '../components/StopList';
 import PassengerList from '../components/PassengerList';
+import './TripScreen.css';
 
 export default function TripScreen() {
   const { state, dispatch } = useApp();
   const [showCancelModal, setShowCancelModal] = useState(false);
 
   async function handleComplete() {
-    // Confirm because completing a trip will finalize it for all riders
     if (!window.confirm('Completing this trip will finalize it for all riders. Are you sure?')) return;
 
     try {
@@ -57,47 +54,60 @@ export default function TripScreen() {
 
   if (!state.trip) {
     return (
-      <div className="trip-screen">
-        <p className="trip-finalizing">Finalizing your trip...</p>
+      <div className="trip-screen-loading">
+        <div className="loading-spinner"></div>
+        <p>Finalizing your trip...</p>
       </div>
     );
   }
 
   const trip = state.trip;
   const me = (trip.passengers || []).find(p => p.userId === state.userId) || {};
+  
+  // Status chip styles based on M3 Expressive states
+  let statusClass = "trip-status-chip--pending";
+  if (trip.status === "ACTIVE") statusClass = "trip-status-chip--active";
+  if (trip.status === "COMPLETED") statusClass = "trip-status-chip--done";
 
   return (
-    <div className="trip-screen two-panel">
-      <div className="left-panel">
-        <div className="fare-header">
-          <h2>Your fare</h2>
-          <FareBadge fareShare={me.fareShare} large />
-        </div>
-
-        <div className="trip-metadata">
-          <p>Status: {trip.status}</p>
-          <p>Total distance: {trip.totalDistanceKm?.toFixed(2)} km</p>
-          <p>ETA: {trip.estimatedEtaMinutes} min</p>
-        </div>
-
-        <h3>Co-riders</h3>
-        <PassengerList passengers={trip.passengers} currentUserId={state.userId} />
-
-        <h3>Stops</h3>
-        <StopList stops={trip.stops} />
-
-        <div className="trip-actions">
-          <button className="complete-button" onClick={handleComplete}>Complete trip</button>
-          <button className="cancel-button" onClick={() => setShowCancelModal(true)}>Cancel trip</button>
-        </div>
+    <div className="trip-screen-expressive">
+      {/* Top 55% Full-Bleed Map */}
+      <div className="trip-map-container">
+        <TripMap stops={trip.stops} />
       </div>
 
-      <div className="right-panel">
-        <div className="map-container">
-          <TripMap stops={trip.stops} />
-        </div>
-        <div className="trip-card-compact">
-          <TripCard trip={trip} currentUserId={state.userId} />
+      {/* Persistent Bottom Sheet */}
+      <div className="trip-bottom-sheet">
+        {/* Blur shape behind content */}
+        <div className="blur-shape trip-sheet-blur"></div>
+        
+        <div className="trip-sheet-content">
+          <div className="trip-sheet-header">
+            <div className={`trip-status-chip ${statusClass}`}>
+              {trip.status}
+            </div>
+            <h2 className="trip-headline">En route to destination</h2>
+          </div>
+
+          <div className="trip-eta-block">
+            <span className="trip-eta-value">{trip.estimatedEtaMinutes}</span>
+            <span className="trip-eta-label">min</span>
+          </div>
+
+          <div className="trip-driver-card glass-card">
+            <h3>Your Fare: ${me.fareShare?.toFixed(2)}</h3>
+            <p>Total Distance: {trip.totalDistanceKm?.toFixed(2)} km</p>
+          </div>
+
+          <div className="trip-passengers">
+            <h3>Co-riders</h3>
+            <PassengerList passengers={trip.passengers} currentUserId={state.userId} />
+          </div>
+
+          <div className="trip-actions-row">
+            <button className="btn btn-primary" onClick={handleComplete}>Complete Trip</button>
+            <button className="btn btn-danger" onClick={() => setShowCancelModal(true)}>Cancel</button>
+          </div>
         </div>
       </div>
 

@@ -1,0 +1,79 @@
+.home-screen-expressive {
+   position: relative;
+   min-height: 100vh;
+   width: 100vw;
+   overflow: hidden;
+}
+
+/* Map as Wallpaper */
+.home-map-layer {
+   position: absolute;
+   inset: 0;
+   z-index: 0;
+}
+
+/* Atmospheric Blur Shapes */
+.home-blur-1 {
+   width: 50vw;
+   height: 50vw;
+   background: var(--color-md-primary);
+   opacity: 0.15;
+   top: -10%;
+   right: -10%;
+   animation: drift 20s ease-in-out infinite alternate;
+}
+
+.home-blur-2 {
+   width: 40vw;
+   height: 40vw;
+   background: var(--color-md-tertiary);
+   opacity: 0.15;
+   bottom: -10%;
+   left: 20%;
+   animation: drift 25s ease-in-out infinite alternate-reverse;
+}
+
+/* Foreground Content */
+.home-content-layer {
+   position: relative;
+   z-index: 10;
+   min-height: 100vh;
+   display: flex;
+   flex-direction: column;
+   justify-content: flex-end; /* Anchored to bottom */
+   padding: 24px;
+   pointer-events: none; /* Let map be interactive where exposed */
+}
+
+/* Re-enable pointer events for the form area */
+.home-glass-card {
+   pointer-events: auto;
+   width: 100%;
+   max-width: 500px;
+   border-radius: var(--radius-2xl);
+   padding: 32px;
+   margin-bottom: 24px;
+   box-shadow: var(--shadow-elevation-3);
+   animation: md3-fade-in var(--duration-spring) var(--ease-spring) both;
+}
+
+.home-headline {
+   font: var(--type-display-large);
+   color: var(--color-md-on-surface);
+   margin-bottom: 24px;
+}
+
+/* Overriding form elements to fit the Glass Card better */
+.home-glass-card .ride-request-form .form-title {
+   display: none; /* Hide the default form title, using home-headline instead */
+}
+
+@media (min-width: 768px) {
+   .home-content-layer {
+      justify-content: center;
+      padding-left: 10vw; /* Anchor left on desktop */
+   }
+   .home-glass-card {
+      margin-bottom: 0;
+   }
+}

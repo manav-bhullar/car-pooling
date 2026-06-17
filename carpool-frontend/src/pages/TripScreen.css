@@ -1,0 +1,146 @@
+.trip-screen-loading {
+   min-height: 100vh;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   background: var(--color-md-surface);
+   color: var(--color-md-on-surface);
+}
+
+.trip-screen-expressive {
+   position: relative;
+   min-height: 100vh;
+   display: flex;
+   flex-direction: column;
+   background: var(--color-md-surface);
+}
+
+/* ============================================================
+   MAP CONTAINER (Top 55%)
+   ============================================================ */
+.trip-map-container {
+   height: 55vh;
+   width: 100%;
+   position: fixed;
+   top: 0;
+   left: 0;
+   z-index: 0;
+}
+
+.trip-map-container .trip-map {
+   height: 100% !important;
+}
+
+/* ============================================================
+   BOTTOM SHEET
+   ============================================================ */
+.trip-bottom-sheet {
+   position: relative;
+   z-index: 10;
+   margin-top: 50vh; /* Overlaps map slightly */
+   min-height: 50vh;
+   background: var(--color-md-surface);
+   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+   box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
+   padding: 32px 24px;
+   overflow: hidden;
+}
+
+/* Blur shape behind sheet content */
+.trip-sheet-blur {
+   width: 60vw;
+   height: 60vw;
+   background: var(--color-md-primary);
+   opacity: 0.12;
+   top: -10%;
+   right: -20%;
+   animation: drift 20s ease-in-out infinite alternate;
+}
+
+.trip-sheet-content {
+   position: relative;
+   z-index: 20;
+   display: flex;
+   flex-direction: column;
+   gap: 24px;
+   max-width: 800px;
+   margin: 0 auto;
+}
+
+/* ============================================================
+   HEADER & STATUS
+   ============================================================ */
+.trip-sheet-header {
+   display: flex;
+   flex-direction: column;
+   gap: 12px;
+   align-items: flex-start;
+}
+
+.trip-headline {
+   font: var(--type-headline-large);
+   color: var(--color-md-on-surface);
+}
+
+.trip-status-chip {
+   font: var(--type-label-medium);
+   padding: 8px 16px;
+   border-radius: var(--radius-full);
+   transition: background var(--duration-medium) var(--ease-standard),
+               color var(--duration-medium) var(--ease-standard);
+}
+
+.trip-status-chip--pending {
+   background: var(--color-md-express-ride-pending);
+   color: var(--color-md-on-tertiary-container);
+}
+
+.trip-status-chip--active {
+   background: var(--color-md-express-ride-active);
+   color: var(--color-md-on-primary-container);
+}
+
+.trip-status-chip--done {
+   background: var(--color-md-express-ride-done);
+   color: #004d00;
+}
+
+/* ============================================================
+   ETA BLOCK
+   ============================================================ */
+.trip-eta-block {
+   display: flex;
+   align-items: baseline;
+   gap: 8px;
+}
+
+.trip-eta-value {
+   font: var(--type-display-large);
+   color: var(--color-md-primary);
+   line-height: 1;
+}
+
+.trip-eta-label {
+   font: var(--type-title-large);
+   color: var(--color-md-on-surface-variant);
+}
+
+/* ============================================================
+   DRIVER CARD (Glassmorphism inside sheet)
+   ============================================================ */
+.trip-driver-card {
+   background: rgba(243, 237, 247, 0.80); /* surface-container/80 */
+   border-radius: var(--radius-md); /* 16px */
+   padding: 24px;
+   border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================================
+   ACTIONS
+   ============================================================ */
+.trip-actions-row {
+   display: flex;
+   gap: 16px;
+   margin-top: 16px;
+}

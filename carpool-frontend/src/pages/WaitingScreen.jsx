@@ -1,17 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { cancelRideRequest } from '../api/rideRequests';
-import LoadingState from '../components/LoadingState';
-import CancelButton from '../components/CancelButton';
 import { getElapsedSeconds, formatElapsed } from '../utils/time';
+import TripMap from '../components/TripMap';
+import './WaitingScreen.css';
 
 export default function WaitingScreen() {
   const { state, dispatch } = useApp();
   const [cancelling, setCancelling] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
-  // Elapsed seconds since ride request creation. Use rideRequest.createdAt
-  // so the timer survives navigation and reflects server timestamp.
-  const createdAt = state.rideRequest?.createdAt || null;
+  const rideRequest = state.rideRequest;
+  const createdAt = rideRequest?.createdAt || null;
   const [elapsed, setElapsed] = useState(() => getElapsedSeconds(createdAt));
 
   useEffect(() => {
@@ -23,52 +23,101 @@ export default function WaitingScreen() {
   }, [createdAt]);
 
   async function handleCancel() {
-    if (!state.rideRequest) return;
-
+    if (!rideRequest) return;
     setCancelling(true);
     try {
-      await cancelRideRequest(state.userId, state.rideRequest.id);
+      await cancelRideRequest(state.userId, rideRequest.id);
       dispatch({ type: 'RESET' });
     } catch (err) {
       dispatch({
         type: 'SET_NOTIFICATION',
-        payload: {
-          type: 'error',
-          message: err.message || 'Failed to cancel ride request',
-        },
+        payload: { type: 'error', message: err.message || 'Failed to cancel' },
       });
     } finally {
       setCancelling(false);
+      setShowCancelConfirm(false);
     }
   }
 
-  if (!state.rideRequest) {
-    return <LoadingState message="Preparing your request..." />;
-  }
+  if (!rideRequest) return null;
 
-  const pendingCycles = state.rideRequest?.pendingCycles;
+  const isMatched = state.uiState === 'MATCHED' || rideRequest.status === 'MATCHED';
 
-  function getProgressMessage(seconds) {
-    if (seconds < 10) return "Finding the best matches near you...";
-    if (seconds < 60) return "Still searching — thanks for your patience.";
-    if (seconds < 120) return "This may take slightly longer; expanding search.";
-    if (seconds < 240) return "We're extending search radius and retrying.";
-    return "Thanks for waiting — we're still working on finding matches.";
-  }
+  const stops = [
+    { stopOrder: 1, type: 'PICKUP', lat: rideRequest.pickupLat, lng: rideRequest.pickupLng },
+    { stopOrder: 2, type: 'DROPOFF', lat: rideRequest.dropLat, lng: rideRequest.dropLng }
+  ];
+
+  // Shift the map's visual center to the right and zoom out slightly by increasing padding
+  const fitBoundsOptions = React.useMemo(() => ({
+    paddingTopLeft: window.innerWidth >= 768 ? [600, 150] : [100, 100],
+    paddingBottomRight: [100, 150]
+  }), []);
 
   return (
-    <div className="waiting-screen">
-      <LoadingState message="Finding you a ride..." />
+    <div className={`waiting-screen-expressive ${isMatched ? 'is-matched' : ''}`}>
 
-      <p className="waiting-time">Waiting for {formatElapsed(elapsed)}</p>
+      {/* Map as Wallpaper */}
+      <div className="waiting-map-layer">
+        <TripMap stops={stops} fitBoundsOptions={fitBoundsOptions} />
+      </div>
 
-      {typeof pendingCycles === 'number' && (
-        <p className="waiting-cycles">Attempt {pendingCycles + 1}</p>
-      )}
+      {/* Atmospheric Blur Shapes */}
+      <div className="blur-shape waiting-blur-1"></div>
+      <div className="blur-shape waiting-blur-2"></div>
 
-      <p className="waiting-hint" aria-live="polite">{getProgressMessage(elapsed)}</p>
+      {/* Foreground Content */}
+      <div className="waiting-content-layer">
+        <div className="waiting-glass-card glass-card">
 
-      <CancelButton onCancel={handleCancel} label={cancelling ? 'Cancelling...' : 'Cancel Ride'} />
+          <h1 className="waiting-primary-msg">
+            {isMatched ? 'Match found!' : 'Finding your ride...'}
+          </h1>
+          {isMatched && <p className="waiting-secondary-msg">Loading your trip details...</p>}
+
+          <div className="waiting-status-block">
+            <p className="waiting-timer">Waiting for {formatElapsed(elapsed)}</p>
+          </div>
+
+          <hr className="waiting-divider" />
+
+          <div className="waiting-request-summary">
+            <span className="waiting-section-label">Your request</span>
+            <p className="waiting-route-text">{rideRequest.pickupAddress?.split(',')[0]} → {rideRequest.dropAddress?.split(',')[0]}</p>
+            <p className="waiting-time-text">
+              {rideRequest.preferredTime
+                ? new Date(rideRequest.preferredTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : 'ASAP'}
+            </p>
+          </div>
+
+          {/* Cancel Action */}
+          <div className="waiting-cancel-zone">
+            {!showCancelConfirm ? (
+              <button
+                className="btn btn-outlined btn-danger"
+                onClick={() => setShowCancelConfirm(true)}
+                disabled={isMatched || cancelling}
+              >
+                Cancel ride
+              </button>
+            ) : (
+              <div className="cancel-confirm-inline">
+                <p>Are you sure?</p>
+                <div className="cancel-confirm-actions">
+                  <button className="btn btn-danger" onClick={handleCancel} disabled={cancelling}>
+                    {cancelling ? 'Cancelling...' : 'Yes, cancel'}
+                  </button>
+                  <button className="btn btn-tonal" onClick={() => setShowCancelConfirm(false)} disabled={cancelling}>
+                    Keep searching
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 }

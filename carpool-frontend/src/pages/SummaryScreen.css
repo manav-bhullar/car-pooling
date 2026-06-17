@@ -1,0 +1,160 @@
+.summary-screen-expressive {
+   min-height: 100vh;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   position: relative;
+   overflow: hidden;
+   background: var(--color-md-surface);
+   padding: 24px;
+}
+
+/* ============================================================
+   ACTIVE BLUR SHAPES (Pulse + Drift)
+   ============================================================ */
+@keyframes pulse-drift {
+   0% { transform: translate(0, 0) scale(1); opacity: 0.15; }
+   50% { transform: translate(15px, -20px) scale(1.1); opacity: 0.25; }
+   100% { transform: translate(0, 0) scale(1); opacity: 0.15; }
+}
+
+.summary-blur-1 {
+   width: 60vw;
+   height: 60vw;
+   background: var(--color-md-primary);
+   top: 10%;
+   right: -10%;
+   animation: pulse-drift 8s ease-in-out infinite;
+}
+
+.summary-blur-2 {
+   width: 50vw;
+   height: 50vw;
+   background: var(--color-md-tertiary);
+   bottom: 10%;
+   left: -10%;
+   animation: pulse-drift 10s ease-in-out infinite reverse;
+}
+
+.summary-blur-3 {
+   width: 40vw;
+   height: 40vw;
+   background: var(--color-md-secondary);
+   top: 40%;
+   left: 30%;
+   animation: pulse-drift 12s ease-in-out infinite;
+}
+
+/* ============================================================
+   CONFETTI ANIMATION
+   ============================================================ */
+.confetti-container {
+   position: absolute;
+   inset: 0;
+   pointer-events: none;
+   z-index: 1;
+   overflow: hidden;
+}
+
+.confetti-piece {
+   position: absolute;
+   bottom: -20px;
+   width: 12px;
+   height: 12px;
+   border-radius: 50%;
+   opacity: 0.6;
+   animation: confetti-float linear forwards;
+}
+
+@keyframes confetti-float {
+   0% { transform: translateY(0) scale(0.8); opacity: 0.8; }
+   100% { transform: translateY(-120vh) scale(1.2); opacity: 0; }
+}
+
+/* ============================================================
+   CONTENT LAYER
+   ============================================================ */
+.summary-content-layer {
+   position: relative;
+   z-index: 10;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   text-align: center;
+   max-width: 600px;
+   width: 100%;
+}
+
+/* ============================================================
+   COMPLETION MARK (Tertiary Container Overshoot)
+   ============================================================ */
+.summary-completion-mark {
+   width: 80px;
+   height: 80px;
+   border-radius: 50%;
+   background: var(--color-md-tertiary-container);
+   color: var(--color-md-on-tertiary-container);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   margin-bottom: 24px;
+   box-shadow: var(--shadow-elevation-2);
+   animation: mark-overshoot var(--duration-long) var(--ease-overshoot) both;
+}
+
+@keyframes mark-overshoot {
+   0% { transform: scale(0); opacity: 0; }
+   100% { transform: scale(1); opacity: 1; }
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+.summary-title {
+   font: var(--type-display-large);
+   color: var(--color-md-on-surface);
+   margin-bottom: 8px;
+}
+
+.summary-time {
+   font: var(--type-body-large);
+   color: var(--color-md-on-surface-variant);
+   margin-bottom: 48px;
+}
+
+/* ============================================================
+   STATS CARD
+   ============================================================ */
+.summary-stats-card {
+   background: var(--color-md-primary-container);
+   width: 100%;
+   margin-bottom: 48px;
+}
+
+.summary-stats-card .trip-card {
+   background: transparent;
+   box-shadow: none;
+   padding: 0;
+   color: var(--color-md-on-primary-container);
+}
+
+/* Ensure text inside the primary container is legible */
+.summary-stats-card .trip-distance,
+.summary-stats-card .trip-status,
+.summary-stats-card p,
+.summary-stats-card h3 {
+   color: var(--color-md-on-primary-container) !important;
+}
+
+.summary-stats-card .trip-status {
+   background: var(--color-md-on-primary-container);
+   color: var(--color-md-primary-container) !important;
+}
+
+/* ============================================================
+   FAB
+   ============================================================ */
+.summary-fab {
+   align-self: center;
+}
