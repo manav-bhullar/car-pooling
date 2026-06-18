@@ -1,0 +1,3 @@
+$kind: collection
+name: Ride Requests
+description: Endpoints for creating and managing ride requests. All endpoints require authentication.

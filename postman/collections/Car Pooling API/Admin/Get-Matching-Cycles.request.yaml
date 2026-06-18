@@ -1,0 +1,14 @@
+$kind: http-request
+name: Get Matching Cycles
+method: GET
+url: '{{baseUrl}}/api/admin/matching-cycles'
+order: 2000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{accessToken}}'
+queryParams:
+  - key: limit
+    value: '20'
+    disabled: true

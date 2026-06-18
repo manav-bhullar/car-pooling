@@ -1,0 +1,10 @@
+$kind: http-request
+name: Run Matching
+method: POST
+url: '{{baseUrl}}/api/admin/run-matching'
+order: 1000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{accessToken}}'

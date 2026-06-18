@@ -1,0 +1,14 @@
+$kind: http-request
+name: Resend OTP
+method: POST
+url: '{{baseUrl}}/api/auth/resend-otp'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "john@example.com"
+    }

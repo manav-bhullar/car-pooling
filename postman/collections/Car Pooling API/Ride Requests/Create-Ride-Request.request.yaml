@@ -1,0 +1,25 @@
+$kind: http-request
+name: Create Ride Request
+method: POST
+url: '{{baseUrl}}/api/ride-requests'
+order: 1000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{accessToken}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "pickupLat": 37.7749,
+      "pickupLng": -122.4194,
+      "dropLat": 37.3382,
+      "dropLng": -121.8863,
+      "pickupAddress": "San Francisco, CA",
+      "dropAddress": "San Jose, CA",
+      "preferredTime": "2026-06-18T10:00:00.000Z"
+    }

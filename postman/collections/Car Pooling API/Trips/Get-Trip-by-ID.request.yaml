@@ -1,0 +1,10 @@
+$kind: http-request
+name: Get Trip by ID
+method: GET
+url: '{{baseUrl}}/api/trips/{{tripId}}'
+order: 3000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{accessToken}}'

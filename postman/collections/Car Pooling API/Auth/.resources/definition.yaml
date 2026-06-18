@@ -1,0 +1,3 @@
+$kind: collection
+name: Auth
+description: Authentication endpoints for registration, login, email verification, and token management.
