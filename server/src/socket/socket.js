@@ -5,9 +5,13 @@ const prisma = require('../prisma/client');
 let io;
 
 function initSocket(server) {
-  const allowedOrigins = process.env.FRONTEND_URL
-    ? [process.env.FRONTEND_URL, /^http:\/\/localhost:\d+$/]
-    : [/^http:\/\/localhost:\d+$/];
+  const allowedOrigins = [
+    /^http:\/\/localhost:\d+$/,        // All localhost ports (dev)
+    /^https:\/\/.*\.vercel\.app$/,    // All Vercel preview + production URLs
+  ];
+  if (process.env.FRONTEND_URL) {
+    allowedOrigins.push(process.env.FRONTEND_URL);
+  }
 
   io = new Server(server, {
     cors: {
