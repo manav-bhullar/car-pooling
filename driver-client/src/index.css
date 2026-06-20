@@ -345,11 +345,11 @@ input:focus {
 
 /* Animations */
 @keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.8; }
-  100% { transform: scale(1); opacity: 1; }
+  0% { box-shadow: 0 0 0 0 rgba(10, 86, 209, 0.4); opacity: 1; }
+  70% { box-shadow: 0 0 0 10px rgba(10, 86, 209, 0); opacity: 0.8; }
+  100% { box-shadow: 0 0 0 0 rgba(10, 86, 209, 0); opacity: 1; }
 }
 
 .pulse {
-  animation: pulse 2s infinite ease-in-out;
+  animation: pulse 2s infinite cubic-bezier(0.66, 0, 0, 1);
 }

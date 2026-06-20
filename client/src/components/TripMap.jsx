@@ -1,5 +1,6 @@
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
+import { fetchOSRMRoute } from '../utils/routing';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -107,6 +108,20 @@ export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, m
 
   const positions = useMemo(() => sortedStops.map(s => [s.lat, s.lng]), [sortedStops]);
 
+  const [routePositions, setRoutePositions] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (positions.length > 1) {
+      fetchOSRMRoute(positions).then(route => {
+        if (isMounted) setRoutePositions(route);
+      });
+    } else {
+      setRoutePositions(positions);
+    }
+    return () => { isMounted = false; };
+  }, [positions]);
+
   if (!sortedStops.length && !defaultCenter) {
     return <div className="map-empty">No map data available</div>;
   }
@@ -135,7 +150,7 @@ export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, m
           );
         })}
 
-        <Polyline positions={positions} pathOptions={{ color: '#000000', weight: 4, dashArray: '10, 10' }} />
+        <Polyline positions={routePositions.length > 0 ? routePositions : positions} pathOptions={{ color: '#0A56D1', weight: 5, lineCap: 'round', lineJoin: 'round' }} />
 
         {driverLocation && (
           <Marker 

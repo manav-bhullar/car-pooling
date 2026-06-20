@@ -1,5 +1,6 @@
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
+import { fetchOSRMRoute } from '../utils/routing';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -97,6 +98,20 @@ export default function DriverMap({ stops = [], fitBoundsOptions, defaultCenter,
 
   const positions = useMemo(() => sortedStops.map(s => [s.lat, s.lng]), [sortedStops]);
 
+  const [routePositions, setRoutePositions] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (positions.length > 1) {
+      fetchOSRMRoute(positions).then(route => {
+        if (isMounted) setRoutePositions(route);
+      });
+    } else {
+      setRoutePositions(positions);
+    }
+    return () => { isMounted = false; };
+  }, [positions]);
+
   // Only use static positions (stops or pickup pins) for bounding so the map doesn't jitter
   // when the driverLocation updates rapidly during a trip.
   const boundsPositions = useMemo(() => {
@@ -138,7 +153,7 @@ export default function DriverMap({ stops = [], fitBoundsOptions, defaultCenter,
         ))}
 
         {positions.length > 0 && (
-          <Polyline positions={positions} pathOptions={{ color: '#000000', weight: 4, dashArray: '10, 10' }} />
+          <Polyline positions={routePositions.length > 0 ? routePositions : positions} pathOptions={{ color: '#0A56D1', weight: 5, lineCap: 'round', lineJoin: 'round' }} />
         )}
 
         {driverLocation && (
