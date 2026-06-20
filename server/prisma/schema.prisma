@@ -12,13 +12,16 @@ model User {
   name      String
   email     String   @unique
   password  String
+  phone     String?
+  role      String   @default("RIDER")
   isVerified Boolean @default(false)
   createdAt DateTime @default(now())
 
-  rideRequests RideRequest[]
-  tripUsers    TripUser[]
-  otps         Otp[]
+  rideRequests  RideRequest[]
+  tripUsers     TripUser[]
+  otps          Otp[]
   refreshTokens RefreshToken[]
+  driverProfile DriverProfile?
 }
 
 model RideRequest {
@@ -43,16 +46,18 @@ model RideRequest {
 }
 
 model Trip {
-  id                   String   @id @default(uuid())
+  id                   String    @id @default(uuid())
   status               String
   totalDistanceKm      Float
   estimatedEtaMinutes  Int
   detourRatio          Float
-  createdAt            DateTime @default(now())
+  lockedAt             DateTime?
+  createdAt            DateTime  @default(now())
   completedAt          DateTime?
 
-  tripUsers TripUser[]
-  tripStops TripStop[]
+  tripUsers  TripUser[]
+  tripStops  TripStop[]
+  driverTrip DriverTrip?
 }
 
 model TripUser {
@@ -121,4 +126,28 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model DriverProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  vehicleType  String
+  licensePlate String
+  createdAt    DateTime @default(now())
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trips DriverTrip[]
+}
+
+model DriverTrip {
+  id              String    @id @default(uuid())
+  driverProfileId String
+  tripId          String    @unique
+  status          String    @default("ACCEPTED")
+  acceptedAt      DateTime  @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  driverProfile DriverProfile @relation(fields: [driverProfileId], references: [id])
+  trip          Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
 }
