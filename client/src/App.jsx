@@ -5,6 +5,7 @@ import { useAuth } from './context/AuthContext';
 import { useAppInit } from './hooks/useAppInit';
 import { useRideRequestPoller } from './hooks/useRideRequestPoller';
 import { useTripPoller } from './hooks/useTripPoller';
+import { useGlobalSocket } from './hooks/useGlobalSocket';
 import { getCurrentTrip } from './api/trips';
 import { getRouteForUiState } from './utils/routeUtils';
 import ProtectedRoute from './ProtectedRoute';
@@ -30,6 +31,7 @@ export default function App() {
   useAppInit();
   useRideRequestPoller();
   useTripPoller();
+  useGlobalSocket();
 
   const userId = user?.id;
   const targetRoute = userId ? getRouteForUiState(state.uiState, state.trip?.id) : null;

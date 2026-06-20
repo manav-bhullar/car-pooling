@@ -40,6 +40,9 @@ function initSocket(server) {
   io.on('connection', (socket) => {
     console.log(`🔌 Socket connected: ${socket.id} (User: ${socket.userId})`);
 
+    // Join a room for the user's specific ID to allow direct notifications
+    socket.join(socket.userId);
+
     // Join a specific trip room
     socket.on('joinTrip', async ({ tripId }) => {
       try {
