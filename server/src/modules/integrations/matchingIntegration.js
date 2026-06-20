@@ -2,6 +2,7 @@ const { runMatchingBatch } = require('../matching/matchingEngine');
 const { createTripFromMatch } = require('../trip/trip.service');
 const { runExpansionPhase } = require('../trip/expansion.service');
 const prisma = require('../../prisma/client');
+const { getIo } = require('../../socket/socket');
 
 /**
  * Fetch pending ride requests with database-level locking
@@ -45,18 +46,42 @@ async function updatePendingCycles(tx, allRequests, matchedIds) {
   // If the ride's departure time has already passed, no point matching
   const now = new Date();
 
-  const timeCancelled = await tx.rideRequest.updateMany({
+  // Find the requests we are about to cancel so we can notify the users
+  const expiringRequests = await tx.rideRequest.findMany({
     where: {
       id: { in: unmatchedIds },
       status: 'PENDING',
       preferredTime: { lt: now }
     },
-    data: { status: 'CANCELLED' }
+    select: { id: true, userId: true }
   });
 
+  const expiringIds = expiringRequests.map(r => r.id);
+
+  let timeCancelledCount = 0;
+  
+  if (expiringIds.length > 0) {
+    const timeCancelled = await tx.rideRequest.updateMany({
+      where: { id: { in: expiringIds } },
+      data: { status: 'CANCELLED' }
+    });
+    timeCancelledCount = timeCancelled.count;
+
+    // Notify the users via Socket.io
+    const io = getIo();
+    if (io) {
+      expiringRequests.forEach(req => {
+        io.to(req.userId).emit('ride_cancelled', {
+          rideRequestId: req.id,
+          reason: 'Time for the ride has passed without a match. Ride automatically cancelled.'
+        });
+      });
+    }
+  }
+
   // ✅ Return counts for observability (enables debugging)
-  console.log(`Auto-cancelled: time=${timeCancelled.count}`);
-  return { cycleCancelled: 0, timeCancelled: timeCancelled.count };
+  console.log(`Auto-cancelled: time=${timeCancelledCount}`);
+  return { cycleCancelled: 0, timeCancelled: timeCancelledCount };
 }
 
 /**
