@@ -73,7 +73,7 @@ async function updatePendingCycles(tx, allRequests, matchedIds) {
       expiringRequests.forEach(req => {
         io.to(req.userId).emit('ride_cancelled', {
           rideRequestId: req.id,
-          reason: 'Time for the ride has passed without a match. Ride automatically cancelled.'
+          reason: 'Your ride was automatically cancelled because the departure time has passed.'
         });
       });
     }
