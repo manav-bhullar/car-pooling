@@ -10,8 +10,12 @@ const { authenticate } = require('./middleware/auth.middleware');
 
 const app = express();
 
+const allowedOrigins = process.env.FRONTEND_URL
+  ? [process.env.FRONTEND_URL, /^http:\/\/localhost:\d+$/]
+  : [/^http:\/\/localhost:\d+$/];
+
 app.use(cors({
-  origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'http://localhost:5174'],
+  origin: allowedOrigins,
   credentials: true,
 }));
 app.use(express.json());

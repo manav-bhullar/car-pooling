@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAvailableTrips, acceptTrip, getCurrentTrip } from '../api/driver';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +13,21 @@ export default function Dashboard() {
   const [rejectedTripIds, setRejectedTripIds] = useState([]);
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const [idleDriverLocation, setIdleDriverLocation] = useState(null);
+  const gpsWatchRef = useRef(null);
+
+  // Watch GPS for the idle car icon on the map
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    gpsWatchRef.current = navigator.geolocation.watchPosition(
+      (pos) => setIdleDriverLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 10000 }
+    );
+    return () => {
+      if (gpsWatchRef.current != null) navigator.geolocation.clearWatch(gpsWatchRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     // Check if we already have an active trip
@@ -65,7 +80,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <DriverMap stops={mapStops} pickupMarkers={pickupMarkers} defaultCenter={[37.7749, -122.4194]} />
+      <DriverMap stops={mapStops} pickupMarkers={pickupMarkers} defaultCenter={[30.9010, 75.8573]} idleDriverLocation={idleDriverLocation} />
       
       {/* Top Right Header */}
       <div className="glass-panel" style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 20, padding: '6px 6px 6px 12px', display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '50px', background: 'var(--color-md-surface-container-low)', border: '1px solid var(--color-md-outline-variant)', boxShadow: 'var(--shadow-elevation-2)' }}>

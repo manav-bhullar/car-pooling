@@ -5,9 +5,13 @@ const prisma = require('../prisma/client');
 let io;
 
 function initSocket(server) {
+  const allowedOrigins = process.env.FRONTEND_URL
+    ? [process.env.FRONTEND_URL, /^http:\/\/localhost:\d+$/]
+    : [/^http:\/\/localhost:\d+$/];
+
   io = new Server(server, {
     cors: {
-      origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'http://localhost:5174'],
+      origin: allowedOrigins,
       methods: ['GET', 'POST'],
       credentials: true,
     },
