@@ -9,6 +9,7 @@ export default function ActiveTrip() {
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -43,9 +44,13 @@ export default function ActiveTrip() {
     }
   };
 
-  const handleComplete = async () => {
-    if (!window.confirm('Are you sure you want to complete this trip?')) return;
+  const handleCompleteClick = () => {
+    setShowCompleteModal(true);
+  };
+
+  const handleCompleteConfirm = async () => {
     try {
+      setShowCompleteModal(false);
       await completeTrip(trip.id);
       navigate('/'); // Back to dashboard
     } catch (err) {
@@ -67,7 +72,7 @@ export default function ActiveTrip() {
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>Trip ID: {trip.id.slice(-6)}</p>
           </div>
           {isStarted ? (
-            <button className="btn btn-danger" style={{ width: 'auto', padding: '0.5rem 1rem' }} onClick={handleComplete} disabled={loading}>
+            <button className="btn btn-success" style={{ width: 'auto', padding: '0.5rem 1rem' }} onClick={handleCompleteClick} disabled={loading}>
               {loading ? 'Completing...' : 'Complete Trip'}
             </button>
           ) : (
@@ -80,14 +85,14 @@ export default function ActiveTrip() {
         {error && <div style={{ color: '#EF4444', marginBottom: '1rem' }}>{error}</div>}
 
         {isStarted && location && (
-          <div className="glass-panel pulse" style={{ padding: '1rem', marginBottom: '1.5rem', border: '1px solid var(--primary)', display: 'flex', justifyContent: 'space-between', background: 'var(--color-md-surface)' }}>
+          <div className="glass-panel pulse" style={{ padding: '1rem', marginBottom: '1.5rem', border: '1px solid #0A56D1', display: 'flex', justifyContent: 'space-between', background: 'var(--color-md-surface)' }}>
             <div>
-              <span style={{ color: 'var(--primary)', fontWeight: '600', display: 'block', fontSize: '0.875rem' }}>Live GPS Broadcasting Active</span>
+              <span style={{ color: '#0A56D1', fontWeight: '600', display: 'block', fontSize: '0.875rem' }}>Live GPS Broadcasting Active</span>
               <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
                 Lat: {location.lat.toFixed(5)}, Lng: {location.lng.toFixed(5)}
               </span>
             </div>
-            <svg style={{ transform: `rotate(${location.bearing}deg)`, transition: 'transform 0.5s ease', fill: 'var(--primary)', width: '24px', height: '24px' }} viewBox="0 0 24 24">
+            <svg style={{ transform: `rotate(${location.bearing}deg)`, transition: 'transform 0.5s linear', fill: '#0A56D1', width: '24px', height: '24px' }} viewBox="0 0 24 24">
               <path d="M12 2L4 20l1.5 1.5L12 17l6.5 4.5L20 20 12 2z" />
             </svg>
           </div>
@@ -96,7 +101,7 @@ export default function ActiveTrip() {
         <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem', background: 'var(--color-md-surface)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ margin: 0, fontWeight: 600 }}>Riders</h3>
-            <span style={{ color: '#FBBF24', fontWeight: 'bold' }}>₹{(trip.tripUsers?.reduce((acc, tu) => acc + tu.fareShare, 0) || 0).toFixed(0)} Earnings</span>
+            <span style={{ color: '#0A56D1', fontWeight: 'bold' }}>₹{(trip.tripUsers?.reduce((acc, tu) => acc + tu.fareShare, 0) || 0).toFixed(0)} Earnings</span>
           </div>
           {trip.tripUsers?.map((tu, i) => (
             <div key={tu.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', padding: '0.5rem', background: 'var(--color-md-surface-container)', borderRadius: '6px' }}>
@@ -104,7 +109,7 @@ export default function ActiveTrip() {
                 <span style={{ fontWeight: '500' }}>{tu.user?.name} (Rider {i + 1})</span>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{tu.user?.phone || 'No phone'}</span>
               </div>
-              <div style={{ color: 'var(--primary)' }}>₹{tu.fareShare.toFixed(0)}</div>
+              <div style={{ color: '#0A56D1', fontWeight: '600' }}>₹{tu.fareShare.toFixed(0)}</div>
             </div>
           ))}
         </div>
@@ -122,6 +127,19 @@ export default function ActiveTrip() {
           </div>
         </div>
       </div>
+
+      {showCompleteModal && (
+        <div className="logout-modal-backdrop">
+          <div className="logout-modal glass-card">
+            <h3>Complete Trip</h3>
+            <p>Are you sure you have dropped off all riders and want to complete this trip?</p>
+            <div className="logout-modal-actions">
+              <button className="btn-cancel" onClick={() => setShowCompleteModal(false)}>Cancel</button>
+              <button className="btn btn-success" style={{ padding: '10px 24px', borderRadius: 'var(--radius-full)', font: 'var(--type-label-medium)', fontWeight: 600, border: 'none', cursor: 'pointer' }} onClick={handleCompleteConfirm}>Complete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

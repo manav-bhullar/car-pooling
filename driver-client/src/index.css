@@ -176,6 +176,16 @@ input:focus {
   background-color: #8c1d18;
 }
 
+.btn-success {
+  background-color: var(--color-md-express-ride-done);
+  color: #000000;
+}
+
+.btn-success:hover {
+  background-color: #4CAF50;
+  box-shadow: 0 4px 14px rgba(92, 200, 153, 0.4);
+}
+
 .btn-primary {
   background: var(--primary);
   color: #000;

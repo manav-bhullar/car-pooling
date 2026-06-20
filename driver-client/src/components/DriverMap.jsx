@@ -97,17 +97,15 @@ export default function DriverMap({ stops = [], fitBoundsOptions, defaultCenter,
 
   const positions = useMemo(() => sortedStops.map(s => [s.lat, s.lng]), [sortedStops]);
 
-  // If driverLocation is provided, add it to positions so bounds fit it too
+  // Only use static positions (stops or pickup pins) for bounding so the map doesn't jitter
+  // when the driverLocation updates rapidly during a trip.
   const boundsPositions = useMemo(() => {
     let pos = [...positions];
-    if (driverLocation) {
-      pos.push([driverLocation.lat, driverLocation.lng]);
-    }
     if (pickupMarkers && pickupMarkers.length > 0) {
       pickupMarkers.forEach(m => pos.push([m.lat, m.lng]));
     }
     return pos;
-  }, [positions, driverLocation, pickupMarkers]);
+  }, [positions, pickupMarkers]);
 
   if (!sortedStops.length && !defaultCenter && !driverLocation) {
     return <div className="map-empty" style={{height: '100vh', width: '100vw', background: '#0f172a'}}></div>;

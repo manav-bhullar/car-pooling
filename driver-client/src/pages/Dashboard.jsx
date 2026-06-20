@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const [expandedTripId, setExpandedTripId] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [rejectedTripIds, setRejectedTripIds] = useState([]);
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
@@ -52,11 +53,12 @@ export default function Dashboard() {
     return <div style={{ color: 'white', textAlign: 'center', padding: '2rem' }}>Loading trips...</div>;
   }
 
-  const expandedTrip = trips.find(t => t.id === expandedTripId);
+  const displayTrips = trips.filter(t => !rejectedTripIds.includes(t.id));
+  const expandedTrip = displayTrips.find(t => t.id === expandedTripId);
   const mapStops = expandedTrip ? expandedTrip.tripStops : [];
   
   // If no trip is expanded, show all initial pickup points
-  const pickupMarkers = !expandedTrip ? trips.map(t => {
+  const pickupMarkers = !expandedTrip ? displayTrips.map(t => {
     const firstPickup = t.tripStops.find(s => s.type === 'PICKUP');
     return firstPickup ? { lat: firstPickup.lat, lng: firstPickup.lng, id: t.id } : null;
   }).filter(Boolean) : [];
@@ -86,7 +88,7 @@ export default function Dashboard() {
         
         {error && <div style={{ color: '#EF4444', marginBottom: '1rem', background: 'rgba(239, 68, 68, 0.2)', padding: '0.5rem', borderRadius: '8px' }}>{error}</div>}
 
-        {trips.length === 0 ? (
+        {displayTrips.length === 0 ? (
           <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
             No trips available right now. Waiting for riders...
             <br /><br />
@@ -94,7 +96,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
-            {trips.map(trip => {
+            {displayTrips.map(trip => {
               const isExpanded = expandedTripId === trip.id;
               const firstPickup = trip.tripStops.find(s => s.type === 'PICKUP');
               const lastDropoff = [...trip.tripStops].reverse().find(s => s.type === 'DROPOFF');
@@ -161,9 +163,18 @@ export default function Dashboard() {
                         </div>
                       </div>
 
-                      <button className="btn btn-primary" onClick={(e) => { e.stopPropagation(); handleAccept(trip.id); }}>
-                        Accept Trip
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className="btn btn-cancel" style={{ flex: 1, padding: '0.75rem', background: 'transparent', border: '1px solid var(--border-color)' }} onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setRejectedTripIds(prev => [...prev, trip.id]);
+                          if (expandedTripId === trip.id) setExpandedTripId(null);
+                        }}>
+                          Decline
+                        </button>
+                        <button className="btn btn-primary" style={{ flex: 2, padding: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handleAccept(trip.id); }}>
+                          Accept Trip
+                        </button>
+                      </div>
                     </>
                   )}
                 </div>
