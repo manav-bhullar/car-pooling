@@ -1,37 +1,40 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT, 10),
-  secure: false, // true for 465, false for other ports
-  family: 4,     // Force IPv4 — Render free tier blocks outbound IPv6
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+// Resend uses HTTPS API — works on all hosting platforms including Render free tier
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// The "from" address must be either:
+//   1. onboarding@resend.dev  (works immediately, for testing)
+//   2. A verified domain you own (for production)
+const FROM_ADDRESS = process.env.SMTP_FROM || 'CarpoolTU <onboarding@resend.dev>';
 
 exports.sendOtpEmail = async (to, otp, userName) => {
-  const mailOptions = {
-    from: process.env.SMTP_FROM || '"Carpool App" <noreply@carpool.com>',
-    to,
-    subject: 'Verify your email - Carpool App',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #333;">Welcome to Carpool App!</h2>
-        <p>Hi ${userName},</p>
-        <p>Please use the following OTP to verify your email address. It is valid for 10 minutes.</p>
-        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;">
-          <h1 style="color: #333; margin: 0; letter-spacing: 5px;">${otp}</h1>
-        </div>
-        <p>If you did not request this, please ignore this email.</p>
-      </div>
-    `,
-  };
-
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('OTP email sent: %s', info.messageId);
+    const { data, error } = await resend.emails.send({
+      from: FROM_ADDRESS,
+      to,
+      subject: 'Verify your email — CarpoolTU',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9;">
+          <div style="background: #ffffff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h2 style="color: #1a1a1a; margin-top: 0;">Welcome to CarpoolTU! 🚗</h2>
+            <p style="color: #555; font-size: 16px;">Hi ${userName},</p>
+            <p style="color: #555; font-size: 16px;">Please use the following OTP to verify your email address. It is valid for <strong>10 minutes</strong>.</p>
+            <div style="background: #fae366; border-radius: 8px; padding: 20px; text-align: center; margin: 24px 0;">
+              <h1 style="color: #1a1a1a; margin: 0; letter-spacing: 8px; font-size: 2.5rem;">${otp}</h1>
+            </div>
+            <p style="color: #999; font-size: 13px;">If you did not create an account, please ignore this email.</p>
+          </div>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error('Resend error:', error);
+      throw new Error('Failed to send verification email');
+    }
+
+    console.log('OTP email sent via Resend: %s', data?.id);
     return true;
   } catch (error) {
     console.error('Error sending email:', error);
