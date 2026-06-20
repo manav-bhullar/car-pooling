@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef, useState } from 'react';
+import { useMemo, useEffect, useRef, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
 import { fetchOSRMRoute } from '../utils/routing';
 import L from 'leaflet';
@@ -16,6 +16,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
+// ── FitBounds: fly to all stops when stops change ──────────────────
 function FitBounds({ positions, fitBoundsOptions }) {
   const map = useMap();
   const prevData = useRef('');
@@ -24,29 +25,44 @@ function FitBounds({ positions, fitBoundsOptions }) {
     if (!positions || positions.length === 0) return;
 
     const currentData = JSON.stringify({ positions, fitBoundsOptions });
-    if (prevData.current === currentData) {
-      return;
-    }
+    if (prevData.current === currentData) return;
     prevData.current = currentData;
 
     if (positions.length === 1) {
-      const singleBound = [positions[0], positions[0]];
-      map.flyToBounds(singleBound, { 
-        ...fitBoundsOptions, 
-        padding: fitBoundsOptions?.padding || [40, 40], 
-        maxZoom: 14, 
-        duration: 1.5, 
-        easeLinearity: 0.2 
+      map.flyToBounds([positions[0], positions[0]], {
+        ...fitBoundsOptions,
+        padding: fitBoundsOptions?.padding || [40, 40],
+        maxZoom: 14,
+        duration: 1.5,
+        easeLinearity: 0.2,
       });
       return;
     }
-    const bounds = positions.map((p) => [p[0], p[1]]);
-    map.flyToBounds(bounds, { ...fitBoundsOptions, padding: fitBoundsOptions?.padding || [40, 40], duration: 1.5, easeLinearity: 0.2 });
+    map.flyToBounds(positions.map((p) => [p[0], p[1]]), {
+      ...fitBoundsOptions,
+      padding: fitBoundsOptions?.padding || [40, 40],
+      duration: 1.5,
+      easeLinearity: 0.2,
+    });
   }, [map, positions, fitBoundsOptions]);
 
   return null;
 }
 
+// ── FlyToLocation: imperative fly triggered via ref ───────────────
+function FlyToLocation({ flyToRef }) {
+  const map = useMap();
+
+  useEffect(() => {
+    flyToRef.current = (lat, lng, zoom = 15) => {
+      map.flyTo([lat, lng], zoom, { duration: 1.4, easeLinearity: 0.25 });
+    };
+  }, [map, flyToRef]);
+
+  return null;
+}
+
+// ── SVG icons ──────────────────────────────────────────────────────
 const getPinSVG = (color) => encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
   <path fill="${color}" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z"/>
@@ -55,12 +71,9 @@ const getPinSVG = (color) => encodeURIComponent(`
 `);
 
 const getMarkerIcon = (type) => {
-  // M3 Expressive Baseline colors: Azure Blue for Pickup, Crimson Red for Dropoff
-  let color = type === 'PICKUP' ? '#0A56D1' : '#B3261E'; 
-  
+  const color = type === 'PICKUP' ? '#0A56D1' : '#B3261E';
   const width = 28;
   const height = 42;
-  
   return L.icon({
     iconUrl: `data:image/svg+xml;utf8,${getPinSVG(color)}`,
     iconSize: [width, height],
@@ -68,42 +81,135 @@ const getMarkerIcon = (type) => {
     popupAnchor: [0, -height],
     shadowUrl: markerShadow,
     shadowSize: [41, 41],
-    shadowAnchor: [13, 41]
+    shadowAnchor: [13, 41],
   });
 };
 
+// Proper car icon (top-down view) for active trip tracking
 const getCarSVG = (bearing) => encodeURIComponent(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48">
-  <g transform="rotate(${bearing} 12 12)">
-    <path fill="#0A56D1" stroke="#FFFFFF" stroke-width="2" d="M12 2L4 20l1.5 1.5L12 17l6.5 4.5L20 20 12 2z" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="48" height="48">
+  <g transform="rotate(${bearing}, 32, 32)">
+    <!-- Car body -->
+    <rect x="20" y="10" width="24" height="44" rx="10" ry="10" fill="#0A56D1" stroke="#ffffff" stroke-width="3"/>
+    <!-- Windshield -->
+    <rect x="23" y="14" width="18" height="12" rx="3" ry="3" fill="rgba(255,255,255,0.55)"/>
+    <!-- Rear window -->
+    <rect x="23" y="38" width="18" height="9" rx="3" ry="3" fill="rgba(255,255,255,0.35)"/>
+    <!-- Left wheels -->
+    <rect x="13" y="16" width="8" height="13" rx="3" fill="#1a1a2e"/>
+    <rect x="13" y="35" width="8" height="13" rx="3" fill="#1a1a2e"/>
+    <!-- Right wheels -->
+    <rect x="43" y="16" width="8" height="13" rx="3" fill="#1a1a2e"/>
+    <rect x="43" y="35" width="8" height="13" rx="3" fill="#1a1a2e"/>
   </g>
 </svg>
 `);
 
-const getCarIcon = (bearing) => {
-  return L.icon({
+// Idle car icon (yellow, parked) — shown on dashboard with no active trip
+const getIdleCarSVG = () => encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="52" height="52">
+  <!-- Shadow -->
+  <ellipse cx="32" cy="58" rx="16" ry="5" fill="rgba(0,0,0,0.18)"/>
+  <!-- Car body -->
+  <rect x="18" y="10" width="28" height="42" rx="11" ry="11" fill="#fae366" stroke="#000000" stroke-width="3"/>
+  <!-- Windshield -->
+  <rect x="22" y="14" width="20" height="13" rx="4" ry="4" fill="rgba(0,0,0,0.35)"/>
+  <!-- Rear window -->
+  <rect x="22" y="37" width="20" height="9" rx="4" ry="4" fill="rgba(0,0,0,0.25)"/>
+  <!-- Headlights -->
+  <rect x="22" y="10" width="8" height="4" rx="2" fill="#fffde7" stroke="#ccc" stroke-width="1"/>
+  <rect x="34" y="10" width="8" height="4" rx="2" fill="#fffde7" stroke="#ccc" stroke-width="1"/>
+  <!-- Left wheels -->
+  <rect x="11" y="17" width="8" height="12" rx="3" fill="#222"/>
+  <rect x="11" y="35" width="8" height="12" rx="3" fill="#222"/>
+  <!-- Right wheels -->
+  <rect x="45" y="17" width="8" height="12" rx="3" fill="#222"/>
+  <rect x="45" y="35" width="8" height="12" rx="3" fill="#222"/>
+</svg>
+`);
+
+const getCarIcon = (bearing) =>
+  L.icon({
     iconUrl: `data:image/svg+xml;utf8,${getCarSVG(bearing)}`,
     iconSize: [48, 48],
     iconAnchor: [24, 24],
   });
-};
 
-export default function DriverMap({ stops = [], fitBoundsOptions, defaultCenter, driverLocation, pickupMarkers = [] }) {
-  const sortedStops = useMemo(() => (
-    (stops || [])
-      .slice()
-      .filter(s => s && typeof s.lat === 'number' && typeof s.lng === 'number')
-      .sort((a, b) => (a.stopOrder || 0) - (b.stopOrder || 0))
-  ), [stops]);
+const getIdleCarIcon = () =>
+  L.icon({
+    iconUrl: `data:image/svg+xml;utf8,${getIdleCarSVG()}`,
+    iconSize: [52, 52],
+    iconAnchor: [26, 52],
+  });
 
-  const positions = useMemo(() => sortedStops.map(s => [s.lat, s.lng]), [sortedStops]);
+// ── DriverMap ──────────────────────────────────────────────────────
+export default function DriverMap({
+  stops = [],
+  fitBoundsOptions,
+  defaultCenter,
+  driverLocation,
+  pickupMarkers = [],
+  idleDriverLocation = null,   // driver GPS when NOT in a trip
+}) {
+  const flyToRef = useRef(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const hasFlewToUser = useRef(false);
+
+  // On mount: get real GPS and fly there once
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserLocation(loc);
+        if (!hasFlewToUser.current && flyToRef.current) {
+          flyToRef.current(loc.lat, loc.lng, 14);
+          hasFlewToUser.current = true;
+        }
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+
+  // Fly to user location once flyToRef is registered
+  useEffect(() => {
+    if (userLocation && flyToRef.current && !hasFlewToUser.current) {
+      flyToRef.current(userLocation.lat, userLocation.lng, 14);
+      hasFlewToUser.current = true;
+    }
+  }, [userLocation]);
+
+  const handleMyLocation = useCallback(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+        flyToRef.current?.(latitude, longitude, 15);
+      },
+      () => alert('Could not get your location. Please enable GPS.'),
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }, []);
+
+  const sortedStops = useMemo(
+    () =>
+      (stops || [])
+        .slice()
+        .filter((s) => s && typeof s.lat === 'number' && typeof s.lng === 'number')
+        .sort((a, b) => (a.stopOrder || 0) - (b.stopOrder || 0)),
+    [stops]
+  );
+
+  const positions = useMemo(() => sortedStops.map((s) => [s.lat, s.lng]), [sortedStops]);
 
   const [routePositions, setRoutePositions] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
     if (positions.length > 1) {
-      fetchOSRMRoute(positions).then(route => {
+      fetchOSRMRoute(positions).then((route) => {
         if (isMounted) setRoutePositions(route);
       });
     } else {
@@ -112,60 +218,115 @@ export default function DriverMap({ stops = [], fitBoundsOptions, defaultCenter,
     return () => { isMounted = false; };
   }, [positions]);
 
-  // Only use static positions (stops or pickup pins) for bounding so the map doesn't jitter
-  // when the driverLocation updates rapidly during a trip.
   const boundsPositions = useMemo(() => {
-    let pos = [...positions];
-    if (pickupMarkers && pickupMarkers.length > 0) {
-      pickupMarkers.forEach(m => pos.push([m.lat, m.lng]));
+    const pos = [...positions];
+    if (pickupMarkers?.length > 0) {
+      pickupMarkers.forEach((m) => pos.push([m.lat, m.lng]));
     }
     return pos;
   }, [positions, pickupMarkers]);
 
-  if (!sortedStops.length && !defaultCenter && !driverLocation) {
-    return <div className="map-empty" style={{height: '100vh', width: '100vw', background: '#0f172a'}}></div>;
-  }
-
-  const center = driverLocation ? [driverLocation.lat, driverLocation.lng] : (positions.length > 0 ? positions[0] : defaultCenter);
+  const center = useMemo(() => {
+    if (driverLocation) return [driverLocation.lat, driverLocation.lng];
+    if (idleDriverLocation) return [idleDriverLocation.lat, idleDriverLocation.lng];
+    if (userLocation) return [userLocation.lat, userLocation.lng];
+    if (positions.length > 0) return positions[0];
+    return defaultCenter;
+  }, [driverLocation, idleDriverLocation, userLocation, positions, defaultCenter]);
 
   return (
-    <div className="driver-map" style={{ position: 'fixed', top: 0, left: 0, height: '100vh', width: '100vw', zIndex: 0 }}>
-      <MapContainer center={center} zoom={14} scrollWheelZoom={true} zoomControl={false} style={{ height: '100%', width: '100%' }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, height: '100vh', width: '100vw', zIndex: 0 }}>
+      <MapContainer
+        center={center}
+        zoom={14}
+        scrollWheelZoom={true}
+        zoomControl={false}
+        style={{ height: '100%', width: '100%' }}
+      >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {sortedStops.map((s) => {
-          return (
-            <Marker key={s.id || s.stopOrder} position={[s.lat, s.lng]} icon={getMarkerIcon(s.type)}>
-              <Popup>
-                {s.type === 'PICKUP' ? 'Pickup' : 'Dropoff'} (Stop {s.stopOrder})
-              </Popup>
-            </Marker>
-          );
-        })}
+        <FlyToLocation flyToRef={flyToRef} />
 
+        {/* Route stops markers (trip view) */}
+        {sortedStops.map((s) => (
+          <Marker key={s.id || s.stopOrder} position={[s.lat, s.lng]} icon={getMarkerIcon(s.type)}>
+            <Popup>{s.type === 'PICKUP' ? 'Pickup' : 'Dropoff'} (Stop {s.stopOrder})</Popup>
+          </Marker>
+        ))}
+
+        {/* Available trip pickup markers (dashboard view) */}
         {pickupMarkers.map((m, i) => (
           <Marker key={m.id || i} position={[m.lat, m.lng]} icon={getMarkerIcon('PICKUP')}>
             <Popup>Trip Request Pickup</Popup>
           </Marker>
         ))}
 
+        {/* Route polyline */}
         {positions.length > 0 && (
-          <Polyline positions={routePositions.length > 0 ? routePositions : positions} pathOptions={{ color: '#0A56D1', weight: 5, lineCap: 'round', lineJoin: 'round' }} />
+          <Polyline
+            positions={routePositions.length > 0 ? routePositions : positions}
+            pathOptions={{ color: '#0A56D1', weight: 5, lineCap: 'round', lineJoin: 'round' }}
+          />
         )}
 
+        {/* Active trip: animated car icon with bearing */}
         {driverLocation && (
-          <Marker 
-            position={[driverLocation.lat, driverLocation.lng]} 
-            icon={getCarIcon(driverLocation.bearing || 0)} 
+          <Marker
+            position={[driverLocation.lat, driverLocation.lng]}
+            icon={getCarIcon(driverLocation.bearing || 0)}
             zIndexOffset={1000}
           />
         )}
 
-        <FitBounds positions={boundsPositions} fitBoundsOptions={fitBoundsOptions} />
+        {/* Idle driver: yellow parked car at GPS position */}
+        {!driverLocation && idleDriverLocation && (
+          <Marker
+            position={[idleDriverLocation.lat, idleDriverLocation.lng]}
+            icon={getIdleCarIcon()}
+            zIndexOffset={900}
+          >
+            <Popup>Your current location</Popup>
+          </Marker>
+        )}
+
+        {boundsPositions.length > 0 && (
+          <FitBounds positions={boundsPositions} fitBoundsOptions={fitBoundsOptions} />
+        )}
       </MapContainer>
+
+      {/* My Location FAB */}
+      <button
+        onClick={handleMyLocation}
+        title="Go to my location"
+        aria-label="Go to my location"
+        style={{
+          position: 'absolute',
+          bottom: '2rem',
+          right: '1.5rem',
+          zIndex: 20,
+          width: '52px',
+          height: '52px',
+          borderRadius: '50%',
+          background: 'var(--color-md-surface)',
+          border: '1px solid var(--color-md-outline)',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          color: '#0A56D1',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(10,86,209,0.25)'; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.18)'; }}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 -960 960 960" width="26px" fill="currentColor">
+          <path d="M440-42v-80q-125-14-214.5-103.5T122-440H42v-80h80q14-125 103.5-214.5T440-838v-80h80v80q125 14 214.5 103.5T838-520h80v80h-80q-14 125-103.5 214.5T520-122v80h-80Zm40-158q116 0 198-82t82-198q0-116-82-198t-198-82q-116 0-198 82t-82 198q0 116 82 198t198 82Zm0-120q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T560-480q0-33-23.5-56.5T480-560q-33 0-56.5 23.5T400-480q0 33 23.5 56.5T480-400Z"/>
+        </svg>
+      </button>
     </div>
   );
 }
