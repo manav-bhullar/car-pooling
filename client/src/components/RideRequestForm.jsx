@@ -5,7 +5,19 @@ import { createRideRequest, getRideRequests } from '../api/rideRequests';
 import { searchLocation, reverseGeocode } from '../api/geocoding';
 import DateTimePickerModal from './DateTimePickerModal';
 
-function LocationInput({ label, value, onSelect, allowCurrentLocation }) {
+function getDistance(lat1, lon1, lat2, lon2) {
+  if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return Infinity;
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+function LocationInput({ label, value, onSelect, allowCurrentLocation, referenceLocation }) {
   const [query, setQuery] = useState(value?.displayName || '');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -55,7 +67,14 @@ function LocationInput({ label, value, onSelect, allowCurrentLocation }) {
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const found = await searchLocation(val);
+        let found = await searchLocation(val);
+        if (referenceLocation) {
+          found.sort((a, b) => {
+            const distA = getDistance(referenceLocation.lat, referenceLocation.lng, a.lat, a.lng);
+            const distB = getDistance(referenceLocation.lat, referenceLocation.lng, b.lat, b.lng);
+            return distA - distB;
+          });
+        }
         if (latestQueryRef.current === val) {
           setResults(found);
         }
@@ -294,12 +313,14 @@ export default function RideRequestForm({ onLocationSelect }) {
         value={pickup}
         onSelect={handlePickupSelect}
         allowCurrentLocation={true}
+        referenceLocation={drop}
       />
 
       <LocationInput
         label="Drop location"
         value={drop}
         onSelect={handleDropSelect}
+        referenceLocation={pickup}
       />
 
       <div className="md3-input-group datetime-input-group">
