@@ -2,46 +2,63 @@
 
 const { haversine } = require('./utils');
 
-/**
- * Generate all permutations of array
- */
-function permute(arr) {
-  if (arr.length <= 1) return [arr];
-
-  const result = [];
-
-  for (let i = 0; i < arr.length; i++) {
-    const rest = arr.slice(0, i).concat(arr.slice(i + 1));
-    const perms = permute(rest);
-
-    for (const p of perms) {
-      result.push([arr[i], ...p]);
-    }
-  }
-
-  return result;
-}
+const MAX_GROUP_SIZE = 4;
 
 /**
- * Check if sequence is valid
- * Ensures pickup comes before drop for each user
+ * Generate all valid stop orderings using backtracking.
+ * Only produces sequences where pickup comes before drop for each user.
+ *
+ * Search space: (2n)! / 2^n instead of (2n)!
+ *   2 riders: 6 sequences (vs 24)
+ *   3 riders: 90 sequences (vs 720)
+ *   4 riders: 2,520 sequences (vs 40,320)
  */
-function isValidSequence(sequence) {
-  const picked = new Set();
+function generateValidSequences(users) {
+  // Pre-build stop objects for each user (avoids creating them inside recursion)
+  const userStops = users.map(u => ({
+    pickup: { type: 'pickup', userId: u.id, lat: u.pickupLat, lng: u.pickupLng },
+    drop:   { type: 'drop',   userId: u.id, lat: u.dropLat,   lng: u.dropLng },
+  }));
 
-  for (const stop of sequence) {
-    if (stop.type === "pickup") {
-      picked.add(stop.userId);
+  const totalStops = users.length * 2;
+  const results = [];
+
+  // State tracking: arrays for performance (faster than Sets in tight recursion)
+  const pickedUp = new Array(users.length).fill(false);
+  const droppedOff = new Array(users.length).fill(false);
+
+  // Current sequence being built (reused, not re-allocated)
+  const current = [];
+
+  function backtrack() {
+    if (current.length === totalStops) {
+      results.push([...current]); // save a copy
+      return;
     }
 
-    if (stop.type === "drop") {
-      if (!picked.has(stop.userId)) {
-        return false;
+    for (let i = 0; i < users.length; i++) {
+      if (!pickedUp[i]) {
+        // Option: pick up user i
+        pickedUp[i] = true;
+        current.push(userStops[i].pickup);
+        backtrack();
+        current.pop();
+        pickedUp[i] = false;
+
+      } else if (!droppedOff[i]) {
+        // Option: drop off user i (already picked up)
+        droppedOff[i] = true;
+        current.push(userStops[i].drop);
+        backtrack();
+        current.pop();
+        droppedOff[i] = false;
       }
+      // If both pickedUp AND droppedOff → skip (user fully processed)
     }
   }
 
-  return true;
+  backtrack();
+  return results;
 }
 
 /**
@@ -186,15 +203,17 @@ function buildStops(users) {
  * Returns best sequence + distance + detour
  */
 function optimizeRoute(users) {
-  const stops = buildStops(users);
+  if (users.length > MAX_GROUP_SIZE) {
+    throw new Error(`Group size ${users.length} exceeds MAX_GROUP_SIZE ${MAX_GROUP_SIZE}`);
+  }
 
-  const allPerms = permute(stops);
+  const validSequences = generateValidSequences(users);
 
   let bestDistance = Infinity;
   let bestSequence = null;
 
-  for (const seq of allPerms) {
-    if (!isValidSequence(seq)) continue;
+  for (const seq of validSequences) {
+    // No isValidSequence check needed — all sequences are valid by construction
 
     if (!isConnectedGroup(users, seq)) continue;
 
@@ -263,4 +282,5 @@ module.exports = {
   computePerUserDetour,
   calculateSegmentDistance,
   isConnectedGroup,
+  MAX_GROUP_SIZE,
 };

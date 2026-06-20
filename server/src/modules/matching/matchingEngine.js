@@ -1,5 +1,5 @@
 const { scorePair } = require('./scoring');
-const { optimizeRoute } = require('./route');
+const { optimizeRoute, MAX_GROUP_SIZE } = require('./route');
 
 const MAX_USER_DETOUR = 0.30;
 
@@ -30,7 +30,8 @@ function generatePairs(requests) {
 }
 
 /**
- * Step 2: Try to expand pair into group (3 users)
+ * Step 2: Try to expand group by one user
+ * Works for any input size: pair→3, group of 3→4, etc.
  */
 function tryFormGroup(pair, allRequests, usedIds) {
   // Defensive copy of pair to prevent mutation
@@ -143,8 +144,17 @@ function runMatchingBatch(requests) {
 
     if (usedIds.has(a.id) || usedIds.has(b.id)) continue;
 
-    // Try forming group
-    const best = tryFormGroup(pair, requests, usedIds);
+    // Try forming group (pair → 3)
+    let best = tryFormGroup(pair, requests, usedIds);
+
+    // Try expanding further (3 → 4) if below MAX_GROUP_SIZE
+    if (best.users.length > 2 && best.users.length < MAX_GROUP_SIZE) {
+      const expanded = tryFormGroup(best, requests, usedIds);
+      // Only take the expansion if it actually grew
+      if (expanded.users.length > best.users.length) {
+        best = expanded;
+      }
+    }
 
     // Final validation for pair fallback
     if (best.users.length === 2) {

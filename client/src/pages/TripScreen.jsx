@@ -76,7 +76,7 @@ export default function TripScreen() {
 
   // Status chip styles based on M3 Expressive states
   let statusClass = "trip-status-chip--pending";
-  if (trip.status === "ACTIVE") statusClass = "trip-status-chip--active";
+  if (["RIDERS_MATCHED", "DRIVER_MATCHED", "STARTED"].includes(trip.status)) statusClass = "trip-status-chip--active";
   if (trip.status === "COMPLETED") statusClass = "trip-status-chip--done";
 
   return (

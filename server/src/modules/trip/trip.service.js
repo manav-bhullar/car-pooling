@@ -5,6 +5,7 @@ const { getRoadDistances, ROAD_DETOUR_THRESHOLD } = require("./osrm");
 const { haversine } = require("../matching/utils");
 
 const AVG_SPEED_KMH = 30;
+const LOCK_BEFORE_DEPARTURE_MS = 30 * 60 * 1000; // 30 minutes
 
 /**
  * Create Trip from matching result
@@ -65,12 +66,23 @@ async function createTripFromMatch(match, tx = null) {
       throw new Error('Some ride requests already processed');
     }
 
+    // Calculate lockedAt from earliest preferredTime
+    const rideRequestsForLock = await txContext.rideRequest.findMany({
+      where: { id: { in: rideRequestIds } },
+      select: { preferredTime: true },
+    });
+    const earliestTime = new Date(
+      Math.min(...rideRequestsForLock.map(r => r.preferredTime.getTime()))
+    );
+    const lockedAt = new Date(earliestTime.getTime() - LOCK_BEFORE_DEPARTURE_MS);
+
     const trip = await txContext.trip.create({
       data: {
-        status: 'ACTIVE',
+        status: 'RIDERS_MATCHED',
         totalDistanceKm: totalRoadDistanceKm,
         estimatedEtaMinutes,
         detourRatio: roadData.roadDetourRatio,
+        lockedAt,
       },
     });
 
@@ -98,7 +110,7 @@ async function createTripFromMatch(match, tx = null) {
         status: 'PENDING',
       },
       data: {
-        status: 'MATCHED',
+        status: 'RIDERS_MATCHED',
         pendingCycles: 0,
       },
     });
@@ -192,7 +204,7 @@ async function getTripById(tripId, userId) {
 async function getCurrentTrip(userId) {
   const activeTrip = await prisma.trip.findFirst({
     where: {
-      status: 'ACTIVE',
+      status: { in: ['RIDERS_MATCHED', 'DRIVER_MATCHED', 'STARTED'] },
       tripUsers: {
         some: { userId },
       },
@@ -252,7 +264,7 @@ async function completeTrip(tripId, userId) {
       throw { code: 400, message: 'TRIP_NOT_COMPLETABLE' };
     }
 
-    if (trip.status !== 'ACTIVE') {
+    if (trip.status !== 'STARTED') {
       throw { code: 400, message: 'TRIP_NOT_COMPLETABLE' };
     }
 

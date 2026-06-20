@@ -43,7 +43,7 @@ export default function WaitingScreen() {
 
   if (!rideRequest) return null;
 
-  const isMatched = state.uiState === 'MATCHED' || rideRequest.status === 'MATCHED';
+  const isMatched = state.uiState === 'MATCHED' || rideRequest.status === 'RIDERS_MATCHED';
 
   const stops = [
     { stopOrder: 1, type: 'PICKUP', lat: rideRequest.pickupLat, lng: rideRequest.pickupLng },

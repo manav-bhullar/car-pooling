@@ -1,5 +1,6 @@
 const { runMatchingBatch } = require('../matching/matchingEngine');
 const { createTripFromMatch } = require('../trip/trip.service');
+const { runExpansionPhase } = require('../trip/expansion.service');
 const prisma = require('../../prisma/client');
 
 /**
@@ -28,7 +29,7 @@ async function updatePendingCycles(tx, allRequests, matchedIds) {
   if (unmatchedIds.length === 0) return { cycleCancelled: 0, timeCancelled: 0 };
 
   // 🔒 STEP 1: Increment pending cycles for unmatched PENDING requests ONLY
-  // Prevents dirty updates if a request somehow becomes MATCHED/CANCELLED
+  // Prevents dirty updates if a request somehow becomes RIDERS_MATCHED/CANCELLED
   // ⚠️ CRITICAL: This must run BEFORE cancel logic
   await tx.rideRequest.updateMany({
     where: {
@@ -40,32 +41,22 @@ async function updatePendingCycles(tx, allRequests, matchedIds) {
     }
   });
 
-  // 🔒 STEP 2: Auto-cancel by pending cycles (>= 10 cycles = ~10 min unmatched)
-  const cutoffTime = new Date(Date.now() - 45 * 60 * 1000);
-  
-  const cycleCancelled = await tx.rideRequest.updateMany({
-    where: {
-      id: { in: unmatchedIds },
-      status: 'PENDING',
-      pendingCycles: { gte: 10 }
-    },
-    data: { status: 'CANCELLED' }
-  });
+  // 🔒 STEP 2: Auto-cancel by time — preferredTime has passed
+  // If the ride's departure time has already passed, no point matching
+  const now = new Date();
 
-  // 🔒 STEP 3: Auto-cancel by time (preferredTime > 45 min old)
-  // Only affects PENDING requests (may have been cancelled in STEP 2)
   const timeCancelled = await tx.rideRequest.updateMany({
     where: {
       id: { in: unmatchedIds },
       status: 'PENDING',
-      preferredTime: { lt: cutoffTime }
+      preferredTime: { lt: now }
     },
     data: { status: 'CANCELLED' }
   });
 
   // ✅ Return counts for observability (enables debugging)
-  console.log(`Auto-cancelled: cycles=${cycleCancelled.count} time=${timeCancelled.count}`);
-  return { cycleCancelled: cycleCancelled.count, timeCancelled: timeCancelled.count };
+  console.log(`Auto-cancelled: time=${timeCancelled.count}`);
+  return { cycleCancelled: 0, timeCancelled: timeCancelled.count };
 }
 
 /**
@@ -263,6 +254,20 @@ async function runMatchingCycle(triggerType = 'CRON') {
       }
     }
 
+    /**
+     * ✅ STEP 5: Expansion phase — add remaining PENDING riders to existing trips
+     */
+    let usersExpanded = 0;
+    try {
+      const expansion = await runExpansionPhase();
+      usersExpanded = expansion.expandedCount;
+      if (usersExpanded > 0) {
+        console.log(`✅ Expansion: ${usersExpanded} riders added to existing trips`);
+      }
+    } catch (err) {
+      console.warn('⚠️ Expansion phase failed (non-fatal):', err.message);
+    }
+
     const usersStillPending = await prisma.rideRequest.count({
       where: { status: 'PENDING' },
     });
@@ -270,7 +275,7 @@ async function runMatchingCycle(triggerType = 'CRON') {
     const resultToLog = {
       pendingCountStart: result.pendingCountStart,
       tripsCreated,
-      usersMatched,
+      usersMatched: usersMatched + usersExpanded,
       usersStillPending,
       autoCancelledCount: result.autoCancelledCount,
       durationMs: Date.now() - startTime,

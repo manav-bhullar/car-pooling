@@ -10,7 +10,7 @@ function startMatchingScheduler() {
     return;
   }
   schedulerStarted = true;
-  cron.schedule('*/60 * * * * *', async () => {
+  cron.schedule('*/45 * * * * *', async () => {
     if (isRunning) {
       console.log('⏭️ Skipping overlapping batch');
       return;

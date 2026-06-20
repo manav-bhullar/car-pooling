@@ -26,13 +26,13 @@ export function deriveUIState(rideRequest, trip) {
   // Matched transition: matched but trip may not yet be loaded.
   // This must return MATCHED as a transition state to avoid blank-screen flashes
   // while the trip fetch is in-flight.
-  if (rideRequest && rideRequest.status === 'MATCHED') {
+  if (rideRequest && rideRequest.status === 'RIDERS_MATCHED') {
     if (!trip) {
       return 'MATCHED';
     }
 
     // Trip exists and we can inspect its status deterministically
-    if (trip.status === 'ACTIVE') return 'TRIP_ACTIVE';
+    if (['RIDERS_MATCHED', 'DRIVER_MATCHED', 'STARTED'].includes(trip.status)) return 'TRIP_ACTIVE';
     if (trip.status === 'COMPLETED') return 'TRIP_COMPLETED';
     if (trip.status === 'CANCELLED') return 'REQUEUED';
 
@@ -42,7 +42,7 @@ export function deriveUIState(rideRequest, trip) {
 
   // If we have a trip but no rideRequest, infer UI from trip status
   if (trip) {
-    if (trip.status === 'ACTIVE') return 'TRIP_ACTIVE';
+    if (['RIDERS_MATCHED', 'DRIVER_MATCHED', 'STARTED'].includes(trip.status)) return 'TRIP_ACTIVE';
     if (trip.status === 'COMPLETED') return 'TRIP_COMPLETED';
   }
 
