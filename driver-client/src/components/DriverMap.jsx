@@ -22,7 +22,6 @@ function FitBounds({ positions, fitBoundsOptions }) {
   useEffect(() => {
     if (!positions || positions.length === 0) return;
 
-    // Deep compare to prevent infinite vibration loops from parent re-renders
     const currentData = JSON.stringify({ positions, fitBoundsOptions });
     if (prevData.current === currentData) {
       return;
@@ -30,8 +29,6 @@ function FitBounds({ positions, fitBoundsOptions }) {
     prevData.current = currentData;
 
     if (positions.length === 1) {
-      // We use flyToBounds even for a single point so that the map padding options are applied!
-      // This prevents the single marker from hiding under the glass card on the left.
       const singleBound = [positions[0], positions[0]];
       map.flyToBounds(singleBound, { 
         ...fitBoundsOptions, 
@@ -43,7 +40,6 @@ function FitBounds({ positions, fitBoundsOptions }) {
       return;
     }
     const bounds = positions.map((p) => [p[0], p[1]]);
-    // Cinematic flight when framing the route
     map.flyToBounds(bounds, { ...fitBoundsOptions, padding: fitBoundsOptions?.padding || [40, 40], duration: 1.5, easeLinearity: 0.2 });
   }, [map, positions, fitBoundsOptions]);
 
@@ -57,18 +53,12 @@ const getPinSVG = (color) => encodeURIComponent(`
 </svg>
 `);
 
-const getMarkerIcon = (type, isMyStop = true) => {
+const getMarkerIcon = (type) => {
   // M3 Expressive Baseline colors: Azure Blue for Pickup, Crimson Red for Dropoff
   let color = type === 'PICKUP' ? '#0A56D1' : '#B3261E'; 
-  let scale = 1;
-
-  if (!isMyStop) {
-    color = '#9E9E9E'; // Material Grey 500 for other passengers' stops
-    scale = 0.75;
-  }
   
-  const width = 28 * scale;
-  const height = 42 * scale;
+  const width = 28;
+  const height = 42;
   
   return L.icon({
     iconUrl: `data:image/svg+xml;utf8,${getPinSVG(color)}`,
@@ -76,13 +66,13 @@ const getMarkerIcon = (type, isMyStop = true) => {
     iconAnchor: [width / 2, height],
     popupAnchor: [0, -height],
     shadowUrl: markerShadow,
-    shadowSize: [41 * scale, 41 * scale],
-    shadowAnchor: [13 * scale, 41 * scale]
+    shadowSize: [41, 41],
+    shadowAnchor: [13, 41]
   });
 };
 
 const getCarSVG = (bearing) => encodeURIComponent(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48">
   <g transform="rotate(${bearing} 12 12)">
     <path fill="#0A56D1" stroke="#FFFFFF" stroke-width="2" d="M12 2L4 20l1.5 1.5L12 17l6.5 4.5L20 20 12 2z" />
   </g>
@@ -92,12 +82,12 @@ const getCarSVG = (bearing) => encodeURIComponent(`
 const getCarIcon = (bearing) => {
   return L.icon({
     iconUrl: `data:image/svg+xml;utf8,${getCarSVG(bearing)}`,
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
+    iconSize: [48, 48],
+    iconAnchor: [24, 24],
   });
 };
 
-export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, myRideRequestId, driverLocation }) {
+export default function DriverMap({ stops = [], fitBoundsOptions, defaultCenter, driverLocation, pickupMarkers = [] }) {
   const sortedStops = useMemo(() => (
     (stops || [])
       .slice()
@@ -107,14 +97,26 @@ export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, m
 
   const positions = useMemo(() => sortedStops.map(s => [s.lat, s.lng]), [sortedStops]);
 
-  if (!sortedStops.length && !defaultCenter) {
-    return <div className="map-empty">No map data available</div>;
+  // If driverLocation is provided, add it to positions so bounds fit it too
+  const boundsPositions = useMemo(() => {
+    let pos = [...positions];
+    if (driverLocation) {
+      pos.push([driverLocation.lat, driverLocation.lng]);
+    }
+    if (pickupMarkers && pickupMarkers.length > 0) {
+      pickupMarkers.forEach(m => pos.push([m.lat, m.lng]));
+    }
+    return pos;
+  }, [positions, driverLocation, pickupMarkers]);
+
+  if (!sortedStops.length && !defaultCenter && !driverLocation) {
+    return <div className="map-empty" style={{height: '100vh', width: '100vw', background: '#0f172a'}}></div>;
   }
 
-  const center = positions.length > 0 ? positions[0] : defaultCenter;
+  const center = driverLocation ? [driverLocation.lat, driverLocation.lng] : (positions.length > 0 ? positions[0] : defaultCenter);
 
   return (
-    <div className="trip-map" style={{ height: '100%', width: '100%' }}>
+    <div className="driver-map" style={{ position: 'fixed', top: 0, left: 0, height: '100vh', width: '100vw', zIndex: 0 }}>
       <MapContainer center={center} zoom={14} scrollWheelZoom={true} zoomControl={false} style={{ height: '100%', width: '100%' }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -122,20 +124,24 @@ export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, m
         />
 
         {sortedStops.map((s) => {
-          const isMyStop = myRideRequestId ? s.rideRequestId === myRideRequestId : true;
           return (
-            <Marker key={s.stopOrder} position={[s.lat, s.lng]} icon={getMarkerIcon(s.type, isMyStop)}>
+            <Marker key={s.id || s.stopOrder} position={[s.lat, s.lng]} icon={getMarkerIcon(s.type)}>
               <Popup>
-                {isMyStop 
-                  ? (s.type === 'PICKUP' ? `Your Pickup` : `Your Dropoff`)
-                  : (s.type === 'PICKUP' ? `Co-rider Pickup` : `Co-rider Dropoff`)
-                } (Stop {s.stopOrder})
+                {s.type === 'PICKUP' ? 'Pickup' : 'Dropoff'} (Stop {s.stopOrder})
               </Popup>
             </Marker>
           );
         })}
 
-        <Polyline positions={positions} pathOptions={{ color: '#000000', weight: 4, dashArray: '10, 10' }} />
+        {pickupMarkers.map((m, i) => (
+          <Marker key={m.id || i} position={[m.lat, m.lng]} icon={getMarkerIcon('PICKUP')}>
+            <Popup>Trip Request Pickup</Popup>
+          </Marker>
+        ))}
+
+        {positions.length > 0 && (
+          <Polyline positions={positions} pathOptions={{ color: '#000000', weight: 4, dashArray: '10, 10' }} />
+        )}
 
         {driverLocation && (
           <Marker 
@@ -145,7 +151,7 @@ export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, m
           />
         )}
 
-        <FitBounds positions={positions} fitBoundsOptions={fitBoundsOptions} />
+        <FitBounds positions={boundsPositions} fitBoundsOptions={fitBoundsOptions} />
       </MapContainer>
     </div>
   );

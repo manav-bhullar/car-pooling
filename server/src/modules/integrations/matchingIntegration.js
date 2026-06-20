@@ -106,8 +106,8 @@ async function runMatchingCycle(triggerType = 'CRON') {
        */
       const pending = await fetchPendingRequests(tx);
 
-      if (pending.length < 2) {
-        console.log(`⏭️  Not enough pending requests (${pending.length})`);
+      if (pending.length < 3) {
+        console.log(`⏭️  Not enough pending requests (${pending.length}, minimum 3 required)`);
         
         // ⚠️ CRITICAL: Still increment pending_cycles for unmatched requests
         if (pending.length > 0) {

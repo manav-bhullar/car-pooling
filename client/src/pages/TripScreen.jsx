@@ -6,6 +6,7 @@ import { cancelRideRequest } from '../api/rideRequests';
 import TripMap from '../components/TripMap';
 import CancelModal from '../components/CancelModal';
 import PassengerList from '../components/PassengerList';
+import { useDriverLocation } from '../hooks/useDriverLocation';
 import './TripScreen.css';
 
 export default function TripScreen() {
@@ -66,6 +67,9 @@ export default function TripScreen() {
   const trip = state.trip;
   const me = (trip.passengers || []).find(p => p.userId === user?.id) || {};
   
+  const isStarted = trip.status === 'STARTED';
+  const driverLocation = useDriverLocation(trip.id, isStarted);
+  
   const displayDistance = typeof me.distanceKm === 'number' && me.distanceKm > 0
     ? me.distanceKm
     : trip.totalDistanceKm;
@@ -83,7 +87,7 @@ export default function TripScreen() {
     <div className="trip-screen-expressive">
       {/* Top 55% Full-Bleed Map */}
       <div className="trip-map-container">
-        <TripMap stops={trip.stops} myRideRequestId={me.rideRequestId} />
+        <TripMap stops={trip.stops} myRideRequestId={me.rideRequestId} driverLocation={driverLocation} />
       </div>
 
       {/* Persistent Bottom Sheet */}

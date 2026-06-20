@@ -11,6 +11,9 @@ async function main() {
     { id: 'c7597b03-65c2-4a14-94c2-d7bc3aef61b0', name: 'Eve',   email: 'eve@test.com'   },
   ];
 
+  const bcrypt = require('bcrypt');
+  const defaultPassword = await bcrypt.hash('password123', 10);
+
   // Create 5 test users
   const users = await Promise.all(
     SEEDED_USERS.map((user) =>
@@ -21,6 +24,8 @@ async function main() {
           id: user.id,
           name: user.name,
           email: user.email,
+          password: defaultPassword,
+          isVerified: true,
         },
       })
     )

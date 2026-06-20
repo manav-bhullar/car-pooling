@@ -156,16 +156,9 @@ function runMatchingBatch(requests) {
       }
     }
 
-    // Final validation for pair fallback
-    if (best.users.length === 2) {
-      const route = optimizeRoute(best.users);
-
-      if (!route || route.maxUserDetour > MAX_USER_DETOUR) {
-        continue; // reject pair
-      }
-
-      // Explicitly preserve score and add route
-      best.route = route;
+    // Reject any group that didn't reach the minimum threshold of 3 riders
+    if (best.users.length < 3) {
+      continue; // reject groups smaller than 3
     }
 
     // Ensure score is always valid (not null, NaN, or Infinity)

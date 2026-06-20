@@ -6,6 +6,24 @@ exports.getAvailableTrips = async () => {
     include: {
       tripStops: {
         orderBy: { stopOrder: 'asc' },
+        include: {
+          rideRequest: {
+            select: {
+              pickupAddress: true,
+              dropAddress: true,
+            }
+          }
+        }
+      },
+      tripUsers: {
+        include: {
+          user: {
+            select: {
+              name: true,
+              phone: true,
+            }
+          }
+        }
       },
     },
     orderBy: { createdAt: 'desc' },

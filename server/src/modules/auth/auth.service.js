@@ -53,7 +53,7 @@ exports.register = async ({ name, email, password, role, phone, vehicleType, lic
     console.error('Failed to send OTP email during registration:', err);
   }
 
-  return { id: user.id, name: user.name, email: user.email, isVerified: user.isVerified };
+  return { id: user.id, name: user.name, email: user.email, isVerified: user.isVerified, role: user.role };
 };
 
 exports.login = async ({ email, password }) => {
@@ -250,7 +250,7 @@ exports.getMe = async (userId) => {
     error.status = 404;
     throw error;
   }
-  return { id: user.id, name: user.name, email: user.email, isVerified: user.isVerified };
+  return { id: user.id, name: user.name, email: user.email, isVerified: user.isVerified, role: user.role };
 };
 
 // Helper function
@@ -292,7 +292,7 @@ async function createTokensForUser(user, existingTokenId = null) {
   }
 
   return {
-    user: { id: user.id, name: user.name, email: user.email, isVerified: user.isVerified },
+    user: { id: user.id, name: user.name, email: user.email, isVerified: user.isVerified, role: user.role },
     accessToken,
     refreshToken // this needs to be set as a cookie by controller
   };
