@@ -1,43 +1,40 @@
-const { Resend } = require('resend');
-
-// Resend uses HTTPS API — works on all hosting platforms including Render free tier
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// The "from" address must be either:
-//   1. onboarding@resend.dev  (works immediately, for testing)
-//   2. A verified domain you own (for production)
-const FROM_ADDRESS = process.env.SMTP_FROM || 'CarpoolTU <onboarding@resend.dev>';
+const axios = require('axios');
 
 exports.sendOtpEmail = async (to, otp, userName) => {
+  // Required EmailJS environment variables
+  const serviceId = process.env.EMAILJS_SERVICE_ID;
+  const templateId = process.env.EMAILJS_TEMPLATE_ID;
+  const publicKey = process.env.EMAILJS_PUBLIC_KEY;
+  const privateKey = process.env.EMAILJS_PRIVATE_KEY;
+
+  if (!serviceId || !templateId || !publicKey || !privateKey) {
+    console.error('EmailJS credentials missing. Please set EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_PUBLIC_KEY, and EMAILJS_PRIVATE_KEY in your Render environment.');
+    return false;
+  }
+
+  const data = {
+    service_id: serviceId,
+    template_id: templateId,
+    user_id: publicKey,
+    accessToken: privateKey,
+    template_params: {
+      to_email: to,
+      to_name: userName,
+      otp_code: otp
+    }
+  };
+
   try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_ADDRESS,
-      to,
-      subject: 'Verify your email — CarpoolTU',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9;">
-          <div style="background: #ffffff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-            <h2 style="color: #1a1a1a; margin-top: 0;">Welcome to CarpoolTU! 🚗</h2>
-            <p style="color: #555; font-size: 16px;">Hi ${userName},</p>
-            <p style="color: #555; font-size: 16px;">Please use the following OTP to verify your email address. It is valid for <strong>10 minutes</strong>.</p>
-            <div style="background: #fae366; border-radius: 8px; padding: 20px; text-align: center; margin: 24px 0;">
-              <h1 style="color: #1a1a1a; margin: 0; letter-spacing: 8px; font-size: 2.5rem;">${otp}</h1>
-            </div>
-            <p style="color: #999; font-size: 13px;">If you did not create an account, please ignore this email.</p>
-          </div>
-        </div>
-      `,
+    const response = await axios.post('https://api.emailjs.com/api/v1.0/email/send', data, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
 
-    if (error) {
-      console.error('Resend error:', error);
-      throw new Error('Failed to send verification email');
-    }
-
-    console.log('OTP email sent via Resend: %s', data?.id);
+    console.log('OTP email sent via EmailJS:', response.data);
     return true;
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('Error sending email via EmailJS:', error.response ? error.response.data : error.message);
     throw new Error('Failed to send verification email');
   }
 };
