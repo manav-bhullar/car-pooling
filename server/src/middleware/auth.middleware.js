@@ -1,5 +1,6 @@
 const { verifyAccessToken } = require('../utils/jwt');
 const { error } = require('../utils/response');
+const prisma = require('../prisma/client');
 
 exports.authenticate = (req, res, next) => {
   try {
@@ -24,4 +25,32 @@ exports.authenticate = (req, res, next) => {
     console.error('Auth middleware error:', err);
     return error(res, 'Internal server error', 500);
   }
+};
+
+exports.requireRole = (allowedRoles) => {
+  return async (req, res, next) => {
+    try {
+      if (!req.userId) {
+        return error(res, 'Authentication required', 401);
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.userId },
+        select: { role: true },
+      });
+
+      if (!user) {
+        return error(res, 'User not found', 404);
+      }
+
+      if (!allowedRoles.includes(user.role)) {
+        return error(res, 'Forbidden: Insufficient permissions', 403);
+      }
+
+      next();
+    } catch (err) {
+      console.error('Role middleware error:', err);
+      return error(res, 'Internal server error', 500);
+    }
+  };
 };

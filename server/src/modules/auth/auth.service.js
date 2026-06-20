@@ -6,7 +6,7 @@ const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = requir
 
 const SALT_ROUNDS = 12;
 
-exports.register = async ({ name, email, password }) => {
+exports.register = async ({ name, email, password, role, phone, vehicleType, licensePlate }) => {
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     const error = new Error('Email already in use');
@@ -21,7 +21,17 @@ exports.register = async ({ name, email, password }) => {
       name,
       email,
       password: hashedPassword,
+      phone: phone || null,
+      role: role || 'RIDER',
       isVerified: false,
+      ...(role === 'DRIVER' ? {
+        driverProfile: {
+          create: {
+            vehicleType,
+            licensePlate
+          }
+        }
+      } : {})
     },
   });
 
