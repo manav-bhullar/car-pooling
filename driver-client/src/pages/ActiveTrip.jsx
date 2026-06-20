@@ -61,9 +61,9 @@ export default function ActiveTrip() {
     <>
       <DriverMap stops={trip.tripStops} defaultCenter={[37.7749, -122.4194]} driverLocation={location} />
       <div style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', bottom: '1.5rem', width: '400px', zIndex: 10, display: 'flex', flexDirection: 'column', overflowY: 'auto', paddingRight: '0.5rem' }}>
-        <div className="header glass-panel" style={{ padding: '1rem', marginBottom: '1.5rem' }}>
+        <div className="header glass-panel" style={{ padding: '1rem', marginBottom: '1.5rem', background: 'var(--color-md-surface)' }}>
           <div>
-            <h1 style={{ color: 'white', fontSize: '1.5rem', margin: 0 }}>Active Trip</h1>
+            <h1 style={{ fontSize: '1.5rem', margin: 0, fontWeight: 600 }}>Active Trip</h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>Trip ID: {trip.id.slice(-6)}</p>
           </div>
           {isStarted ? (
@@ -80,7 +80,7 @@ export default function ActiveTrip() {
         {error && <div style={{ color: '#EF4444', marginBottom: '1rem' }}>{error}</div>}
 
         {isStarted && location && (
-          <div className="glass-panel pulse" style={{ padding: '1rem', marginBottom: '1.5rem', border: '1px solid var(--primary)', display: 'flex', justifyContent: 'space-between' }}>
+          <div className="glass-panel pulse" style={{ padding: '1rem', marginBottom: '1.5rem', border: '1px solid var(--primary)', display: 'flex', justifyContent: 'space-between', background: 'var(--color-md-surface)' }}>
             <div>
               <span style={{ color: 'var(--primary)', fontWeight: '600', display: 'block', fontSize: '0.875rem' }}>Live GPS Broadcasting Active</span>
               <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
@@ -93,13 +93,13 @@ export default function ActiveTrip() {
           </div>
         )}
 
-        <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+        <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem', background: 'var(--color-md-surface)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3 style={{ color: 'white', margin: 0 }}>Riders</h3>
+            <h3 style={{ margin: 0, fontWeight: 600 }}>Riders</h3>
             <span style={{ color: '#FBBF24', fontWeight: 'bold' }}>₹{(trip.tripUsers?.reduce((acc, tu) => acc + tu.fareShare, 0) || 0).toFixed(0)} Earnings</span>
           </div>
           {trip.tripUsers?.map((tu, i) => (
-            <div key={tu.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '6px' }}>
+            <div key={tu.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', padding: '0.5rem', background: 'var(--color-md-surface-container)', borderRadius: '6px' }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontWeight: '500' }}>{tu.user?.name} (Rider {i + 1})</span>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{tu.user?.phone || 'No phone'}</span>
@@ -109,8 +109,8 @@ export default function ActiveTrip() {
           ))}
         </div>
 
-        <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-          <h3 style={{ color: 'white', marginBottom: '1rem' }}>Route Stops</h3>
+        <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem', background: 'var(--color-md-surface)' }}>
+          <h3 style={{ marginBottom: '1rem', fontWeight: 600 }}>Route Stops</h3>
           <div className="stop-list">
             {trip.tripStops.map((stop) => (
               <div key={stop.id} className={`stop-item ${stop.type.toLowerCase()}`}>

@@ -1,0 +1,188 @@
+/* ============================================================
+   CarpoolTU Design System — CSS Custom Properties
+   Theme: Material 3 Expressive (Light / Purple Seed)
+   ============================================================ */
+
+:root {
+   /* ==========================================================
+     M3 EXPRESSIVE COLORS (Google Design Light Theme)
+     ========================================================== */
+   --color-md-primary:              #fae366; /* Glimmer yellow */
+   --color-md-on-primary:           #000000; /* Ink black */
+   --color-md-primary-container:    #fff3a6; /* Light glimmer */
+   --color-md-on-primary-container: #000000;
+
+   --color-md-secondary:            #000000;
+   --color-md-secondary-container:  #e0e0e0;
+   --color-md-on-secondary-container: #000000;
+
+   --color-md-tertiary:             #32302a;
+   --color-md-tertiary-container:   #fae366;
+   --color-md-on-tertiary-container:#000000;
+
+   --color-md-surface:              #ffffff; /* Pure white */
+   --color-md-surface-container:    #f5f5f5; /* Light gray */
+   --color-md-surface-container-low:#fafafa; /* Input backgrounds */
+   --color-md-surface-container-high:#ebebeb; /* Modals */
+   --color-md-surface-container-highest:#e0e0e0; /* Hover states */
+   
+   --color-md-on-surface:           #000000;
+   --color-md-on-surface-variant:   #555555;
+   --color-md-outline:              #cccccc;
+
+   /* Expressive additions — tonal fills for status states */
+   --color-md-express-ride-active:  #fae366;  /* Seat confirmed */
+   --color-md-express-ride-pending: #f5f5f5;  /* Awaiting driver */
+   --color-md-express-ride-done:    #5CC899;  /* Trip complete */
+
+   /* ==========================================================
+     TYPOGRAPHY (Roboto + M3 Scale)
+     ========================================================== */
+   --font-display: 'Roboto Flex', sans-serif;
+   --font-body: 'Roboto', sans-serif;
+
+   --type-display-large:   400 3.5rem/4rem    var(--font-display);
+   --type-headline-large:  500 2rem/2.5rem    var(--font-body);
+   --type-title-large:     500 1.5rem/2rem    var(--font-body);
+   --type-body-large:      400 1.25rem/1.75rem var(--font-body);
+   --type-body-medium:     400 1rem/1.5rem    var(--font-body);
+   --type-label-medium:    500 0.875rem/1.25rem var(--font-body);
+
+   /* ==========================================================
+     ANIMATION (Spring Easing)
+     ========================================================== */
+   --ease-standard:     cubic-bezier(0.2, 0, 0, 1);      /* Standard M3 */
+   --ease-spring:       cubic-bezier(0.05, 0.7, 0.1, 1.0); /* Expressive spring */
+   --ease-overshoot:    cubic-bezier(0.34, 1.56, 0.64, 1); /* Slight overshoot */
+
+   --duration-short:    200ms;
+   --duration-medium:   300ms;
+   --duration-long:     500ms;
+   --duration-spring:   400ms;
+
+   /* ==========================================================
+     SHAPE SYSTEM (M3 Expressive Radii)
+     ========================================================== */
+   --radius-xs:    8px;
+   --radius-sm:    12px;
+   --radius-md:    16px;
+   --radius-lg:    24px;   /* Standard cards */
+   --radius-xl:    28px;   /* Dialogs, sheets */
+   --radius-2xl:   32px;   /* Hero containers */
+   --radius-hero:  48px;   /* Major sections */
+   --radius-full:  9999px; /* All buttons, all chips, badges */
+
+   /* Expressive asymmetric — use on feature cards */
+   --radius-express-card: 24px 24px 48px 8px;
+
+   /* ==========================================================
+     ELEVATION & GLOW
+     ========================================================== */
+   --shadow-elevation-1: 0 1px 2px rgba(0,0,0,0.08);
+   --shadow-elevation-2: 0 2px 8px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+   --shadow-elevation-3: 0 4px 16px rgba(0,0,0,0.16), 0 2px 4px rgba(0,0,0,0.08);
+   --shadow-glow-primary: 0 0 24px rgba(103,80,164,0.25);
+   --shadow-glow-tertiary: 0 0 24px rgba(125,82,96,0.25);
+   
+   /* Content widths */
+   --layout-content-std: 800px;
+   --layout-content-narrow: 500px;
+}
+
+/* ============================================================
+   BASE RESET + GLOBAL STYLES
+   ============================================================ */
+*, *::before, *::after {
+   box-sizing: border-box;
+   margin: 0;
+   padding: 0;
+}
+
+html {
+   font-size: 16px;
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+   background-color: var(--color-md-surface);
+   color: var(--color-md-on-surface);
+   font: var(--type-body-medium);
+   min-height: 100vh;
+   overflow-x: hidden;
+}
+
+/* ============================================================
+   FOCUS RINGS & UTILITIES
+   ============================================================ */
+:focus-visible {
+   outline: 2px solid var(--color-md-primary);
+   outline-offset: 2px;
+}
+:focus:not(:focus-visible) {
+   outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+   *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+   }
+}
+
+.content-std {
+   width: 100%;
+   max-width: var(--layout-content-std);
+   margin-left: auto;
+   margin-right: auto;
+}
+
+.glass-card {
+   background: rgba(255, 255, 255, 0.85); /* Light surface-container with opacity */
+   backdrop-filter: blur(12px);
+   -webkit-backdrop-filter: blur(12px);
+   border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.blur-shape {
+   position: absolute;
+   border-radius: 50%;
+   filter: blur(80px);
+   pointer-events: none;
+   z-index: 0;
+}
+
+/* ============================================================
+   KEYFRAMES
+   ============================================================ */
+@keyframes md3-spin {
+   to { transform: rotate(360deg); }
+}
+
+@keyframes md3-fade-in {
+   from { opacity: 0; transform: translateY(20px); }
+   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes md3-pulse {
+   0%, 100% { opacity: 0.4; }
+   50% { opacity: 1; }
+}
+
+@keyframes drift {
+   0% { transform: translate(0, 0) scale(1); }
+   33% { transform: translate(20px, -30px) scale(1.1); }
+   66% { transform: translate(-20px, 20px) scale(0.9); }
+   100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes md3-slide-in-top {
+   from { opacity: 0; transform: translateY(-100%); }
+   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes md3-scale-in {
+   from { opacity: 0; transform: scale(0.92); }
+   to { opacity: 1; transform: scale(1); }
+}

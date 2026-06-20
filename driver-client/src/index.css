@@ -1,24 +1,25 @@
+@import './design-system.css';
+
 :root {
-  --primary: #4ADE80; /* vibrant green */
-  --primary-glow: rgba(74, 222, 128, 0.4);
-  --bg-dark: #0f172a; /* deep slate */
-  --bg-card: rgba(30, 41, 59, 0.7);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-color: rgba(255, 255, 255, 0.1);
+  --primary: var(--color-md-primary);
+  --primary-glow: var(--shadow-glow-primary);
+  --bg-dark: var(--color-md-surface);
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --text-main: var(--color-md-on-surface);
+  --text-muted: var(--color-md-on-surface-variant);
+  --border-color: rgba(0, 0, 0, 0.1);
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Inter', -apple-system, sans-serif;
 }
 
 body {
-  background-color: var(--bg-dark);
+  background-color: var(--color-md-surface-container);
   color: var(--text-main);
-  line-height: 1.5;
+  font: var(--type-body-medium);
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -29,8 +30,8 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-elevation-2, 0 4px 30px rgba(0, 0, 0, 0.1));
 }
 
 /* Forms */

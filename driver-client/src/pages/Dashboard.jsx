@@ -65,17 +65,21 @@ export default function Dashboard() {
       <DriverMap stops={mapStops} pickupMarkers={pickupMarkers} defaultCenter={[37.7749, -122.4194]} />
       
       {/* Top Right Header */}
-      <div className="glass-panel" style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 20, padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1.5rem', borderRadius: '50px' }}>
+      <div className="glass-panel" style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 20, padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1.5rem', borderRadius: '50px', background: 'var(--color-md-surface)' }}>
         <div style={{ textAlign: 'right' }}>
-          <h1 style={{ color: 'white', fontSize: '1rem', margin: 0 }}>Driver Dashboard</h1>
+          <h1 style={{ fontSize: '1rem', margin: 0, fontWeight: 500 }}>Driver Dashboard</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', margin: 0 }}>{user?.name}</p>
         </div>
-        <button className="btn btn-danger" style={{ width: 'auto', padding: '0.5rem 1rem', borderRadius: '50px', fontSize: '0.875rem' }} onClick={logout}>Logout</button>
+        <button className="btn btn-danger" style={{ width: 'auto', padding: '0.5rem 1rem', borderRadius: '50px', fontSize: '0.875rem' }} onClick={() => {
+          if (window.confirm('Are you sure you want to log out?')) {
+            logout();
+          }
+        }}>Logout</button>
       </div>
 
       {/* Left Panel for Trips */}
       <div style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', bottom: '1.5rem', width: '400px', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
-        <h2 style={{ color: 'white', marginBottom: '1rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Available Trips</h2>
+        <h2 style={{ marginBottom: '1rem', fontWeight: 600 }}>Available Trips</h2>
         
         {error && <div style={{ color: '#EF4444', marginBottom: '1rem', background: 'rgba(239, 68, 68, 0.2)', padding: '0.5rem', borderRadius: '8px' }}>{error}</div>}
 
@@ -89,44 +93,49 @@ export default function Dashboard() {
           <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
             {trips.map(trip => {
               const isExpanded = expandedTripId === trip.id;
+              const firstPickup = trip.tripStops.find(s => s.type === 'PICKUP');
+              const lastDropoff = [...trip.tripStops].reverse().find(s => s.type === 'DROPOFF');
+
               return (
                 <div 
                   key={trip.id} 
                   className="glass-panel trip-card" 
-                  style={{ marginBottom: '1.5rem', cursor: 'pointer', transition: 'all 0.3s ease' }}
+                  style={{ marginBottom: '1.5rem', cursor: 'pointer', transition: 'all 0.3s ease', background: 'var(--color-md-surface)' }}
                   onClick={() => setExpandedTripId(isExpanded ? null : trip.id)}
                 >
                   <div className="trip-header">
-                    <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Trip ID: {trip.id.slice(-6)}</span>
-                    <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{trip.tripUsers?.length || 0} Riders</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{trip.estimatedEtaMinutes} min away • {trip.totalDistanceKm?.toFixed(1)} km</span>
+                    <span style={{ color: '#0A56D1', fontWeight: 'bold' }}>{trip.tripUsers?.length || 0} Riders</span>
                   </div>
                   
-                  <div className="trip-stats" style={{ marginBottom: isExpanded ? '1.5rem' : '0' }}>
-                    <div className="stat">
-                      <div className="stat-value">{trip.estimatedEtaMinutes}</div>
-                      <div className="stat-label">mins</div>
-                    </div>
-                    <div className="stat">
-                      <div className="stat-value">{trip.totalDistanceKm?.toFixed(1)}</div>
-                      <div className="stat-label">km</div>
-                    </div>
-                    <div className="stat" style={{ gridColumn: 'span 2' }}>
-                      <div className="stat-value" style={{ color: '#FBBF24' }}>
-                        ₹{(trip.tripUsers?.reduce((acc, tu) => acc + tu.fareShare, 0) || 0).toFixed(0)}
-                      </div>
-                      <div className="stat-label">Total Earnings</div>
-                    </div>
-                  </div>
-
                   {!isExpanded && (
-                    <div style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.875rem', color: 'var(--primary)', fontWeight: '500' }}>
-                      Tap to view route details & accept
+                    <div style={{ margin: '0.5rem 0 1rem' }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0A56D1' }}></div>
+                        {firstPickup?.rideRequest?.pickupAddress || 'Start Location'}
+                      </div>
+                      <div style={{ width: '2px', height: '10px', background: 'var(--border-color)', margin: '2px 0 2px 3px' }}></div>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', border: '2px solid #B3261E' }}></div>
+                        {lastDropoff?.rideRequest?.dropAddress || 'End Location'}
+                      </div>
                     </div>
                   )}
 
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: isExpanded ? '1rem' : '0' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+                      ₹{(trip.tripUsers?.reduce((acc, tu) => acc + tu.fareShare, 0) || 0).toFixed(0)} <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>Total Earnings</span>
+                    </div>
+                    {!isExpanded && (
+                      <span style={{ fontSize: '0.75rem', color: '#0A56D1', fontWeight: '600', background: 'rgba(10, 86, 209, 0.1)', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
+                        Tap to expand
+                      </span>
+                    )}
+                  </div>
+
                   {isExpanded && (
                     <>
-                      <div style={{ marginBottom: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px' }}>
+                      <div style={{ marginBottom: '1.5rem', background: 'var(--color-md-surface-container)', padding: '1rem', borderRadius: '8px', marginTop: '1.5rem' }}>
                         <h4 style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Riders</h4>
                         {trip.tripUsers?.map((tu, i) => (
                           <div key={tu.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.875rem' }}>
