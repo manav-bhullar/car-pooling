@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import './DateTimePicker.css';
 
@@ -8,22 +8,43 @@ const DAYS_OF_WEEK = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 export default function DateTimePickerModal({ isOpen, onClose, onConfirm, initialDate }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  
-  const [hours, setHours] = useState('12');
-  const [minutes, setMinutes] = useState('00');
-  const [ampm, setAmpm] = useState('AM');
+  const [selectedTime, setSelectedTime] = useState('12:00 AM');
+  const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false);
+  const timeDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (timeDropdownRef.current && !timeDropdownRef.current.contains(event.target)) {
+        setIsTimeDropdownOpen(false);
+      }
+    };
+    if (isTimeDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isTimeDropdownOpen]);
 
   useEffect(() => {
     if (isOpen) {
       const d = initialDate ? new Date(initialDate) : new Date();
+      // If initialDate is somehow in the past, use now
+      if (d < new Date()) {
+        d.setTime(Date.now());
+      }
       setSelectedDate(d);
       setCurrentDate(d);
-      let h = d.getHours();
-      const m = d.getMinutes();
-      setAmpm(h >= 12 ? 'PM' : 'AM');
-      h = h % 12 || 12;
-      setHours(h.toString().padStart(2, '0'));
-      setMinutes(m.toString().padStart(2, '0'));
+      
+      const ms = 1000 * 60 * 15;
+      const rounded = new Date(Math.ceil(d.getTime() / ms) * ms);
+      
+      let rh = rounded.getHours();
+      const rm = rounded.getMinutes();
+      const rampm = rh >= 12 ? 'PM' : 'AM';
+      rh = rh % 12 || 12;
+      
+      setSelectedTime(`${rh.toString().padStart(2, '0')}:${rm.toString().padStart(2, '0')} ${rampm}`);
     }
   }, [isOpen, initialDate]);
 
@@ -41,11 +62,13 @@ export default function DateTimePickerModal({ isOpen, onClose, onConfirm, initia
 
   const handleConfirm = () => {
     const finalDate = new Date(selectedDate);
-    let h = parseInt(hours, 10);
-    if (ampm === 'PM' && h !== 12) h += 12;
-    if (ampm === 'AM' && h === 12) h = 0;
+    const [timeStr, ampmStr] = selectedTime.split(' ');
+    const [hStr, mStr] = timeStr.split(':');
+    let h = parseInt(hStr, 10);
+    if (ampmStr === 'PM' && h !== 12) h += 12;
+    if (ampmStr === 'AM' && h === 12) h = 0;
     finalDate.setHours(h);
-    finalDate.setMinutes(parseInt(minutes, 10));
+    finalDate.setMinutes(parseInt(mStr, 10));
     finalDate.setSeconds(0);
     finalDate.setMilliseconds(0);
     
@@ -54,6 +77,39 @@ export default function DateTimePickerModal({ isOpen, onClose, onConfirm, initia
     const localIso = new Date(finalDate.getTime() - tzOffset).toISOString().slice(0, 16);
     onConfirm(localIso);
   };
+
+  const generateTimeOptions = () => {
+    const options = [];
+    const now = new Date();
+    const isToday = 
+      selectedDate.getDate() === now.getDate() &&
+      selectedDate.getMonth() === now.getMonth() &&
+      selectedDate.getFullYear() === now.getFullYear();
+
+    const currentTotalMins = now.getHours() * 60 + now.getMinutes();
+
+    for (let i = 0; i < 24 * 4; i++) {
+      const totalMins = i * 15;
+      
+      if (isToday && totalMins < currentTotalMins) {
+        continue;
+      }
+
+      let h = Math.floor(totalMins / 60);
+      const m = totalMins % 60;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      const val = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+      options.push(val);
+    }
+    
+    // Fallback if all times have passed today (e.g. 11:55 PM)
+    if (options.length === 0) {
+      options.push('11:59 PM');
+    }
+    return options;
+  };
+  const timeOptions = generateTimeOptions();
 
   const renderCalendar = () => {
     const days = [];
@@ -104,19 +160,30 @@ export default function DateTimePickerModal({ isOpen, onClose, onConfirm, initia
           {renderCalendar()}
         </div>
 
-        <div className="time-picker-section">
-          <div className="time-inputs">
-            <div className="time-input-wrap">
-              <input type="number" className="time-input" value={hours} onChange={e => setHours(e.target.value)} onBlur={e => setHours(e.target.value.padStart(2, '0'))} min="1" max="12" />
-            </div>
-            <span className="time-colon">:</span>
-            <div className="time-input-wrap">
-              <input type="number" className="time-input" value={minutes} onChange={e => setMinutes(e.target.value)} onBlur={e => setMinutes(e.target.value.padStart(2, '0'))} min="0" max="59" />
-            </div>
-          </div>
-          <div className="ampm-toggle">
-            <button type="button" className={`ampm-btn ${ampm === 'AM' ? 'active' : ''}`} onClick={() => setAmpm('AM')}>AM</button>
-            <button type="button" className={`ampm-btn ${ampm === 'PM' ? 'active' : ''}`} onClick={() => setAmpm('PM')}>PM</button>
+        <div className="time-picker-section" style={{ display: 'flex', justifyContent: 'center' }}>
+          <div className="m3-time-dropdown-container" ref={timeDropdownRef}>
+            <button 
+              type="button" 
+              className="m3-time-select-btn" 
+              onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
+            >
+              <span>{selectedTime}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
+            </button>
+            {isTimeDropdownOpen && (
+              <div className="m3-time-dropdown-menu">
+                {timeOptions.map(t => (
+                  <button 
+                    type="button"
+                    key={t} 
+                    className={`m3-time-dropdown-item ${t === selectedTime ? 'selected' : ''}`}
+                    onClick={() => { setSelectedTime(t); setIsTimeDropdownOpen(false); }}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

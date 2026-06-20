@@ -108,7 +108,7 @@ async function runMatchingCycle(triggerType = 'CRON') {
 
       if (pending.length < 3) {
         console.log(`⏭️  Not enough pending requests (${pending.length}, minimum 3 required)`);
-        
+
         // ⚠️ CRITICAL: Still increment pending_cycles for unmatched requests
         if (pending.length > 0) {
           const matchedIds = new Set(); // No matches found
@@ -150,7 +150,7 @@ async function runMatchingCycle(triggerType = 'CRON') {
 
       if (matches.length === 0) {
         console.log(`❌ No valid matches found for ${pending.length} requests`);
-        
+
         // ⚠️ CRITICAL: Still increment pending_cycles for all unmatched requests
         const matchedIds = new Set(); // No matches found
         const { cycleCancelled, timeCancelled } = await updatePendingCycles(tx, pending, matchedIds);
@@ -296,7 +296,7 @@ async function runMatchingCycle(triggerType = 'CRON') {
       durationMs: Date.now() - startTime,
       error: err.message,
     };
-    
+
     // Log error to database
     await logMatchingCycle(result, triggerType);
 

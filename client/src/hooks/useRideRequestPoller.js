@@ -34,6 +34,16 @@ export function useRideRequestPoller() {
 
         if (updated && JSON.stringify(updated) !== JSON.stringify(state.rideRequest)) {
           dispatch({ type: 'SET_RIDE_REQUEST', payload: updated });
+          
+          if (state.rideRequest && state.rideRequest.status === 'PENDING' && updated.status === 'CANCELLED') {
+            dispatch({
+              type: 'SET_NOTIFICATION',
+              payload: {
+                type: 'warning',
+                message: 'Your ride request was cancelled because the preferred time has passed without a match.'
+              }
+            });
+          }
         }
 
         if (uiState === 'MATCHED' && !state.trip) {

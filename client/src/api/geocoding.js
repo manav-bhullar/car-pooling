@@ -14,7 +14,6 @@ export async function searchLocation(query) {
     q: query.trim(),
     format: 'json',
     limit: '5',
-    viewbox: PATIALA_VIEWBOX,
     addressdetails: '0',
     countrycodes: 'in',
   });
