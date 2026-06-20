@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
+import { apiClient } from '../api/apiClient';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL 
   ? import.meta.env.VITE_API_URL.replace('/api', '') 
@@ -12,7 +13,7 @@ export function useDriverLocation(tripId, isStarted) {
   useEffect(() => {
     if (!tripId || !isStarted) return;
 
-    const token = localStorage.getItem('accessToken');
+    const token = apiClient.accessToken;
     const socket = io(BACKEND_URL, {
       auth: { token }
     });

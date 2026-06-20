@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
+import { apiClient } from '../api/apiClient';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL 
   ? import.meta.env.VITE_API_URL.replace('/api', '') 
@@ -15,7 +16,7 @@ export function useGlobalSocket() {
   useEffect(() => {
     if (!user?.id) return;
 
-    const token = localStorage.getItem('accessToken');
+    const token = apiClient.accessToken;
     const socket = io(BACKEND_URL, {
       auth: { token }
     });
