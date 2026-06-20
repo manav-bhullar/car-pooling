@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedTripId, setExpandedTripId] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
@@ -65,16 +66,18 @@ export default function Dashboard() {
       <DriverMap stops={mapStops} pickupMarkers={pickupMarkers} defaultCenter={[37.7749, -122.4194]} />
       
       {/* Top Right Header */}
-      <div className="glass-panel" style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 20, padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1.5rem', borderRadius: '50px', background: 'var(--color-md-surface)' }}>
-        <div style={{ textAlign: 'right' }}>
-          <h1 style={{ fontSize: '1rem', margin: 0, fontWeight: 500 }}>Driver Dashboard</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', margin: 0 }}>{user?.name}</p>
+      <div className="glass-panel" style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 20, padding: '6px 6px 6px 12px', display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '50px', background: 'var(--color-md-surface-container-low)', border: '1px solid var(--color-md-outline-variant)', boxShadow: 'var(--shadow-elevation-2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'var(--color-md-primary-container)', color: 'var(--color-md-on-primary-container)', fontSize: '0.875rem', fontWeight: 700 }}>
+          {user?.name?.charAt(0).toUpperCase() || 'D'}
         </div>
-        <button className="btn btn-danger" style={{ width: 'auto', padding: '0.5rem 1rem', borderRadius: '50px', fontSize: '0.875rem' }} onClick={() => {
-          if (window.confirm('Are you sure you want to log out?')) {
-            logout();
-          }
-        }}>Logout</button>
+        <span style={{ fontSize: '0.875rem', fontWeight: 500, marginRight: '4px' }}>{user?.name}</span>
+        <button onClick={() => setShowLogoutModal(true)} className="logout-btn" title="Logout" aria-label="Logout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </button>
       </div>
 
       {/* Left Panel for Trips */}
@@ -169,6 +172,19 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {showLogoutModal && (
+        <div className="logout-modal-backdrop">
+          <div className="logout-modal glass-card">
+            <h3>Sign Out</h3>
+            <p>Are you sure you want to sign out of your account?</p>
+            <div className="logout-modal-actions">
+              <button className="btn-cancel" onClick={() => setShowLogoutModal(false)}>Cancel</button>
+              <button className="btn-confirm" onClick={() => { setShowLogoutModal(false); logout(); }}>Sign Out</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

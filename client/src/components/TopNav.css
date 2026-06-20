@@ -52,8 +52,8 @@
 }
 
 .logout-btn:hover {
-  background-color: var(--color-md-error-container);
-  color: var(--color-md-on-error-container);
+  background-color: #b3261e; /* Error Container */
+  color: #ffffff; /* On Error */
 }
 
 .logout-btn svg {
