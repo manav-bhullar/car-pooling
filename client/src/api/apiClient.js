@@ -63,16 +63,21 @@ class ApiClient {
 
     this.refreshPromise = (async () => {
       try {
+        const storedRefreshToken = localStorage.getItem('refreshToken');
         const res = await window.fetch(`${BASE_URL}/auth/refresh-token`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: storedRefreshToken }),
           credentials: 'include',
         });
 
         const json = await res.json();
         if (json.success && json.data.accessToken) {
           this.setAccessToken(json.data.accessToken);
-          return json.data.accessToken;
+          return {
+            accessToken: json.data.accessToken,
+            refreshToken: json.data.refreshToken
+          };
         }
         throw new Error('Refresh failed');
       } finally {

@@ -33,6 +33,9 @@ export function AuthProvider({ children }) {
       throw new Error('Only drivers can login here');
     }
     localStorage.setItem('accessToken', data.accessToken);
+    if (data.refreshToken) {
+      localStorage.setItem('refreshToken', data.refreshToken);
+    }
     setUser(data.user);
     return data;
   };
@@ -51,6 +54,7 @@ export function AuthProvider({ children }) {
       console.error(err);
     } finally {
       localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       setUser(null);
     }
   };

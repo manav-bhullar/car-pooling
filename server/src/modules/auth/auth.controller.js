@@ -32,7 +32,8 @@ exports.login = async (req, res) => {
     
     setRefreshTokenCookie(res, refreshToken);
     
-    return success(res, { user, accessToken });
+    // Return refreshToken in payload to support Safari ITP bypass
+    return success(res, { user, accessToken, refreshToken });
   } catch (err) {
     if (err.needsVerification) {
       return res.status(err.status).json({
@@ -53,7 +54,8 @@ exports.verifyEmail = async (req, res) => {
     
     setRefreshTokenCookie(res, refreshToken);
     
-    return success(res, { user, accessToken });
+    // Return refreshToken in payload
+    return success(res, { user, accessToken, refreshToken });
   } catch (err) {
     return error(res, err.message, err.status || 500);
   }
@@ -72,14 +74,16 @@ exports.resendOtp = async (req, res) => {
 
 exports.refreshToken = async (req, res) => {
   try {
-    const token = req.cookies.refreshToken;
+    // Safari blocks 3rd party cookies, so we accept refreshToken from the body as a fallback
+    const token = req.body.refreshToken || req.cookies.refreshToken;
     if (!token) return error(res, 'Refresh token not found', 401);
 
     const { user, accessToken, refreshToken } = await authService.refreshToken(token);
     
     setRefreshTokenCookie(res, refreshToken);
     
-    return success(res, { user, accessToken });
+    // Return refreshToken in payload
+    return success(res, { user, accessToken, refreshToken });
   } catch (err) {
     // Clear cookie if token is invalid
     res.clearCookie('refreshToken');

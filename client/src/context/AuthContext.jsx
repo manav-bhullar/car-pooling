@@ -17,11 +17,12 @@ export function AuthProvider({ children }) {
   const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const setAuthData = (userData, accessToken) => {
+  const setAuthData = (userData, accessToken, refreshToken) => {
     setUser(userData);
     setIsAuthenticated(true);
     setIsVerified(userData.isVerified);
     apiClient.setAccessToken(accessToken);
+    if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
   };
 
   const clearAuthData = () => {
@@ -29,6 +30,7 @@ export function AuthProvider({ children }) {
     setIsAuthenticated(false);
     setIsVerified(false);
     apiClient.setAccessToken(null);
+    localStorage.removeItem('refreshToken');
   };
 
   // Set up API client error handler to log out user automatically if refresh fails
@@ -38,17 +40,17 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
-  // Check auth state on mount using the refresh token cookie
+  // Check auth state on mount using the refresh token
   useEffect(() => {
     let mounted = true;
 
     async function initAuth() {
       try {
-        const accessToken = await apiClient.refreshToken();
+        const { accessToken, refreshToken } = await apiClient.refreshToken();
         if (accessToken) {
           const userData = await getMe();
           if (mounted) {
-            setAuthData(userData, accessToken);
+            setAuthData(userData, accessToken, refreshToken);
           }
         }
       } catch (err) {
@@ -68,7 +70,7 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const data = await loginUser(email, password);
-    setAuthData(data.user, data.accessToken);
+    setAuthData(data.user, data.accessToken, data.refreshToken);
     return data;
   };
 
@@ -78,7 +80,7 @@ export function AuthProvider({ children }) {
 
   const verify = async (email, otp) => {
     const data = await verifyEmail(email, otp);
-    setAuthData(data.user, data.accessToken);
+    setAuthData(data.user, data.accessToken, data.refreshToken);
     return data;
   };
 
