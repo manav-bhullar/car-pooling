@@ -169,6 +169,38 @@
   cursor: not-allowed;
 }
 
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper input {
+  padding-right: 48px; /* Make room for the toggle button */
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--color-md-on-surface-variant);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.password-toggle-btn:hover {
+  background-color: var(--color-md-surface-container-highest);
+  color: var(--color-md-on-surface);
+}
+
 /* ---- Submit Button ---- */
 .auth-submit-btn {
   background: var(--color-md-tertiary);
