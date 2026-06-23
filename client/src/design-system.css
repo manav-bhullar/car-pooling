@@ -1,5 +1,5 @@
 /* ============================================================
-   CarpoolTU Design System — CSS Custom Properties
+   floq Design System — CSS Custom Properties
    Theme: Material 3 Expressive (Light / Purple Seed)
    ============================================================ */
 
@@ -16,13 +16,13 @@
    --color-md-secondary-container:  #e0e0e0;
    --color-md-on-secondary-container: #000000;
 
-   --color-md-tertiary:             #32302a;
+   --color-md-tertiary:             #111111; /* Changed to near black for prominent buttons */
    --color-md-tertiary-container:   #fae366;
    --color-md-on-tertiary-container:#000000;
 
    --color-md-surface:              #ffffff; /* Pure white */
    --color-md-surface-container:    #f5f5f5; /* Light gray */
-   --color-md-surface-container-low:#fafafa; /* Input backgrounds */
+   --color-md-surface-container-low:#f1f3f4; /* Input backgrounds */
    --color-md-surface-container-high:#ebebeb; /* Modals */
    --color-md-surface-container-highest:#e0e0e0; /* Hover states */
    
@@ -38,7 +38,7 @@
    /* ==========================================================
      TYPOGRAPHY (Roboto + M3 Scale)
      ========================================================== */
-   --font-display: 'Roboto Flex', sans-serif;
+   --font-display: 'Outfit', 'Roboto Flex', sans-serif;
    --font-body: 'Roboto', sans-serif;
 
    --type-display-large:   400 3.5rem/4rem    var(--font-display);

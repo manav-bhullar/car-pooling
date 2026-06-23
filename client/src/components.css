@@ -1,5 +1,5 @@
 /* ============================================================
-   CarpoolTU — Shared Component Styles
+   floq — Shared Component Styles
    Material Design 3 Expressive
    ============================================================ */
 
@@ -166,11 +166,10 @@
    padding: 16px;
    background: var(--color-md-surface-container-low);
    border: none;
-   border-bottom: 2px solid var(--color-md-outline);
-   border-radius: 12px 12px 0 0;
+   border-radius: 12px;
    font: var(--type-body-large);
    color: var(--color-md-on-surface);
-   transition: border-color var(--duration-short) var(--ease-standard),
+   transition: box-shadow var(--duration-short) var(--ease-standard),
                background var(--duration-short) var(--ease-standard);
 }
 
@@ -180,7 +179,7 @@
 
 .md3-input:focus, .form-input:focus {
    outline: none;
-   border-bottom-color: var(--color-md-primary);
+   box-shadow: 0 0 0 2px var(--color-md-primary);
    background: var(--color-md-surface-container);
 }
 
@@ -261,6 +260,28 @@
    display: flex;
    gap: 8px;
    justify-content: flex-end;
+}
+
+/* ============================================================
+   DRAG HANDLE (Expandable Bottom Sheets)
+   ============================================================ */
+.drag-handle {
+   width: 48px;
+   height: 6px;
+   background: var(--color-md-outline);
+   border-radius: var(--radius-full);
+   margin: 0 auto 24px auto;
+   opacity: 0.5;
+}
+
+.drag-handle-wrapper {
+   width: 100%;
+   padding-top: 8px;
+   padding-bottom: 8px;
+   margin-top: -16px;
+   cursor: pointer;
+   display: flex;
+   justify-content: center;
 }
 
 

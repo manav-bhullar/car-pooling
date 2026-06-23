@@ -106,17 +106,16 @@
   padding: 16px;
   background: var(--color-md-surface-container-low);
   border: none;
-  border-bottom: 2px solid var(--color-md-outline);
-  border-radius: 12px 12px 0 0;
+  border-radius: 12px;
   font: var(--type-body-large);
   color: var(--color-md-on-surface);
-  transition: border-color var(--duration-short) var(--ease-standard),
+  transition: box-shadow var(--duration-short) var(--ease-standard),
               background var(--duration-short) var(--ease-standard);
 }
 
 .form-group input:focus {
   outline: none;
-  border-bottom-color: var(--color-md-primary);
+  box-shadow: 0 0 0 2px var(--color-md-primary);
   background: var(--color-md-surface-container);
 }
 
@@ -245,16 +244,15 @@
   appearance: none;
   background: var(--color-md-surface-container-low);
   border: none;
-  border-bottom: 2px solid var(--color-md-outline);
-  border-radius: 12px 12px 0 0;
+  border-radius: 12px;
   color: var(--color-md-on-surface);
-  transition: border-color var(--duration-short) var(--ease-standard),
+  transition: box-shadow var(--duration-short) var(--ease-standard),
               background var(--duration-short) var(--ease-standard);
 }
 
 .otp-input:focus {
   outline: none;
-  border-bottom-color: var(--color-md-primary);
+  box-shadow: 0 0 0 2px var(--color-md-primary);
   background: var(--color-md-surface-container);
 }
 

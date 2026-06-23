@@ -62,7 +62,7 @@ export default function RegisterPage() {
         <div className="auth-card glass-card">
         <div className="auth-header">
           <h1>Create Account</h1>
-          <p>Join our carpool community</p>
+          <p>Join floq</p>
         </div>
 
         {error && <div className="auth-error">{error}</div>}
