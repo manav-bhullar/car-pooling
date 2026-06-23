@@ -10,8 +10,17 @@ export default function ActiveTrip() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(window.innerWidth >= 768);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) setIsExpanded(true);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     loadTrip();
@@ -65,24 +74,31 @@ export default function ActiveTrip() {
   return (
     <>
       <DriverMap stops={trip.tripStops} defaultCenter={[37.7749, -122.4194]} driverLocation={location} />
-      <div style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', bottom: '1.5rem', width: '400px', zIndex: 10, display: 'flex', flexDirection: 'column', overflowY: 'auto', paddingRight: '0.5rem' }}>
-        <div className="header glass-panel" style={{ padding: '1rem', marginBottom: '1.5rem', background: 'var(--color-md-surface)' }}>
+      
+      <div className={`driver-panel glass-panel ${isExpanded ? 'expanded' : 'collapsed'}`} style={{ padding: 0 }}>
+        {/* Drag Handle to toggle expansion on mobile */}
+        <div className="drag-handle-wrapper" style={{ marginTop: '0', paddingTop: '16px' }} onClick={() => setIsExpanded(!isExpanded)}>
+          <div className="drag-handle"></div>
+        </div>
+
+        <div onClick={() => !isExpanded && setIsExpanded(true)} style={{ cursor: !isExpanded ? 'pointer' : 'default', padding: '0 1.5rem 1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h1 style={{ fontSize: '1.5rem', margin: 0, fontWeight: 600 }}>Active Trip</h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>Trip ID: {trip.id.slice(-6)}</p>
           </div>
           {isStarted ? (
-            <button className="btn btn-success" style={{ width: 'auto', padding: '0.5rem 1rem' }} onClick={handleCompleteClick} disabled={loading}>
+            <button className="btn btn-success" style={{ width: 'auto', padding: '0.5rem 1rem', borderRadius: 'var(--radius-full)' }} onClick={(e) => { e.stopPropagation(); handleCompleteClick(); }} disabled={loading}>
               {loading ? 'Completing...' : 'Complete Trip'}
             </button>
           ) : (
-            <button className="btn btn-primary" style={{ width: 'auto', padding: '0.5rem 1rem' }} onClick={handleStart} disabled={loading}>
+            <button className="btn btn-primary" style={{ width: 'auto', padding: '0.5rem 1rem', borderRadius: 'var(--radius-full)' }} onClick={(e) => { e.stopPropagation(); handleStart(); }} disabled={loading}>
               {loading ? 'Starting...' : 'Start Trip'}
             </button>
           )}
         </div>
 
-        {error && <div style={{ color: '#EF4444', marginBottom: '1rem' }}>{error}</div>}
+        <div className="panel-scroll-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: '0 1.5rem 1.5rem 1.5rem', overflowY: 'auto' }}>
+          {error && <div style={{ color: '#EF4444', marginBottom: '1rem' }}>{error}</div>}
 
         {isStarted && location && (
           <div className="glass-panel pulse" style={{ padding: '1rem', marginBottom: '1.5rem', border: '1px solid #0A56D1', display: 'flex', justifyContent: 'space-between', background: 'var(--color-md-surface)' }}>
@@ -124,6 +140,7 @@ export default function ActiveTrip() {
                 <div className="stop-address">{stop.rideRequest?.[stop.type === 'PICKUP' ? 'pickupAddress' : 'dropAddress'] || 'Unknown Address'}</div>
               </div>
             ))}
+          </div>
           </div>
         </div>
       </div>
