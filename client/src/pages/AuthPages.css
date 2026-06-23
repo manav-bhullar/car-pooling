@@ -230,14 +230,15 @@
 /* Verify Email OTP specific styles */
 .otp-container {
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 10px;
 }
 
 .otp-input {
-  width: 50px;
-  height: 60px;
+  width: 44px;
+  height: 56px;
   text-align: center !important;
   font-size: 24px !important;
   font-weight: 600;

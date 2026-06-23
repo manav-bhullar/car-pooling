@@ -223,11 +223,82 @@ input:focus {
   padding: 2rem 1rem;
 }
 
+/* ============================================================
+   DRAG HANDLE (Expandable Bottom Sheets)
+   ============================================================ */
+.drag-handle {
+  width: 48px;
+  height: 6px;
+  background: var(--color-md-outline);
+  border-radius: var(--radius-full);
+  margin: 0 auto 24px auto;
+  opacity: 0.5;
+}
+
+.drag-handle-wrapper {
+  width: 100%;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  margin-top: -16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+}
+
+/* ============================================================
+   MOBILE BOTTOM SHEET LAYOUT
+   ============================================================ */
+.driver-panel {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  bottom: 1.5rem;
+  width: 400px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  transition: height 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+@media (max-width: 767px) {
+  .driver-panel {
+    top: auto;
+    left: 16px;
+    right: 16px;
+    bottom: 24px;
+    width: auto;
+    max-height: 85vh;
+    border-radius: var(--radius-2xl);
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-elevation-3);
+    padding: 24px;
+    overflow: hidden;
+  }
+  
+  .driver-panel.collapsed {
+    height: auto;
+    padding-bottom: 16px;
+  }
+  
+  .driver-panel.expanded {
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* When collapsed, hide the main scrollable list but keep header */
+  .driver-panel.collapsed .panel-scroll-content {
+    display: none;
+  }
+}
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 /* Trip Cards */

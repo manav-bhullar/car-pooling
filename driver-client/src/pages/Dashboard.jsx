@@ -11,6 +11,7 @@ export default function Dashboard() {
   const [expandedTripId, setExpandedTripId] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [rejectedTripIds, setRejectedTripIds] = useState([]);
+  const [isExpanded, setIsExpanded] = useState(window.innerWidth >= 768);
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const [idleDriverLocation, setIdleDriverLocation] = useState(null);
@@ -27,6 +28,14 @@ export default function Dashboard() {
     return () => {
       if (gpsWatchRef.current != null) navigator.geolocation.clearWatch(gpsWatchRef.current);
     };
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) setIsExpanded(true);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -97,20 +106,30 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Left Panel for Trips */}
-      <div style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', bottom: '1.5rem', width: '400px', zIndex: 10, display: 'flex', flexDirection: 'column' }}>
-        <h2 style={{ marginBottom: '1rem', fontWeight: 600 }}>Available Trips</h2>
+      {/* Left Panel for Trips (Bottom Sheet on Mobile) */}
+      <div className={`driver-panel glass-panel ${isExpanded ? 'expanded' : 'collapsed'}`}>
+        {/* Drag Handle to toggle expansion on mobile */}
+        <div className="drag-handle-wrapper" onClick={() => setIsExpanded(!isExpanded)}>
+          <div className="drag-handle"></div>
+        </div>
+
+        <div onClick={() => !isExpanded && setIsExpanded(true)} style={{ cursor: !isExpanded ? 'pointer' : 'default' }}>
+          <h2 style={{ marginBottom: '1rem', fontWeight: 600 }}>
+            {displayTrips.length === 0 ? 'Searching for riders...' : `Available Trips (${displayTrips.length})`}
+          </h2>
+        </div>
         
         {error && <div style={{ color: '#EF4444', marginBottom: '1rem', background: 'rgba(239, 68, 68, 0.2)', padding: '0.5rem', borderRadius: '8px' }}>{error}</div>}
 
-        {displayTrips.length === 0 ? (
-          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-            No trips available right now. Waiting for riders...
-            <br /><br />
-            <button className="btn btn-primary" style={{ width: 'auto' }} onClick={loadTrips}>Refresh</button>
-          </div>
-        ) : (
-          <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
+        <div className="panel-scroll-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          {displayTrips.length === 0 ? (
+            <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              No trips available right now. Waiting for riders...
+              <br /><br />
+              <button className="btn btn-primary" style={{ width: 'auto' }} onClick={loadTrips}>Refresh</button>
+            </div>
+          ) : (
+            <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
             {displayTrips.map(trip => {
               const isExpanded = expandedTripId === trip.id;
               const firstPickup = trip.tripStops.find(s => s.type === 'PICKUP');
@@ -197,6 +216,7 @@ export default function Dashboard() {
             })}
           </div>
         )}
+        </div>
       </div>
 
       {showLogoutModal && (

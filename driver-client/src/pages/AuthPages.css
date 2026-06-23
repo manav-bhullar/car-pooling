@@ -289,3 +289,68 @@
   margin-bottom: 12px;
   letter-spacing: 0.5px;
 }
+
+/* Verify Email OTP specific styles */
+.otp-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.otp-input {
+  width: 44px;
+  height: 56px;
+  text-align: center !important;
+  font-size: 24px !important;
+  font-weight: 600;
+  appearance: none;
+  background: var(--color-md-surface-container-low);
+  border: none;
+  border-radius: 12px;
+  color: var(--color-md-on-surface);
+  transition: box-shadow var(--duration-short) var(--ease-standard),
+              background var(--duration-short) var(--ease-standard);
+}
+
+.otp-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-md-primary);
+  background: var(--color-md-surface-container);
+}
+
+.verify-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.resend-btn {
+  background: none;
+  border: none;
+  color: var(--color-md-tertiary);
+  font: var(--type-label-medium);
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  transition: background-color 0.2s ease;
+}
+
+.resend-btn:hover:not(:disabled) {
+  background-color: var(--color-md-surface-container-high);
+}
+
+.resend-btn:disabled {
+  color: var(--color-md-on-surface-variant);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.back-to-login {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-md-outline);
+  width: 100%;
+}
