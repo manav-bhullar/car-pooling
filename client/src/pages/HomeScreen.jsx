@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import RideRequestForm from '../components/RideRequestForm';
@@ -10,6 +10,15 @@ export default function HomeScreen() {
   const { state } = useApp();
   const { user } = useAuth();
   const [activeStop, setActiveStop] = useState([]);
+  const [isExpanded, setIsExpanded] = useState(window.innerWidth >= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) setIsExpanded(true);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // University coordinates as default wallpaper center
   const defaultCenter = [49.2606, -123.2460]; // e.g., UBC
@@ -46,10 +55,23 @@ export default function HomeScreen() {
       <div className="blur-shape home-blur-2"></div>
 
       {/* Foreground Content */}
-      <div className="home-content-layer">
+      <div className={`home-content-layer ${isExpanded ? 'expanded' : 'collapsed'}`}>
         <div className="home-glass-card glass-card">
+          {/* Drag Handle to toggle expansion on mobile */}
+          <div className="drag-handle-wrapper" onClick={() => setIsExpanded(!isExpanded)}>
+            <div className="drag-handle"></div>
+          </div>
+          
           <h1 className="home-headline">Where to next, {user?.name}?</h1>
-          <RideRequestForm onLocationSelect={handleLocationSelect} />
+          
+          {!isExpanded ? (
+            <div className="collapsed-mock-input" onClick={() => setIsExpanded(true)}>
+              <span className="mock-placeholder">Search for a destination...</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mock-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+          ) : (
+            <RideRequestForm onLocationSelect={handleLocationSelect} />
+          )}
         </div>
       </div>
     </div>

@@ -11,6 +11,15 @@ export default function WaitingScreen() {
   const { user } = useAuth();
   const [cancelling, setCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(window.innerWidth >= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) setIsExpanded(true);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const rideRequest = state.rideRequest;
   const createdAt = rideRequest?.createdAt || null;
@@ -69,54 +78,63 @@ export default function WaitingScreen() {
       <div className="blur-shape waiting-blur-2"></div>
 
       {/* Foreground Content */}
-      <div className="waiting-content-layer">
+      <div className={`waiting-content-layer ${isExpanded ? 'expanded' : 'collapsed'}`}>
         <div className="waiting-glass-card glass-card">
+          
+          {/* Drag Handle */}
+          <div className="drag-handle-wrapper" onClick={() => setIsExpanded(!isExpanded)}>
+            <div className="drag-handle"></div>
+          </div>
 
           <h1 className="waiting-primary-msg">
             {isMatched ? 'Match found!' : 'Finding your ride...'}
           </h1>
           {isMatched && <p className="waiting-secondary-msg">Loading your trip details...</p>}
 
-          <div className="waiting-status-block">
+          <div className="waiting-status-block" onClick={() => !isExpanded && setIsExpanded(true)} style={{ cursor: !isExpanded ? 'pointer' : 'default' }}>
             <p className="waiting-timer">Waiting for {formatElapsed(elapsed)}</p>
           </div>
 
-          <hr className="waiting-divider" />
+          {isExpanded && (
+            <div className="waiting-expanded-content">
+              <hr className="waiting-divider" />
 
-          <div className="waiting-request-summary">
-            <span className="waiting-section-label">Your request</span>
-            <p className="waiting-route-text">{rideRequest.pickupAddress?.split(',')[0]} → {rideRequest.dropAddress?.split(',')[0]}</p>
-            <p className="waiting-time-text">
-              {rideRequest.preferredTime
-                ? new Date(rideRequest.preferredTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                : 'ASAP'}
-            </p>
-          </div>
-
-          {/* Cancel Action */}
-          <div className="waiting-cancel-zone">
-            {!showCancelConfirm ? (
-              <button
-                className="btn btn-outlined btn-danger"
-                onClick={() => setShowCancelConfirm(true)}
-                disabled={isMatched || cancelling}
-              >
-                Cancel ride
-              </button>
-            ) : (
-              <div className="cancel-confirm-inline">
-                <p>Are you sure?</p>
-                <div className="cancel-confirm-actions">
-                  <button className="btn btn-danger" onClick={handleCancel} disabled={cancelling}>
-                    {cancelling ? 'Cancelling...' : 'Yes, cancel'}
-                  </button>
-                  <button className="btn btn-tonal" onClick={() => setShowCancelConfirm(false)} disabled={cancelling}>
-                    Keep searching
-                  </button>
-                </div>
+              <div className="waiting-request-summary">
+                <span className="waiting-section-label">Your request</span>
+                <p className="waiting-route-text">{rideRequest.pickupAddress?.split(',')[0]} → {rideRequest.dropAddress?.split(',')[0]}</p>
+                <p className="waiting-time-text">
+                  {rideRequest.preferredTime
+                    ? new Date(rideRequest.preferredTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : 'ASAP'}
+                </p>
               </div>
-            )}
-          </div>
+
+              {/* Cancel Action */}
+              <div className="waiting-cancel-zone">
+                {!showCancelConfirm ? (
+                  <button
+                    className="btn btn-outlined btn-danger"
+                    onClick={() => setShowCancelConfirm(true)}
+                    disabled={isMatched || cancelling}
+                  >
+                    Cancel ride
+                  </button>
+                ) : (
+                  <div className="cancel-confirm-inline">
+                    <p>Are you sure?</p>
+                    <div className="cancel-confirm-actions">
+                      <button className="btn btn-danger" onClick={handleCancel} disabled={cancelling}>
+                        {cancelling ? 'Cancelling...' : 'Yes, cancel'}
+                      </button>
+                      <button className="btn btn-tonal" onClick={() => setShowCancelConfirm(false)} disabled={cancelling}>
+                        Keep searching
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
         </div>
       </div>
