@@ -45,7 +45,7 @@ export default function LoginPage() {
         <div className="auth-card glass-card">
         <div className="auth-header">
           <h1>Welcome Back</h1>
-          <p>Sign in to continue your journey</p>
+          <p>Sign in to floq</p>
         </div>
 
         {error && <div className="auth-error">{error}</div>}
