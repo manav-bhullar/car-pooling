@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-
 import { fetchOSRMRoute } from '../utils/routing';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import '@luomus/leaflet-smooth-wheel-zoom';
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -32,17 +33,13 @@ function FitBounds({ positions, fitBoundsOptions }) {
       map.flyToBounds([positions[0], positions[0]], {
         ...fitBoundsOptions,
         padding: fitBoundsOptions?.padding || [40, 40],
-        maxZoom: 14,
-        duration: 1.5,
-        easeLinearity: 0.2,
+        maxZoom: 14
       });
       return;
     }
     map.flyToBounds(positions.map((p) => [p[0], p[1]]), {
       ...fitBoundsOptions,
-      padding: fitBoundsOptions?.padding || [40, 40],
-      duration: 1.5,
-      easeLinearity: 0.2,
+      padding: fitBoundsOptions?.padding || [40, 40]
     });
   }, [map, positions, fitBoundsOptions]);
 
@@ -55,7 +52,7 @@ function FlyToLocation({ flyToRef }) {
 
   useEffect(() => {
     flyToRef.current = (lat, lng, zoom = 15) => {
-      map.flyTo([lat, lng], zoom, { duration: 1.4, easeLinearity: 0.25 });
+      map.flyTo([lat, lng], zoom);
     };
   }, [map, flyToRef]);
 
@@ -239,7 +236,9 @@ export default function DriverMap({
       <MapContainer
         center={center}
         zoom={14}
-        scrollWheelZoom={true}
+        scrollWheelZoom={false}
+        smoothWheelZoom={true}
+        smoothSensitivity={1}
         zoomControl={false}
         style={{ height: '100%', width: '100%' }}
       >

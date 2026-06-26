@@ -284,6 +284,12 @@
    justify-content: center;
 }
 
+@media (min-width: 768px) {
+   .drag-handle-wrapper {
+      display: none;
+   }
+}
+
 
 /* ============================================================
    STATUS BANNER
