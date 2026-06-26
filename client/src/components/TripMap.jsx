@@ -37,15 +37,13 @@ function FitBounds({ positions, fitBoundsOptions }) {
       map.flyToBounds(singleBound, { 
         ...fitBoundsOptions, 
         padding: fitBoundsOptions?.padding || [40, 40], 
-        maxZoom: 14, 
-        duration: 1.5, 
-        easeLinearity: 0.2 
+        maxZoom: 14 
       });
       return;
     }
     const bounds = positions.map((p) => [p[0], p[1]]);
     // Cinematic flight when framing the route
-    map.flyToBounds(bounds, { ...fitBoundsOptions, padding: fitBoundsOptions?.padding || [40, 40], duration: 1.5, easeLinearity: 0.2 });
+    map.flyToBounds(bounds, { ...fitBoundsOptions, padding: fitBoundsOptions?.padding || [40, 40] });
   }, [map, positions, fitBoundsOptions]);
 
   return null;
@@ -130,7 +128,16 @@ export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, m
 
   return (
     <div className="trip-map" style={{ height: '100%', width: '100%' }}>
-      <MapContainer center={center} zoom={14} scrollWheelZoom={true} zoomControl={false} style={{ height: '100%', width: '100%' }}>
+      <MapContainer 
+        center={center} 
+        zoom={14} 
+        scrollWheelZoom={true} 
+        zoomControl={false} 
+        zoomSnap={0.1}
+        zoomDelta={0.5}
+        wheelPxPerZoomLevel={120}
+        style={{ height: '100%', width: '100%' }}
+      >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
