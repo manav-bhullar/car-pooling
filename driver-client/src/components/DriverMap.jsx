@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-
 import { fetchOSRMRoute } from '../utils/routing';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import '@luomus/leaflet-smooth-wheel-zoom';
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -235,11 +236,10 @@ export default function DriverMap({
       <MapContainer
         center={center}
         zoom={14}
-        scrollWheelZoom={true}
+        scrollWheelZoom={false}
+        smoothWheelZoom={true}
+        smoothSensitivity={1}
         zoomControl={false}
-        zoomSnap={0.1}
-        zoomDelta={0.5}
-        wheelPxPerZoomLevel={120}
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer
