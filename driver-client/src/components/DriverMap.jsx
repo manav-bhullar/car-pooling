@@ -240,6 +240,40 @@ export default function DriverMap({
     }
   }, [userLocation]);
 
+
+  const sortedStops = useMemo(
+    () =>
+      (stops || [])
+        .slice()
+        .filter((s) => s && typeof s.lat === 'number' && typeof s.lng === 'number')
+        .sort((a, b) => (a.stopOrder || 0) - (b.stopOrder || 0)),
+    [stops]
+  );
+
+  const positions = useMemo(() => sortedStops.map((s) => [s.lat, s.lng]), [sortedStops]);
+
+  const [routePositions, setRoutePositions] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (positions.length > 1) {
+      fetchOSRMRoute(positions).then((route) => {
+        if (isMounted) setRoutePositions(route);
+      });
+    } else {
+      setRoutePositions(positions);
+    }
+    return () => { isMounted = false; };
+  }, [positions]);
+
+  const boundsPositions = useMemo(() => {
+    const pos = [...positions];
+    if (pickupMarkers?.length > 0) {
+      pickupMarkers.forEach((m) => pos.push([m.lat, m.lng]));
+    }
+    return pos;
+  }, [positions, pickupMarkers]);
+
   const handleMyLocation = useCallback(() => {
     setIsDrifted(false);
     
@@ -279,39 +313,6 @@ export default function DriverMap({
       { enableHighAccuracy: true, timeout: 8000 }
     );
   }, [driverLocation, idleDriverLocation, userLocation, boundsPositions]);
-
-  const sortedStops = useMemo(
-    () =>
-      (stops || [])
-        .slice()
-        .filter((s) => s && typeof s.lat === 'number' && typeof s.lng === 'number')
-        .sort((a, b) => (a.stopOrder || 0) - (b.stopOrder || 0)),
-    [stops]
-  );
-
-  const positions = useMemo(() => sortedStops.map((s) => [s.lat, s.lng]), [sortedStops]);
-
-  const [routePositions, setRoutePositions] = useState([]);
-
-  useEffect(() => {
-    let isMounted = true;
-    if (positions.length > 1) {
-      fetchOSRMRoute(positions).then((route) => {
-        if (isMounted) setRoutePositions(route);
-      });
-    } else {
-      setRoutePositions(positions);
-    }
-    return () => { isMounted = false; };
-  }, [positions]);
-
-  const boundsPositions = useMemo(() => {
-    const pos = [...positions];
-    if (pickupMarkers?.length > 0) {
-      pickupMarkers.forEach((m) => pos.push([m.lat, m.lng]));
-    }
-    return pos;
-  }, [positions, pickupMarkers]);
 
   const center = useMemo(() => {
     if (driverLocation) return [driverLocation.lat, driverLocation.lng];
