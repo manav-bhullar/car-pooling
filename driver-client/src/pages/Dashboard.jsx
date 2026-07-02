@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getAvailableTrips, acceptTrip, getCurrentTrip } from '../api/driver';
 import { useAuth } from '../context/AuthContext';
 import DriverMap from '../components/DriverMap';
+import { useCompassHeading } from '../hooks/useCompassHeading';
 
 export default function Dashboard() {
   const [trips, setTrips] = useState([]);
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [idleDriverLocation, setIdleDriverLocation] = useState(null);
   const gpsWatchRef = useRef(null);
+  const { heading: compassHeading, requestPermission, permissionState } = useCompassHeading();
 
   // Watch GPS for the idle car icon on the map
   useEffect(() => {
@@ -89,8 +91,41 @@ export default function Dashboard() {
 
   return (
     <>
-      <DriverMap stops={mapStops} pickupMarkers={pickupMarkers} defaultCenter={[30.9010, 75.8573]} idleDriverLocation={idleDriverLocation} />
+      <DriverMap stops={mapStops} pickupMarkers={pickupMarkers} defaultCenter={[30.9010, 75.8573]} idleDriverLocation={idleDriverLocation} compassHeading={compassHeading} />
       
+      {/* Compass permission prompt — only shows on iOS before user taps */}
+      {permissionState === 'prompt' && (
+        <button
+          onClick={requestPermission}
+          title="Enable compass for live direction"
+          style={{
+            position: 'fixed',
+            bottom: '6rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '8px 16px',
+            borderRadius: '50px',
+            background: 'var(--color-md-surface)',
+            border: '1px solid var(--color-md-outline)',
+            boxShadow: 'var(--shadow-elevation-2)',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            color: '#0A56D1',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
+            <path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-80q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm0-80q66 0 113-47t47-113q0-66-47-113t-113-47q-66 0-113 47t-47 113q0 66 47 113t113 47Z"/>
+          </svg>
+          Enable compass direction
+        </button>
+      )}
+
       {/* Top Right Header */}
       <div className="glass-panel" style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 20, padding: '6px 6px 6px 12px', display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '50px', background: 'var(--color-md-surface-container-low)', border: '1px solid var(--color-md-outline-variant)', boxShadow: 'var(--shadow-elevation-2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'var(--color-md-primary-container)', color: 'var(--color-md-on-primary-container)', fontSize: '0.875rem', fontWeight: 700 }}>

@@ -207,6 +207,7 @@ export default function DriverMap({
   driverLocation,
   pickupMarkers = [],
   idleDriverLocation = null,   // driver GPS when NOT in a trip
+  compassHeading = null,       // live compass bearing from DeviceOrientationEvent
 }) {
   const flyToRef = useRef(null);
   const [userLocation, setUserLocation] = useState(null);
@@ -351,11 +352,22 @@ export default function DriverMap({
         {/* Speed-based dynamic zoom — Google Maps navigation style */}
         {driverLocation && <SpeedZoom speed={driverLocation.speed} />}
 
-        {/* Idle driver: yellow parked car at GPS position */}
+        {/* Idle driver: yellow parked car — rotates with compass when stationary */}
         {!driverLocation && idleDriverLocation && (
           <Marker
             position={[idleDriverLocation.lat, idleDriverLocation.lng]}
-            icon={getIdleCarIcon()}
+            icon={L.divIcon({
+              className: '',
+              html: `<div style="
+                width:52px; height:52px;
+                transform: rotate(${compassHeading ?? 0}deg);
+                transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
+                will-change: transform;
+                display:flex; align-items:center; justify-content:center;
+              ">${decodeURIComponent(getIdleCarSVG())}</div>`,
+              iconSize: [52, 52],
+              iconAnchor: [26, 52],
+            })}
             zIndexOffset={900}
           >
             <Popup>Your current location</Popup>
