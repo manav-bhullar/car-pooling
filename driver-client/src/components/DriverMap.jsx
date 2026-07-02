@@ -213,6 +213,7 @@ export default function DriverMap({
   const [userLocation, setUserLocation] = useState(null);
   const hasFlewToUser = useRef(false);
   const [isDrifted, setIsDrifted] = useState(false);
+  const [recenterCount, setRecenterCount] = useState(0);
 
   // On mount: get real GPS and fly there once
   useEffect(() => {
@@ -240,17 +241,44 @@ export default function DriverMap({
   }, [userLocation]);
 
   const handleMyLocation = useCallback(() => {
+    setIsDrifted(false);
+    
+    // 1. Active trip: fly to the moving car at zoom 17
+    if (driverLocation && flyToRef.current) {
+      flyToRef.current(driverLocation.lat, driverLocation.lng, 17);
+      return;
+    }
+    
+    // 2. Idle state: fly to the real GPS location at zoom 17
+    if (idleDriverLocation && flyToRef.current) {
+      flyToRef.current(idleDriverLocation.lat, idleDriverLocation.lng, 17);
+      return;
+    }
+    
+    // 3. Fallback to userLocation if we have it
+    if (userLocation && flyToRef.current) {
+      flyToRef.current(userLocation.lat, userLocation.lng, 17);
+      return;
+    }
+    
+    // 4. Fallback to route bounds
+    if (boundsPositions.length > 0) {
+      setRecenterCount(c => c + 1);
+      return;
+    }
+
+    // 5. Final fallback: request browser location again
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setUserLocation({ lat: latitude, lng: longitude });
-        flyToRef.current?.(latitude, longitude, 15);
+        flyToRef.current?.(latitude, longitude, 17);
       },
       () => alert('Could not get your location. Please enable GPS.'),
       { enableHighAccuracy: true, timeout: 8000 }
     );
-  }, []);
+  }, [driverLocation, idleDriverLocation, userLocation, boundsPositions]);
 
   const sortedStops = useMemo(
     () =>
@@ -375,7 +403,7 @@ export default function DriverMap({
         )}
 
         {boundsPositions.length > 0 && (
-          <FitBounds positions={boundsPositions} fitBoundsOptions={fitBoundsOptions} />
+          <FitBounds positions={boundsPositions} fitBoundsOptions={fitBoundsOptions} key={recenterCount} />
         )}
         <DriftTracker targetPositions={driftTargetPositions} onDriftChange={setIsDrifted} />
       </MapContainer>
