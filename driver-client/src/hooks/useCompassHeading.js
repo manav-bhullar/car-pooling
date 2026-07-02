@@ -55,9 +55,9 @@ export function useCompassHeading() {
 
   // Request permission on iOS 13+
   const requestPermission = useCallback(async () => {
-    if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
+    if (typeof window.DeviceOrientationEvent !== 'undefined' && typeof window.DeviceOrientationEvent.requestPermission === 'function') {
       try {
-        const result = await DeviceOrientationEvent.requestPermission();
+        const result = await window.DeviceOrientationEvent.requestPermission();
         if (result === 'granted') {
           startListening();
         } else {
@@ -74,13 +74,13 @@ export function useCompassHeading() {
 
   useEffect(() => {
     // Check if the API is supported at all
-    if (!window.DeviceOrientationEvent) {
+    if (typeof window.DeviceOrientationEvent === 'undefined') {
       setPermissionState('unsupported');
       return;
     }
 
     // On Android / desktop, we can start immediately without user gesture
-    if (typeof DeviceOrientationEvent.requestPermission !== 'function') {
+    if (typeof window.DeviceOrientationEvent.requestPermission !== 'function') {
       startListening();
     }
     // On iOS 13+, wait for user to call requestPermission()
