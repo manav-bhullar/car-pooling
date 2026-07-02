@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef, useState } from 'react';
+import { useMemo, useEffect, useRef, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
 import { fetchOSRMRoute } from '../utils/routing';
 import L from 'leaflet';
@@ -46,6 +46,35 @@ function FitBounds({ positions, fitBoundsOptions }) {
     // Cinematic flight when framing the route
     map.flyToBounds(bounds, { ...fitBoundsOptions, padding: fitBoundsOptions?.padding || [40, 40] });
   }, [map, positions, fitBoundsOptions]);
+
+  return null;
+}
+
+// Detects when the user has dragged/panned away from the target route bounds
+function DriftTracker({ targetPositions, onDriftChange }) {
+  const map = useMap();
+  const targetRef = useRef(targetPositions);
+
+  useEffect(() => {
+    targetRef.current = targetPositions;
+  }, [targetPositions]);
+
+  useEffect(() => {
+    if (!map) return;
+
+    const checkDrift = () => {
+      const t = targetRef.current;
+      if (!t || t.length === 0) return;
+      // Build expected bounds from target positions
+      const expectedBounds = L.latLngBounds(t.map(p => [p[0], p[1]])).pad(0.5);
+      const currentCenter = map.getCenter();
+      const isDrifted = !expectedBounds.contains(currentCenter);
+      onDriftChange(isDrifted);
+    };
+
+    map.on('moveend', checkDrift);
+    return () => { map.off('moveend', checkDrift); };
+  }, [map, onDriftChange]);
 
   return null;
 }
@@ -98,6 +127,14 @@ const getCarIcon = (bearing) => {
 };
 
 export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, myRideRequestId, driverLocation }) {
+  const [isDrifted, setIsDrifted] = useState(false);
+  const [recenterCount, setRecenterCount] = useState(0);
+
+  const handleRecenter = useCallback(() => {
+    setRecenterCount(c => c + 1);
+    setIsDrifted(false);
+  }, []);
+
   const sortedStops = useMemo(() => (
     (stops || [])
       .slice()
@@ -128,7 +165,7 @@ export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, m
   const center = positions.length > 0 ? positions[0] : defaultCenter;
 
   return (
-    <div className="trip-map" style={{ height: '100%', width: '100%' }}>
+    <div className="trip-map" style={{ height: '100%', width: '100%', position: 'relative' }}>
       <MapContainer 
         center={center} 
         zoom={14} 
@@ -167,8 +204,25 @@ export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, m
           />
         )}
 
-        <FitBounds positions={positions} fitBoundsOptions={fitBoundsOptions} />
+        <FitBounds positions={positions} fitBoundsOptions={fitBoundsOptions} key={recenterCount} />
+        <DriftTracker targetPositions={positions} onDriftChange={setIsDrifted} />
       </MapContainer>
+
+      {/* Recenter FAB — only visible when user has panned away */}
+      {isDrifted && (
+        <button
+          onClick={handleRecenter}
+          title="Recenter map"
+          aria-label="Recenter map"
+          className="recenter-fab"
+        >
+          {/* Material Symbols: my_location */}
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+            <path d="M440-42v-80q-125-14-214.5-103.5T122-440H42v-80h80q14-125 103.5-214.5T440-838v-80h80v80q125 14 214.5 103.5T838-520h80v80h-80q-14 125-103.5 214.5T520-122v80h-80Zm40-158q116 0 198-82t82-198q0-116-82-198t-198-82q-116 0-198 82t-82 198q0 116 82 198t198 82Zm0-120q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T560-480q0-33-23.5-56.5T480-560q-33 0-56.5 23.5T400-480q0 33 23.5 56.5T480-400Z"/>
+          </svg>
+          <span>Recenter</span>
+        </button>
+      )}
     </div>
   );
 }

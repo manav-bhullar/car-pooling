@@ -59,6 +59,31 @@ function FlyToLocation({ flyToRef }) {
   return null;
 }
 
+// ── DriftTracker: detects when user has panned away from target ───
+function DriftTracker({ targetPositions, onDriftChange }) {
+  const map = useMap();
+  const targetRef = useRef(targetPositions);
+
+  useEffect(() => {
+    targetRef.current = targetPositions;
+  }, [targetPositions]);
+
+  useEffect(() => {
+    if (!map) return;
+    const checkDrift = () => {
+      const t = targetRef.current;
+      if (!t || t.length === 0) return;
+      // Use a padded bounding box around route/markers to define "centered" zone
+      const expectedBounds = L.latLngBounds(t.map(p => [p[0], p[1]])).pad(0.5);
+      onDriftChange(!expectedBounds.contains(map.getCenter()));
+    };
+    map.on('moveend', checkDrift);
+    return () => { map.off('moveend', checkDrift); };
+  }, [map, onDriftChange]);
+
+  return null;
+}
+
 // ── SVG icons ──────────────────────────────────────────────────────
 const getPinSVG = (color) => encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
@@ -151,6 +176,7 @@ export default function DriverMap({
   const flyToRef = useRef(null);
   const [userLocation, setUserLocation] = useState(null);
   const hasFlewToUser = useRef(false);
+  const [isDrifted, setIsDrifted] = useState(false);
 
   // On mount: get real GPS and fly there once
   useEffect(() => {
@@ -231,6 +257,13 @@ export default function DriverMap({
     return defaultCenter;
   }, [driverLocation, idleDriverLocation, userLocation, positions, defaultCenter]);
 
+  // Build drift tracking targets: either route stops or pickup markers
+  const driftTargetPositions = useMemo(() => {
+    if (boundsPositions.length > 0) return boundsPositions;
+    if (userLocation) return [[userLocation.lat, userLocation.lng]];
+    return center ? [center] : [];
+  }, [boundsPositions, userLocation, center]);
+
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, height: '100vh', width: '100vw', zIndex: 0 }}>
       <MapContainer
@@ -294,38 +327,24 @@ export default function DriverMap({
         {boundsPositions.length > 0 && (
           <FitBounds positions={boundsPositions} fitBoundsOptions={fitBoundsOptions} />
         )}
+        <DriftTracker targetPositions={driftTargetPositions} onDriftChange={setIsDrifted} />
       </MapContainer>
 
-      {/* My Location FAB */}
-      <button
-        onClick={handleMyLocation}
-        title="Go to my location"
-        aria-label="Go to my location"
-        style={{
-          position: 'absolute',
-          bottom: '2rem',
-          right: '1.5rem',
-          zIndex: 20,
-          width: '52px',
-          height: '52px',
-          borderRadius: '50%',
-          background: 'var(--color-md-surface)',
-          border: '1px solid var(--color-md-outline)',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          transition: 'transform 0.2s, box-shadow 0.2s',
-          color: '#0A56D1',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(10,86,209,0.25)'; }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.18)'; }}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 -960 960 960" width="26px" fill="currentColor">
-          <path d="M440-42v-80q-125-14-214.5-103.5T122-440H42v-80h80q14-125 103.5-214.5T440-838v-80h80v80q125 14 214.5 103.5T838-520h80v80h-80q-14 125-103.5 214.5T520-122v80h-80Zm40-158q116 0 198-82t82-198q0-116-82-198t-198-82q-116 0-198 82t-82 198q0 116 82 198t198 82Zm0-120q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T560-480q0-33-23.5-56.5T480-560q-33 0-56.5 23.5T400-480q0 33 23.5 56.5T480-400Z"/>
-        </svg>
-      </button>
+      {/* Recenter FAB — appears only when user has panned away */}
+      {isDrifted && (
+        <button
+          onClick={handleMyLocation}
+          title="Recenter map"
+          aria-label="Recenter map"
+          className="recenter-fab"
+        >
+          {/* Material Symbols: my_location */}
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+            <path d="M440-42v-80q-125-14-214.5-103.5T122-440H42v-80h80q14-125 103.5-214.5T440-838v-80h80v80q125 14 214.5 103.5T838-520h80v80h-80q-14 125-103.5 214.5T520-122v80h-80Zm40-158q116 0 198-82t82-198q0-116-82-198t-198-82q-116 0-198 82t-82 198q0 116 82 198t198 82Zm0-120q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T560-480q0-33-23.5-56.5T480-560q-33 0-56.5 23.5T400-480q0 33 23.5 56.5T480-400Z"/>
+          </svg>
+          <span>Recenter</span>
+        </button>
+      )}
     </div>
   );
 }
