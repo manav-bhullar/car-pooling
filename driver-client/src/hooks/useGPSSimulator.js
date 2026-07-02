@@ -91,7 +91,7 @@ export function useGPSSimulator(tripId, tripStops, isStarted) {
         simulatedLng = simulatedLng + (nextStop.lng - simulatedLng) * ratio;
       }
 
-      setCurrentLocation({ lat: simulatedLat, lng: simulatedLng, bearing });
+      setCurrentLocation({ lat: simulatedLat, lng: simulatedLng, bearing, speed: SPEED_M_PER_S });
 
       // Emit to server
       socket.emit('driverLocationUpdate', {
