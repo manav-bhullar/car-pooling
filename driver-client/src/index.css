@@ -428,7 +428,8 @@ input:focus {
    ============================================================ */
 .recenter-fab {
   position: absolute;
-  bottom: max(5.5rem, env(safe-area-inset-bottom, 1.5rem) + 5rem);
+  /* On mobile: clear the browser's bottom bar + iPhone home indicator */
+  bottom: calc(max(1.5rem, env(safe-area-inset-bottom, 0px)) + 1.25rem);
   right: 1.25rem;
   z-index: 500;
 
@@ -476,11 +477,5 @@ input:focus {
   to   { opacity: 1; transform: translateX(0)    scale(1);    }
 }
 
-/* On desktop: driver map is full-screen so position is simpler */
-@media (min-width: 768px) {
-  .recenter-fab {
-    bottom: 2rem;
-    right: 1.5rem;
-  }
-}
+/* On mobile: sit above the trip list cards at bottom */\n@media (max-width: 767px) {\n  .recenter-fab {\n    bottom: calc(260px + env(safe-area-inset-bottom, 0px) + 0.75rem);\n    right: 1rem;\n  }\n}\n\n/* On desktop: driver map is full-screen so position is simpler */\n@media (min-width: 768px) {\n  .recenter-fab {\n    bottom: 2rem;\n    right: 1.5rem;\n  }\n}
 

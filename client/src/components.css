@@ -297,11 +297,12 @@
 .status-banner {
    position: fixed;
    top: 16px;
+   /* Center horizontally but stay within safe viewport on mobile */
    left: 50%;
    transform: translateX(-50%);
    z-index: 2000;
    display: flex;
-   align-items: center;
+   align-items: flex-start;
    gap: 12px;
    padding: 12px 20px;
    border-radius: var(--radius-lg);
@@ -309,9 +310,13 @@
    color: var(--color-md-surface);
    box-shadow: var(--shadow-elevation-3);
    animation: md3-slide-in-top var(--duration-spring) var(--ease-spring) both;
-   max-width: 90vw;
+   /* Constrain width so it never overflows on narrow screens */
+   max-width: min(420px, calc(100vw - 32px));
    width: max-content;
    border: 1px solid rgba(255, 255, 255, 0.1);
+   /* Ensure text wraps rather than clipping */
+   word-break: break-word;
+   white-space: normal;
 }
 
 .status-banner--info { background: var(--color-md-secondary-container); color: var(--color-md-on-secondary-container); border-color: rgba(0,0,0,0.1); }
@@ -583,8 +588,9 @@
    ============================================================ */
 .recenter-fab {
   position: absolute;
-  /* Bottom-right, above home indicator on mobile */
-  bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem) + 0.5rem);
+  /* On mobile: account for browser chrome bottom bar (~60px) + some padding.
+     env(safe-area-inset-bottom) handles iPhone notch/home-bar. */
+  bottom: calc(max(1.5rem, env(safe-area-inset-bottom, 0px)) + 1.25rem);
   right: 1.25rem;
   z-index: 500;
 
@@ -640,11 +646,20 @@
   }
 }
 
-/* On desktop, rider side: nudge above the left panel so it's not covered */
+/* On mobile: recenter must sit ABOVE the bottom glass card (approx 260-300px tall).
+   Use a generous offset so it's always visible and tappable. */
+@media (max-width: 767px) {
+  .recenter-fab {
+    /* 280px clears the bottom sheet card; add safe-area for iPhone home bar */
+    bottom: calc(280px + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    right: 1rem;
+  }
+}
+
+/* On desktop, rider side: position is simpler */
 @media (min-width: 768px) {
   .recenter-fab {
     bottom: 2rem;
     right: 1.5rem;
   }
 }
-
