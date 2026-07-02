@@ -258,11 +258,14 @@ input:focus {
   position: absolute;
   top: 1.5rem;
   left: 1.5rem;
-  bottom: 1.5rem;
-  width: 400px;
+  /* Don't stretch to bottom — float as a compact card */
+  width: 380px;
+  max-height: calc(100vh - 5rem);
   z-index: 10;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  padding: 1.25rem;
   transition: height 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
 
@@ -428,7 +431,8 @@ input:focus {
    ============================================================ */
 .recenter-fab {
   position: absolute;
-  bottom: max(5.5rem, env(safe-area-inset-bottom, 1.5rem) + 5rem);
+  /* On mobile: clear the browser's bottom bar + iPhone home indicator */
+  bottom: calc(max(1.5rem, env(safe-area-inset-bottom, 0px)) + 1.25rem);
   right: 1.25rem;
   z-index: 500;
 
@@ -476,6 +480,14 @@ input:focus {
   to   { opacity: 1; transform: translateX(0)    scale(1);    }
 }
 
+/* On mobile: sit above the trip list cards at bottom */
+@media (max-width: 767px) {
+  .recenter-fab {
+    bottom: calc(260px + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    right: 1rem;
+  }
+}
+
 /* On desktop: driver map is full-screen so position is simpler */
 @media (min-width: 768px) {
   .recenter-fab {
@@ -483,4 +495,3 @@ input:focus {
     right: 1.5rem;
   }
 }
-

@@ -46,7 +46,38 @@ function FitBounds({ positions, fitBoundsOptions }) {
   return null;
 }
 
-// ── FlyToLocation: imperative fly triggered via ref ───────────────
+// ── SpeedZoom: adjusts map zoom based on current speed ─────────────
+// Google Maps equivalent: slow speed → zoom in (street level)
+// High speed → zoom out (see more of the road ahead)
+function SpeedZoom({ speed }) {
+  const map = useMap();
+  const prevSpeed = useRef(null);
+
+  useEffect(() => {
+    if (speed == null) return;
+    if (prevSpeed.current === speed) return;
+    prevSpeed.current = speed;
+
+    // speed is in m/s. Map to zoom level:
+    // 0–5 m/s  (walking / crawl)  → zoom 17
+    // 5–15 m/s (city streets ~50kph) → zoom 16
+    // 15–25 m/s (suburban ~80kph)   → zoom 15
+    // 25+ m/s (highway ~90+kph)     → zoom 14
+    let targetZoom;
+    if (speed < 5)       targetZoom = 17;
+    else if (speed < 15) targetZoom = 16;
+    else if (speed < 25) targetZoom = 15;
+    else                 targetZoom = 14;
+
+    const current = map.getZoom();
+    if (Math.abs(current - targetZoom) >= 1) {
+      map.setZoom(targetZoom, { animate: true });
+    }
+  }, [map, speed]);
+
+  return null;
+}
+
 function FlyToLocation({ flyToRef }) {
   const map = useMap();
 
@@ -107,27 +138,37 @@ const getMarkerIcon = (type) => {
   });
 };
 
-// Proper car icon (top-down view) for active trip tracking
-const getCarSVG = (bearing) => encodeURIComponent(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="48" height="48">
-  <g transform="rotate(${bearing}, 32, 32)">
-    <!-- Car body -->
-    <rect x="20" y="10" width="24" height="44" rx="10" ry="10" fill="#0A56D1" stroke="#ffffff" stroke-width="3"/>
-    <!-- Windshield -->
-    <rect x="23" y="14" width="18" height="12" rx="3" ry="3" fill="rgba(255,255,255,0.55)"/>
-    <!-- Rear window -->
-    <rect x="23" y="38" width="18" height="9" rx="3" ry="3" fill="rgba(255,255,255,0.35)"/>
-    <!-- Left wheels -->
-    <rect x="13" y="16" width="8" height="13" rx="3" fill="#1a1a2e"/>
-    <rect x="13" y="35" width="8" height="13" rx="3" fill="#1a1a2e"/>
-    <!-- Right wheels -->
-    <rect x="43" y="16" width="8" height="13" rx="3" fill="#1a1a2e"/>
-    <rect x="43" y="35" width="8" height="13" rx="3" fill="#1a1a2e"/>
-  </g>
-</svg>
-`);
-
-// Idle car icon (yellow, parked) — shown on dashboard with no active trip
+// Active car icon — uses L.divIcon so CSS transition:rotate animates smoothly
+// without Leaflet replacing the entire DOM element on every GPS update.
+const getActiveDivIcon = (bearing) =>
+  L.divIcon({
+    className: '',   // suppress Leaflet's default white-box class
+    html: `
+      <div style="
+        width:48px; height:48px;
+        transform: rotate(${bearing}deg);
+        transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
+        will-change: transform;
+        display:flex; align-items:center; justify-content:center;
+      ">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="48" height="48">
+          <!-- Car body -->
+          <rect x="20" y="10" width="24" height="44" rx="10" ry="10" fill="#0A56D1" stroke="#ffffff" stroke-width="3"/>
+          <!-- Windshield -->
+          <rect x="23" y="14" width="18" height="12" rx="3" ry="3" fill="rgba(255,255,255,0.55)"/>
+          <!-- Rear window -->
+          <rect x="23" y="38" width="18" height="9" rx="3" ry="3" fill="rgba(255,255,255,0.35)"/>
+          <!-- Left wheels -->
+          <rect x="13" y="16" width="8" height="13" rx="3" fill="#1a1a2e"/>
+          <rect x="13" y="35" width="8" height="13" rx="3" fill="#1a1a2e"/>
+          <!-- Right wheels -->
+          <rect x="43" y="16" width="8" height="13" rx="3" fill="#1a1a2e"/>
+          <rect x="43" y="35" width="8" height="13" rx="3" fill="#1a1a2e"/>
+        </svg>
+      </div>`,
+    iconSize: [48, 48],
+    iconAnchor: [24, 24],
+  });
 const getIdleCarSVG = () => encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="52" height="52">
   <!-- Shadow -->
@@ -150,12 +191,6 @@ const getIdleCarSVG = () => encodeURIComponent(`
 </svg>
 `);
 
-const getCarIcon = (bearing) =>
-  L.icon({
-    iconUrl: `data:image/svg+xml;utf8,${getCarSVG(bearing)}`,
-    iconSize: [48, 48],
-    iconAnchor: [24, 24],
-  });
 
 const getIdleCarIcon = () =>
   L.icon({
@@ -304,14 +339,17 @@ export default function DriverMap({
           />
         )}
 
-        {/* Active trip: animated car icon with bearing */}
+        {/* Active trip: smooth-rotating car icon via CSS divIcon */}
         {driverLocation && (
           <Marker
             position={[driverLocation.lat, driverLocation.lng]}
-            icon={getCarIcon(driverLocation.bearing || 0)}
+            icon={getActiveDivIcon(driverLocation.bearing || 0)}
             zIndexOffset={1000}
           />
         )}
+
+        {/* Speed-based dynamic zoom — Google Maps navigation style */}
+        {driverLocation && <SpeedZoom speed={driverLocation.speed} />}
 
         {/* Idle driver: yellow parked car at GPS position */}
         {!driverLocation && idleDriverLocation && (
