@@ -127,13 +127,14 @@ const getCarIcon = (bearing) => {
 };
 
 export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, myRideRequestId, driverLocation }) {
-  const fitBoundsRef = useRef(null);
   const [isDrifted, setIsDrifted] = useState(false);
+  const [recenterCount, setRecenterCount] = useState(0);
 
   const handleRecenter = useCallback(() => {
-    fitBoundsRef.current?.();
+    setRecenterCount(c => c + 1);
     setIsDrifted(false);
   }, []);
+
   const sortedStops = useMemo(() => (
     (stops || [])
       .slice()
@@ -156,14 +157,6 @@ export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, m
     }
     return () => { isMounted = false; };
   }, [positions]);
-
-  // Expose a recenter callback to FitBounds via ref
-  const recenterCallback = useCallback(() => {
-    // Trigger FitBounds to re-run by toggling a counter
-    setRecenterCount(c => c + 1);
-  }, []);
-
-  const [recenterCount, setRecenterCount] = useState(0);
 
   if (!sortedStops.length && !defaultCenter) {
     return <div className="map-empty">No map data available</div>;
@@ -218,7 +211,7 @@ export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, m
       {/* Recenter FAB — only visible when user has panned away */}
       {isDrifted && (
         <button
-          onClick={recenterCallback}
+          onClick={handleRecenter}
           title="Recenter map"
           aria-label="Recenter map"
           className="recenter-fab"

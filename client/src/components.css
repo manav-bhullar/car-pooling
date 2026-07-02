@@ -576,3 +576,75 @@
    font: var(--type-display-large);
    color: var(--color-md-primary);
 }
+
+/* ============================================================
+   RECENTER FAB — Google Maps-inspired
+   Appears only when user has panned away from the route.
+   ============================================================ */
+.recenter-fab {
+  position: absolute;
+  /* Bottom-right, above home indicator on mobile */
+  bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem) + 0.5rem);
+  right: 1.25rem;
+  z-index: 500;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px 0 12px;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+
+  background: var(--color-md-surface);
+  color: var(--color-md-primary, #0A56D1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.20), 0 0 0 1px rgba(0,0,0,0.06);
+
+  font: var(--type-label-medium, 500 0.875rem/1 'Inter', sans-serif);
+  font-weight: 600;
+  white-space: nowrap;
+
+  /* Slide in from the right edge */
+  animation: recenter-slide-in 220ms var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+  transition: box-shadow 150ms ease, transform 150ms ease, background 150ms ease;
+}
+
+.recenter-fab:hover {
+  background: var(--color-md-primary-container, #D3E4FF);
+  color: var(--color-md-on-primary-container, #001849);
+  box-shadow: 0 4px 16px rgba(10, 86, 209, 0.28), 0 0 0 1px rgba(10,86,209,0.12);
+  transform: translateY(-1px);
+}
+
+.recenter-fab:active {
+  transform: scale(0.95);
+  transition-duration: 80ms;
+}
+
+.recenter-fab svg {
+  flex-shrink: 0;
+  /* Slightly larger icon to match Google Maps' generous tap target feel */
+  width: 20px;
+  height: 20px;
+}
+
+@keyframes recenter-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* On desktop, rider side: nudge above the left panel so it's not covered */
+@media (min-width: 768px) {
+  .recenter-fab {
+    bottom: 2rem;
+    right: 1.5rem;
+  }
+}
+
