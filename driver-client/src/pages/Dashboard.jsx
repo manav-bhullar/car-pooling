@@ -166,7 +166,7 @@ export default function Dashboard() {
           ) : (
             <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
             {displayTrips.map(trip => {
-              const isExpanded = expandedTripId === trip.id;
+              const isTripExpanded = expandedTripId === trip.id;
               const firstPickup = trip.tripStops.find(s => s.type === 'PICKUP');
               const lastDropoff = [...trip.tripStops].reverse().find(s => s.type === 'DROPOFF');
 
@@ -175,14 +175,14 @@ export default function Dashboard() {
                   key={trip.id} 
                   className="glass-panel trip-card" 
                   style={{ marginBottom: '1.5rem', cursor: 'pointer', transition: 'all 0.3s ease', background: 'var(--color-md-surface)' }}
-                  onClick={() => setExpandedTripId(isExpanded ? null : trip.id)}
+                  onClick={() => setExpandedTripId(isTripExpanded ? null : trip.id)}
                 >
                   <div className="trip-header">
                     <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{trip.estimatedEtaMinutes} min away • {trip.totalDistanceKm?.toFixed(1)} km</span>
                     <span style={{ color: '#0A56D1', fontWeight: 'bold' }}>{trip.tripUsers?.length || 0} Riders</span>
                   </div>
                   
-                  {!isExpanded && (
+                  {!isTripExpanded && (
                     <div style={{ margin: '0.5rem 0 1rem' }}>
                       <div style={{ fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0A56D1' }}></div>
@@ -196,18 +196,18 @@ export default function Dashboard() {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: isExpanded ? '1rem' : '0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: isTripExpanded ? '1rem' : '0' }}>
                     <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>
                       ₹{(trip.tripUsers?.reduce((acc, tu) => acc + tu.fareShare, 0) || 0).toFixed(0)} <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>Total Earnings</span>
                     </div>
-                    {!isExpanded && (
+                    {!isTripExpanded && (
                       <span style={{ fontSize: '0.75rem', color: '#0A56D1', fontWeight: '600', background: 'rgba(10, 86, 209, 0.1)', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
                         Tap to expand
                       </span>
                     )}
                   </div>
 
-                  {isExpanded && (
+                  {isTripExpanded && (
                     <>
                       <div style={{ marginBottom: '1.5rem', background: 'var(--color-md-surface-container)', padding: '1rem', borderRadius: '8px', marginTop: '1.5rem' }}>
                         <h4 style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Riders</h4>
