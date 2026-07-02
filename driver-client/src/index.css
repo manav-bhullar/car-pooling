@@ -430,11 +430,12 @@ input:focus {
    panel edge on mobile (active trip panel sits at bottom).
    ============================================================ */
 .recenter-fab {
-  position: absolute;
-  /* On mobile: clear the browser's bottom bar + iPhone home indicator */
+  /* fixed so it escapes the DriverMap z-index:0 stacking context
+     and always floats above the bottom panel card */
+  position: fixed;
   bottom: calc(max(1.5rem, env(safe-area-inset-bottom, 0px)) + 1.25rem);
   right: 1.25rem;
-  z-index: 500;
+  z-index: 1000;
 
   display: flex;
   align-items: center;
@@ -480,15 +481,16 @@ input:focus {
   to   { opacity: 1; transform: translateX(0)    scale(1);    }
 }
 
-/* On mobile: sit above the trip list cards at bottom */
+/* On mobile: use fixed positioning above the bottom sheet card */
 @media (max-width: 767px) {
   .recenter-fab {
-    bottom: calc(260px + env(safe-area-inset-bottom, 0px) + 0.75rem);
-    right: 1rem;
+    /* bottom sheet is ~300px; browser bar ~60px; safe area on top */
+    bottom: calc(300px + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    right: 1.25rem;
   }
 }
 
-/* On desktop: driver map is full-screen so position is simpler */
+/* On desktop: simple fixed bottom-right */
 @media (min-width: 768px) {
   .recenter-fab {
     bottom: 2rem;
