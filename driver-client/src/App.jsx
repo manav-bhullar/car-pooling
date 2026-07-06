@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import VerifyEmail from './pages/VerifyEmail';
 import Dashboard from './pages/Dashboard';
 import ActiveTrip from './pages/ActiveTrip';
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import './index.css';
 
 // Protected Route component
@@ -39,6 +40,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <SpeedInsights />
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>

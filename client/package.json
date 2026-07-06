@@ -12,6 +12,7 @@
   "dependencies": {
     "@luomus/leaflet-smooth-wheel-zoom": "^1.0.0",
     "@mapbox/polyline": "^1.2.1",
+    "@vercel/speed-insights": "^2.0.0",
     "leaflet": "^1.9.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from './context/AppContext';
 import { useAuth } from './context/AuthContext';
@@ -76,6 +77,7 @@ export default function App() {
     <>
       <StatusBanner />
       <TopNav />
+      <SpeedInsights />
 
       <Routes>
         <Route path="/login" element={<LoginPage />} />
