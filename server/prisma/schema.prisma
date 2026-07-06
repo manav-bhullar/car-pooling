@@ -43,6 +43,9 @@ model RideRequest {
   tripUser TripUser?
   // TripStops that reference this ride request (pickups/drops)
   tripStops TripStop[]
+
+  @@index([status])
+  @@index([userId])
 }
 
 model Trip {
@@ -58,6 +61,8 @@ model Trip {
   tripUsers  TripUser[]
   tripStops  TripStop[]
   driverTrip DriverTrip?
+
+  @@index([status])
 }
 
 model TripUser {
@@ -70,6 +75,9 @@ model TripUser {
   trip            Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
   user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
   rideRequest     RideRequest @relation(fields: [rideRequestId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+  @@index([userId])
 }
 
 model TripStop {
@@ -85,6 +93,8 @@ model TripStop {
 
   trip            Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
   rideRequest     RideRequest @relation(fields: [rideRequestId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
 }
 
 model MatchCycleLog {
@@ -150,4 +160,6 @@ model DriverTrip {
 
   driverProfile DriverProfile @relation(fields: [driverProfileId], references: [id])
   trip          Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([driverProfileId])
 }

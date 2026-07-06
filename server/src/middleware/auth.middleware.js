@@ -14,6 +14,8 @@ exports.authenticate = (req, res, next) => {
     try {
       const decoded = verifyAccessToken(token);
       req.userId = decoded.id; // Attach user ID to request object
+      req.userRole = decoded.role; // Attach role to request object
+      req.userEmail = decoded.email; // Attach email to request object
       next();
     } catch (err) {
       if (err.name === 'TokenExpiredError') {
@@ -34,16 +36,11 @@ exports.requireRole = (allowedRoles) => {
         return error(res, 'Authentication required', 401);
       }
 
-      const user = await prisma.user.findUnique({
-        where: { id: req.userId },
-        select: { role: true },
-      });
-
-      if (!user) {
-        return error(res, 'User not found', 404);
+      if (!req.userRole) {
+        return error(res, 'Invalid token payload', 401);
       }
 
-      if (!allowedRoles.includes(user.role)) {
+      if (!allowedRoles.includes(req.userRole)) {
         return error(res, 'Forbidden: Insufficient permissions', 403);
       }
 
