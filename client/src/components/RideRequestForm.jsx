@@ -204,8 +204,11 @@ export default function RideRequestForm({ onLocationSelect }) {
 
   const getDefaultTime = () => {
     const now = new Date();
-    const tzOffset = now.getTimezoneOffset() * 60000;
-    return new Date(Date.now() - tzOffset).toISOString().slice(0, 16);
+    // Round up to the next 15-minute slot
+    const ms = 1000 * 60 * 15;
+    const rounded = new Date(Math.ceil(now.getTime() / ms) * ms);
+    const tzOffset = rounded.getTimezoneOffset() * 60000;
+    return new Date(rounded.getTime() - tzOffset).toISOString().slice(0, 16);
   };
 
   const [pickup, setPickup] = useState(null);

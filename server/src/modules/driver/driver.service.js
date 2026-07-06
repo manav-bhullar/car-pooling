@@ -1,8 +1,26 @@
 const prisma = require('../../prisma/client');
 
+/**
+ * Grace period before a RIDERS_MATCHED trip is considered expired for the driver.
+ * Must match the server-side MATCHED_TRIP_EXPIRY_GRACE_MS.
+ */
+const MATCHED_TRIP_EXPIRY_GRACE_MS = 10 * 60 * 1000; // 10 minutes
+
 exports.getAvailableTrips = async () => {
+  const graceCutoff = new Date(Date.now() - MATCHED_TRIP_EXPIRY_GRACE_MS);
+
   return await prisma.trip.findMany({
-    where: { status: 'RIDERS_MATCHED' },
+    where: {
+      status: 'RIDERS_MATCHED',
+      // Only show trips where at least one rider's preferredTime is still within the grace window
+      tripUsers: {
+        some: {
+          rideRequest: {
+            preferredTime: { gte: graceCutoff },
+          },
+        },
+      },
+    },
     include: {
       tripStops: {
         orderBy: { stopOrder: 'asc' },
@@ -52,13 +70,31 @@ exports.acceptTrip = async (userId, tripId) => {
     }
 
     // 3. Check trip status
-    const trip = await tx.trip.findUnique({ where: { id: tripId } });
+    const trip = await tx.trip.findUnique({
+      where: { id: tripId },
+      include: {
+        tripUsers: {
+          include: {
+            rideRequest: { select: { preferredTime: true } },
+          },
+        },
+      },
+    });
     if (!trip) throw { code: 404, message: 'Trip not found' };
     if (trip.status !== 'RIDERS_MATCHED') {
       throw { code: 400, message: 'Trip is no longer available' };
     }
 
-    // 4. Create DriverTrip and update Trip status
+    // 4. Guard: verify trip hasn't expired (departure time + grace period)
+    const graceCutoff = new Date(Date.now() - MATCHED_TRIP_EXPIRY_GRACE_MS);
+    const hasValidTime = trip.tripUsers.some(
+      tu => new Date(tu.rideRequest.preferredTime) >= graceCutoff
+    );
+    if (!hasValidTime) {
+      throw { code: 400, message: 'Trip has expired — departure time has passed' };
+    }
+
+    // 5. Create DriverTrip and update Trip status
     const driverTrip = await tx.driverTrip.create({
       data: {
         driverProfileId: driverProfile.id,

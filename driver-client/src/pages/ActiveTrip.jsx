@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentTrip, startTrip, completeTrip } from '../api/driver';
 import { useGPSSimulator } from '../hooks/useGPSSimulator';
+import { useTripSocket } from '../hooks/useTripSocket';
 import { useAuth } from '../context/AuthContext';
 import DriverMap from '../components/DriverMap';
 
@@ -40,6 +41,27 @@ export default function ActiveTrip() {
       setLoading(false);
     }
   };
+
+  // Socket listener for real-time trip cancellation
+  useTripSocket();
+
+  // Poll trip status every 10s to detect remote cancellations
+  useEffect(() => {
+    if (!trip) return;
+    const interval = setInterval(async () => {
+      try {
+        const data = await getCurrentTrip();
+        if (!data) {
+          // Trip was cancelled remotely
+          alert('Your trip has been cancelled.');
+          navigate('/');
+        }
+      } catch (_) {
+        // Polling error is non-critical
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [trip, navigate]);
 
   const isStarted = trip?.status === 'STARTED';
   const location = useGPSSimulator(trip?.id, trip?.tripStops, isStarted);

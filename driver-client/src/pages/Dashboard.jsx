@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAvailableTrips, acceptTrip, getCurrentTrip } from '../api/driver';
 import { useAuth } from '../context/AuthContext';
+import { useTripSocket } from '../hooks/useTripSocket';
 import DriverMap from '../components/DriverMap';
 import { useCompassHeading } from '../hooks/useCompassHeading';
 
@@ -18,6 +19,9 @@ export default function Dashboard() {
   const [idleDriverLocation, setIdleDriverLocation] = useState(null);
   const gpsWatchRef = useRef(null);
   const { heading: compassHeading, requestPermission, permissionState } = useCompassHeading();
+
+  // Socket listener for trip cancellation events
+  useTripSocket();
 
   // Watch GPS for the idle car icon on the map
   useEffect(() => {
@@ -52,6 +56,12 @@ export default function Dashboard() {
       })
       .catch(() => loadTrips());
   }, [navigate]);
+
+  // Auto-refresh available trips every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(loadTrips, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const loadTrips = async () => {
     try {

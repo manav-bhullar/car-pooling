@@ -1,4 +1,5 @@
 const prisma = require('../../prisma/client');
+const { getIo } = require('../../socket/socket');
 
 exports.createRideRequest = async(userId, data) => {
     const existing = await prisma.rideRequest.findFirst({
@@ -81,7 +82,7 @@ exports.getCurrentRideRequest = async (userId) => {
     const matchedRequest = await prisma.rideRequest.findFirst({
         where: {
             userId,
-            status: 'MATCHED',
+            status: 'RIDERS_MATCHED',
         },
         orderBy: {
             createdAt: 'desc',
@@ -164,7 +165,7 @@ exports.cancelRideRequest = async (id, userId) => {
     }
     // 🔹 CASE 2: MATCHED → CASCADE CANCEL
     // PHASE 2 FIX: Explicit state machine instead of count-based assumptions
-    if (request.status === "MATCHED") {
+    if (request.status === "RIDERS_MATCHED") {
       // 1. Find trip association
       const tripUser = await tx.tripUser.findUnique({
         where: { rideRequestId: id },
@@ -200,8 +201,8 @@ exports.cancelRideRequest = async (id, userId) => {
         };
       }
 
-      if (trip.status === 'ACTIVE') {
-        // ✅ Only ACTIVE trips can be cascaded
+      if (['RIDERS_MATCHED', 'DRIVER_MATCHED', 'STARTED'].includes(trip.status)) {
+        // ✅ Active trips can be cascaded
         // 4. Cancel the trip
         const updated = await tx.trip.update({
           where: { id: tripId },
@@ -226,7 +227,7 @@ exports.cancelRideRequest = async (id, userId) => {
           await tx.rideRequest.updateMany({
             where: {
               id: { in: coRiderIds },
-              status: "MATCHED",
+              status: "RIDERS_MATCHED",
             },
             data: {
               status: "PENDING",
@@ -239,6 +240,52 @@ exports.cancelRideRequest = async (id, userId) => {
               rideRequestId: { in: coRiderIds },
             },
           });
+        }
+
+        // 8. Cancel DriverTrip if it exists + notify driver
+        const driverTrip = await tx.driverTrip.findUnique({ where: { tripId } });
+        if (driverTrip) {
+          await tx.driverTrip.update({
+            where: { id: driverTrip.id },
+            data: { status: 'CANCELLED' },
+          });
+
+          // Notify driver via socket
+          try {
+            const io = getIo();
+            const driverProfile = await tx.driverProfile.findUnique({
+              where: { id: driverTrip.driverProfileId },
+              select: { userId: true },
+            });
+            if (driverProfile && io) {
+              io.to(driverProfile.userId).emit('trip_cancelled', {
+                tripId,
+                reason: 'A rider cancelled — the trip has been cancelled.',
+              });
+            }
+          } catch (_) {
+            // Socket notification is best-effort, don't fail the transaction
+          }
+        }
+
+        // 9. Notify co-riders via socket
+        try {
+          const io = getIo();
+          if (io) {
+            // Look up userIds for co-riders
+            const coRiderRequests = await tx.rideRequest.findMany({
+              where: { id: { in: coRiderIds } },
+              select: { userId: true, id: true },
+            });
+            for (const req of coRiderRequests) {
+              io.to(req.userId).emit('ride_cancelled', {
+                rideRequestId: req.id,
+                reason: 'A co-rider cancelled — you have been re-queued for matching.',
+              });
+            }
+          }
+        } catch (_) {
+          // Socket notification is best-effort
         }
 
         return {

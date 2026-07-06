@@ -118,7 +118,7 @@ async function runCascadeCancelTest() {
     // STEP 3: Get trip ID
     console.log('🔍 STEP 3: Retrieving trip details...');
     const trip = await prisma.trip.findFirst({
-      where: { status: 'ACTIVE' },
+      where: { status: 'RIDERS_MATCHED' },
       include: {
         tripUsers: true
       }

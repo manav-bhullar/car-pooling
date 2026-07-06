@@ -255,9 +255,12 @@ async function tryExpandTrip(tripId, newRideRequest) {
  * @returns {{ expandedCount: number, attempts: number }}
  */
 async function runExpansionPhase() {
-  // Fetch all PENDING ride requests
+  // Fetch all PENDING ride requests whose departure time is still in the future
   const pendingRequests = await prisma.rideRequest.findMany({
-    where: { status: 'PENDING' },
+    where: {
+      status: 'PENDING',
+      preferredTime: { gte: new Date() },
+    },
     orderBy: { createdAt: 'asc' },
   });
 

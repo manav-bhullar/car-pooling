@@ -88,7 +88,7 @@ async function testMatchingAfterCancel() {
     await axios.post(`${BASE_URL}/admin/run-matching`, {});
     
     const trip1 = await prisma.trip.findFirst({
-      where: { status: 'ACTIVE' },
+      where: { status: 'RIDERS_MATCHED' },
       include: { tripUsers: true }
     });
     
@@ -168,7 +168,7 @@ async function testMatchingAfterCancel() {
 
     // Verify Trip 2 exists with correct users
     const trip2 = await prisma.trip.findFirst({
-      where: { status: 'ACTIVE' },
+      where: { status: 'RIDERS_MATCHED' },
       include: { tripUsers: true }
     });
 

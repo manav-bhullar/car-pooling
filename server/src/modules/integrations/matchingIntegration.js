@@ -5,13 +5,31 @@ const prisma = require('../../prisma/client');
 const { getIo } = require('../../socket/socket');
 
 /**
+ * Minimum buffer (in ms) before a ride's preferredTime for it to enter the matching pool.
+ * Rides whose preferredTime is less than this far in the future are excluded from matching
+ * to give enough time for a driver to accept and start.
+ */
+const MATCHING_TIME_BUFFER_MS = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Grace period (in ms) after a RIDERS_MATCHED trip's departure time before it's auto-expired.
+ * Gives the driver time to accept and start the trip after riders are matched.
+ */
+const MATCHED_TRIP_EXPIRY_GRACE_MS = 10 * 60 * 1000; // 10 minutes
+
+/**
  * Fetch pending ride requests with database-level locking
  * FOR UPDATE SKIP LOCKED prevents race conditions when multiple schedulers run
+ * 
+ * CRITICAL FIX: Only fetch requests whose preferredTime is still in the future
+ * (with a buffer) to prevent matching rides that are about to expire.
  */
 async function fetchPendingRequests(tx) {
+  const cutoff = new Date(Date.now() + MATCHING_TIME_BUFFER_MS);
   const requests = await tx.$queryRaw`
     SELECT * FROM "RideRequest"
     WHERE status = 'PENDING'
+    AND "preferredTime" >= ${cutoff}
     FOR UPDATE SKIP LOCKED
   `;
 
@@ -85,6 +103,93 @@ async function updatePendingCycles(tx, allRequests, matchedIds) {
 }
 
 /**
+ * Auto-expire RIDERS_MATCHED trips whose departure time + grace period has passed.
+ * These are trips where riders were matched but the departure time has long passed
+ * without a driver accepting (or the ride was matched at the current time edge case).
+ * 
+ * Returns count of expired trips for observability.
+ */
+async function autoExpireMatchedTrips(tx) {
+  const graceCutoff = new Date(Date.now() - MATCHED_TRIP_EXPIRY_GRACE_MS);
+
+  // Find RIDERS_MATCHED trips where ALL ride requests' preferredTime + grace < now
+  const staleTrips = await tx.$queryRaw`
+    SELECT t.id FROM "Trip" t
+    WHERE t.status = 'RIDERS_MATCHED'
+    AND NOT EXISTS (
+      SELECT 1 FROM "TripUser" tu
+      JOIN "RideRequest" rr ON rr.id = tu."rideRequestId"
+      WHERE tu."tripId" = t.id
+      AND rr."preferredTime" >= ${graceCutoff}
+    )
+  `;
+
+  if (staleTrips.length === 0) return 0;
+
+  let cancelledCount = 0;
+  const io = getIo();
+
+  for (const { id: tripId } of staleTrips) {
+    // Cancel the trip
+    await tx.trip.update({ where: { id: tripId }, data: { status: 'CANCELLED' } });
+
+    // Get all trip users
+    const tripUsers = await tx.tripUser.findMany({
+      where: { tripId },
+      include: { rideRequest: { select: { id: true, userId: true } } },
+    });
+
+    const rideRequestIds = tripUsers.map(tu => tu.rideRequestId);
+
+    // Cancel all ride requests (time has passed, no point requeueing)
+    await tx.rideRequest.updateMany({
+      where: { id: { in: rideRequestIds } },
+      data: { status: 'CANCELLED' },
+    });
+
+    // Cancel any associated DriverTrip
+    const driverTrip = await tx.driverTrip.findUnique({ where: { tripId } });
+    if (driverTrip) {
+      await tx.driverTrip.update({
+        where: { id: driverTrip.id },
+        data: { status: 'CANCELLED' },
+      });
+    }
+
+    // Notify all riders via socket
+    if (io) {
+      for (const tu of tripUsers) {
+        io.to(tu.rideRequest.userId).emit('ride_cancelled', {
+          rideRequestId: tu.rideRequest.id,
+          reason: 'Your matched ride was automatically cancelled because the departure time has passed without a driver accepting.',
+        });
+      }
+
+      // Notify driver if assigned
+      if (driverTrip) {
+        const driverProfile = await tx.driverProfile.findUnique({
+          where: { id: driverTrip.driverProfileId },
+          select: { userId: true },
+        });
+        if (driverProfile) {
+          io.to(driverProfile.userId).emit('trip_cancelled', {
+            tripId,
+            reason: 'Trip automatically cancelled — departure time has passed.',
+          });
+        }
+      }
+    }
+
+    cancelledCount++;
+  }
+
+  if (cancelledCount > 0) {
+    console.log(`🕐 Auto-expired ${cancelledCount} stale RIDERS_MATCHED trip(s)`);
+  }
+  return cancelledCount;
+}
+
+/**
  * Log matching cycle to database
  */
 async function logMatchingCycle(result, triggerType = 'CRON') {
@@ -117,7 +222,14 @@ async function runMatchingCycle(triggerType = 'CRON') {
   try {
     const result = await prisma.$transaction(async (tx) => {
       /**
-       * 🔒 STEP 0: Count pending at start for logging
+       * 🕐 STEP 0a: Auto-expire stale RIDERS_MATCHED trips
+       * This must run before matching to clean up edge cases where
+       * rides were matched at the current time boundary.
+       */
+      const autoExpiredTrips = await autoExpireMatchedTrips(tx);
+
+      /**
+       * 🔒 STEP 0b: Count pending at start for logging
        */
       const pendingCountStart = await tx.rideRequest.count({
         where: { status: 'PENDING' },

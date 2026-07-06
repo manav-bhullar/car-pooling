@@ -6,6 +6,12 @@ export default function StatusBanner() {
 
   useEffect(() => {
     if (!state.notification) return;
+
+    // Warning and error notifications persist until user manually dismisses them.
+    // Only auto-dismiss info and success types.
+    const { type } = state.notification;
+    if (type === 'warning' || type === 'error') return;
+
     const timer = setTimeout(() => {
       dispatch({ type: 'CLEAR_NOTIFICATION' });
     }, 5000);
