@@ -223,7 +223,7 @@ export default function DriverMap({
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserLocation(loc);
         if (!hasFlewToUser.current && flyToRef.current) {
-          flyToRef.current(loc.lat, loc.lng, 14);
+          flyToRef.current(loc.lat, loc.lng, 16);
           hasFlewToUser.current = true;
         }
       },
@@ -235,7 +235,7 @@ export default function DriverMap({
   // Fly to user location once flyToRef is registered
   useEffect(() => {
     if (userLocation && flyToRef.current && !hasFlewToUser.current) {
-      flyToRef.current(userLocation.lat, userLocation.lng, 14);
+      flyToRef.current(userLocation.lat, userLocation.lng, 16);
       hasFlewToUser.current = true;
     }
   }, [userLocation]);
@@ -333,7 +333,7 @@ export default function DriverMap({
     <div style={{ position: 'fixed', top: 0, left: 0, height: '100vh', width: '100vw', zIndex: 0 }}>
       <MapContainer
         center={center}
-        zoom={14}
+        zoom={16}
         scrollWheelZoom={false}
         smoothWheelZoom={true}
         smoothSensitivity={1}

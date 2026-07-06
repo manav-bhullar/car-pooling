@@ -36,16 +36,62 @@ const dropoffIcon = L.icon({
   shadowAnchor: [13, 41],
 });
 
+// ── Arc curve generator ───────────────────────────────────────
+// Creates a quadratic bezier arc between two points.
+// The control point is offset perpendicular to the midpoint,
+// producing a curved "flight path" that looks elevated / 3D.
+
+function generateArc(start, end, segments = 40, arcHeight = 0.15) {
+  const [lat1, lng1] = start;
+  const [lat2, lng2] = end;
+
+  // Midpoint
+  const midLat = (lat1 + lat2) / 2;
+  const midLng = (lng1 + lng2) / 2;
+
+  // Perpendicular offset direction (rotate the direction vector 90°)
+  const dLat = lat2 - lat1;
+  const dLng = lng2 - lng1;
+  const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+
+  // Control point: offset perpendicular to the line
+  // Negative perpLat pushes the arc "upward" on screen (north)
+  const perpLat = -dLng / dist;
+  const perpLng = dLat / dist;
+
+  const controlLat = midLat + perpLat * dist * arcHeight;
+  const controlLng = midLng + perpLng * dist * arcHeight;
+
+  // Generate points along the quadratic bezier
+  const points = [];
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments;
+    const u = 1 - t;
+    const lat = u * u * lat1 + 2 * u * t * controlLat + t * t * lat2;
+    const lng = u * u * lng1 + 2 * u * t * controlLng + t * t * lng2;
+    points.push([lat, lng]);
+  }
+  return points;
+}
+
+// Generate a shadow arc — same shape but offset slightly south-east
+// to simulate a shadow cast on the ground
+function generateShadowArc(arcPoints, shadowOffset = 0.003) {
+  return arcPoints.map(([lat, lng]) => [
+    lat - shadowOffset,
+    lng + shadowOffset * 0.5,
+  ]);
+}
+
 // ── FitBounds helper (with auto-recenter) ─────────────────────
 
-const AUTO_RECENTER_DELAY = 5000; // ms after user pans before snapping back
+const AUTO_RECENTER_DELAY = 5000;
 
 function FitBoundsAndDrift({ positions, onDriftChange }) {
   const map = useMap();
   const prevData = useRef('');
   const driftTimer = useRef(null);
 
-  // Initial fit
   useEffect(() => {
     if (!positions || positions.length === 0) return;
     const currentData = JSON.stringify(positions);
@@ -63,7 +109,6 @@ function FitBoundsAndDrift({ positions, onDriftChange }) {
     }
   }, [map, positions]);
 
-  // Drift detection + auto-recenter
   useEffect(() => {
     if (!map || !positions || positions.length === 0) return;
 
@@ -73,9 +118,7 @@ function FitBoundsAndDrift({ positions, onDriftChange }) {
       onDriftChange(isDrifted);
 
       if (isDrifted) {
-        // Clear previous timer
         if (driftTimer.current) clearTimeout(driftTimer.current);
-        // Schedule auto-recenter
         driftTimer.current = setTimeout(() => {
           if (positions.length === 1) {
             map.flyTo(positions[0], 14);
@@ -111,8 +154,18 @@ export default function DirectionMap({ pickupLat, pickupLng, dropLat, dropLng })
   const dropoff = useMemo(() => [dropLat, dropLng], [dropLat, dropLng]);
   const positions = useMemo(() => [pickup, dropoff], [pickup, dropoff]);
 
-  // Straight line between pickup and dropoff — no OSRM route
-  const linePositions = useMemo(() => [pickup, dropoff], [pickup, dropoff]);
+  // Generate the curved arc line (3D flight-path effect)
+  const arcPoints = useMemo(() => generateArc(pickup, dropoff, 50, 0.15), [pickup, dropoff]);
+
+  // Shadow arc — offset south-east to simulate shadow on ground
+  // Scale shadow offset based on distance between points
+  const shadowArc = useMemo(() => {
+    const dLat = dropLat - pickupLat;
+    const dLng = dropLng - pickupLng;
+    const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+    const shadowOffset = Math.max(0.002, dist * 0.025);
+    return generateShadowArc(arcPoints, shadowOffset);
+  }, [arcPoints, pickupLat, pickupLng, dropLat, dropLng]);
 
   const center = useMemo(() => [
     (pickupLat + dropLat) / 2,
@@ -130,53 +183,61 @@ export default function DirectionMap({ pickupLat, pickupLng, dropLat, dropLng })
 
   return (
     <div className="direction-map-wrapper">
-      {/* Vignette overlay for cinematic edges */}
-      <div className="direction-map-vignette" />
-      <div className="direction-map-top-fade" />
+      <MapContainer
+        center={center}
+        zoom={13}
+        scrollWheelZoom={true}
+        smoothWheelZoom={true}
+        smoothSensitivity={1}
+        dragging={true}
+        zoomControl={false}
+        style={{ height: '100%', width: '100%' }}
+        ref={mapRef}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
 
-      {/* 3D perspective container */}
-      <div className="direction-map-3d">
-        <MapContainer
-          center={center}
-          zoom={13}
-          scrollWheelZoom={true}
-          smoothWheelZoom={true}
-          smoothSensitivity={1}
-          dragging={true}
-          zoomControl={false}
-          style={{ height: '100%', width: '100%' }}
-          ref={mapRef}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+        {/* Shadow line — offset south-east, blurred gray, on ground */}
+        <Polyline
+          positions={shadowArc}
+          pathOptions={{
+            color: '#000000',
+            weight: 5,
+            opacity: 0.12,
+            lineCap: 'round',
+            lineJoin: 'round',
+            dashArray: null,
+          }}
+          className="direction-shadow-line"
+        />
 
-          {/* Dashed straight line — direction indicator */}
-          <Polyline
-            positions={linePositions}
-            pathOptions={{
-              color: '#0A56D1',
-              weight: 4,
-              dashArray: '12, 10',
-              lineCap: 'round',
-              opacity: 0.8,
-            }}
-          />
+        {/* Main arc line — elevated curved "flight path" */}
+        <Polyline
+          positions={arcPoints}
+          pathOptions={{
+            color: '#0A56D1',
+            weight: 4,
+            dashArray: '12, 10',
+            lineCap: 'round',
+            opacity: 0.9,
+          }}
+          className="direction-arc-line"
+        />
 
-          {/* Pickup marker with pulsing ripple */}
-          <Marker position={pickup} icon={pickupIcon} />
+        {/* Pickup marker with pulsing ripple */}
+        <Marker position={pickup} icon={pickupIcon} />
 
-          {/* Dropoff marker — standard pin */}
-          <Marker position={dropoff} icon={dropoffIcon} />
+        {/* Dropoff marker — standard pin */}
+        <Marker position={dropoff} icon={dropoffIcon} />
 
-          <FitBoundsAndDrift
-            positions={positions}
-            onDriftChange={handleDriftChange}
-            key={recenterKey}
-          />
-        </MapContainer>
-      </div>
+        <FitBoundsAndDrift
+          positions={positions}
+          onDriftChange={handleDriftChange}
+          key={recenterKey}
+        />
+      </MapContainer>
 
       {/* Recenter FAB — shows when user pans away, auto-hides after recenter */}
       {isDrifted && (

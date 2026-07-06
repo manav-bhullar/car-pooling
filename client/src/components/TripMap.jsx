@@ -38,7 +38,7 @@ function FitBounds({ positions, fitBoundsOptions }) {
       map.flyToBounds(singleBound, { 
         ...fitBoundsOptions, 
         padding: fitBoundsOptions?.padding || [40, 40], 
-        maxZoom: 14 
+        maxZoom: 16 
       });
       return;
     }
@@ -168,7 +168,7 @@ export default function TripMap({ stops = [], fitBoundsOptions, defaultCenter, m
     <div className="trip-map" style={{ height: '100%', width: '100%', position: 'relative' }}>
       <MapContainer 
         center={center} 
-        zoom={14} 
+        zoom={16} 
         scrollWheelZoom={false}
         smoothWheelZoom={true}
         smoothSensitivity={1}
