@@ -31,20 +31,20 @@ function FitBounds({ positions, fitBoundsOptions }) {
     }
     prevData.current = currentData;
 
+    const options = { ...fitBoundsOptions, maxZoom: fitBoundsOptions?.maxZoom || 16 };
+    if (!options.padding && !options.paddingTopLeft && !options.paddingBottomRight) {
+      options.padding = [40, 40];
+    }
+
     if (positions.length === 1) {
       // We use flyToBounds even for a single point so that the map padding options are applied!
-      // This prevents the single marker from hiding under the glass card on the left.
       const singleBound = [positions[0], positions[0]];
-      map.flyToBounds(singleBound, { 
-        ...fitBoundsOptions, 
-        padding: fitBoundsOptions?.padding || [40, 40], 
-        maxZoom: 16 
-      });
+      map.flyToBounds(singleBound, options);
       return;
     }
     const bounds = positions.map((p) => [p[0], p[1]]);
     // Cinematic flight when framing the route
-    map.flyToBounds(bounds, { ...fitBoundsOptions, padding: fitBoundsOptions?.padding || [40, 40] });
+    map.flyToBounds(bounds, options);
   }, [map, positions, fitBoundsOptions]);
 
   return null;

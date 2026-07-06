@@ -77,10 +77,15 @@ function generateArc(start, end, segments = 40, arcHeight = 0.15) {
 // Generate a shadow arc — same shape but offset slightly south-east
 // to simulate a shadow cast on the ground
 function generateShadowArc(arcPoints, shadowOffset = 0.003) {
-  return arcPoints.map(([lat, lng]) => [
-    lat - shadowOffset,
-    lng + shadowOffset * 0.5,
-  ]);
+  return arcPoints.map(([lat, lng], i) => {
+    // Taper the shadow offset so it is 0 at the start and end (touching the ground)
+    const t = i / (arcPoints.length - 1);
+    const factor = 4 * t * (1 - t); // Parabola: 0 at ends, 1 in middle
+    return [
+      lat - shadowOffset * factor,
+      lng + shadowOffset * 0.5 * factor,
+    ];
+  });
 }
 
 // ── FitBounds helper (with auto-recenter) ─────────────────────
@@ -102,8 +107,10 @@ function FitBoundsAndDrift({ positions, onDriftChange }) {
       map.flyTo(positions[0], 14);
     } else {
       const bounds = L.latLngBounds(positions);
+      const isMobile = window.innerWidth < 768;
       map.flyToBounds(bounds, {
-        padding: [80, 80],
+        paddingTopLeft: isMobile ? [40, 40] : [450, 80],
+        paddingBottomRight: isMobile ? [40, 320] : [80, 80],
         maxZoom: 15,
       });
     }
@@ -123,8 +130,10 @@ function FitBoundsAndDrift({ positions, onDriftChange }) {
           if (positions.length === 1) {
             map.flyTo(positions[0], 14);
           } else {
+            const isMobile = window.innerWidth < 768;
             map.flyToBounds(L.latLngBounds(positions), {
-              padding: [80, 80],
+              paddingTopLeft: isMobile ? [40, 40] : [450, 80],
+              paddingBottomRight: isMobile ? [40, 320] : [80, 80],
               maxZoom: 15,
             });
           }
