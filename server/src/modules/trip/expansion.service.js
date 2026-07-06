@@ -26,6 +26,18 @@ const LOCK_BEFORE_DEPARTURE_MS = 30 * 60 * 1000;
 async function tryExpandTrip(tripId, newRideRequest) {
   return await prisma.$transaction(async (tx) => {
 
+    // ─── Step 0: Lock resources to prevent concurrent expansion ───
+    // This solves the critical distributed race condition
+    const tripLock = await tx.$queryRaw`SELECT id FROM "Trip" WHERE id = ${tripId}::uuid FOR UPDATE`;
+    if (!tripLock || tripLock.length === 0) {
+      return { expanded: false, reason: 'TRIP_NOT_FOUND' };
+    }
+
+    const reqLock = await tx.$queryRaw`SELECT id, status FROM "RideRequest" WHERE id = ${newRideRequest.id}::uuid FOR UPDATE`;
+    if (!reqLock || reqLock.length === 0 || reqLock[0].status !== 'PENDING') {
+      return { expanded: false, reason: 'REQUEST_NOT_PENDING' };
+    }
+
     // ─── Step 1: Fetch trip with all relations ───
     const trip = await tx.trip.findUnique({
       where: { id: tripId },
@@ -65,13 +77,7 @@ async function tryExpandTrip(tripId, newRideRequest) {
       return { expanded: false, reason: 'FULL' };
     }
 
-    // Verify the ride request is still PENDING
-    const rideReq = await tx.rideRequest.findUnique({
-      where: { id: newRideRequest.id },
-    });
-    if (!rideReq || rideReq.status !== 'PENDING') {
-      return { expanded: false, reason: 'REQUEST_NOT_PENDING' };
-    }
+
 
     // ─── Step 3: Build combined user list ───
     // Existing users (from their ride requests)

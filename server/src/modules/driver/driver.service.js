@@ -94,7 +94,15 @@ exports.acceptTrip = async (userId, tripId) => {
       throw { code: 400, message: 'Trip has expired — departure time has passed' };
     }
 
-    // 5. Create DriverTrip and update Trip status
+    // 5. Atomic update of Trip status
+    const tripUpdateResult = await tx.trip.updateMany({
+      where: { id: tripId, status: 'RIDERS_MATCHED' },
+      data: { status: 'DRIVER_MATCHED' },
+    });
+    if (tripUpdateResult.count === 0) {
+      throw { code: 400, message: 'Trip is no longer available or was concurrently modified' };
+    }
+
     const driverTrip = await tx.driverTrip.create({
       data: {
         driverProfileId: driverProfile.id,
@@ -103,10 +111,21 @@ exports.acceptTrip = async (userId, tripId) => {
       },
     });
 
-    await tx.trip.update({
-      where: { id: tripId },
-      data: { status: 'DRIVER_MATCHED' },
-    });
+    // Notify riders
+    try {
+      const io = getIo();
+      if (io) {
+        trip.tripUsers.forEach(tu => {
+          io.to(tu.userId).emit('trip_updated', {
+            tripId,
+            status: 'DRIVER_MATCHED',
+            message: 'A driver has accepted your trip!'
+          });
+        });
+      }
+    } catch (err) {
+      console.warn('Socket notification failed:', err.message);
+    }
 
     return driverTrip;
   });
@@ -125,21 +144,24 @@ exports.startTrip = async (userId, tripId) => {
     if (!driverTrip || driverTrip.driverProfileId !== driverProfile.id) {
       throw { code: 403, message: 'Not authorized for this trip' };
     }
-    if (driverTrip.status !== 'ACCEPTED') {
+    // Atomic update
+    const updatedDriverTripResult = await tx.driverTrip.updateMany({
+      where: { id: driverTrip.id, status: 'ACCEPTED' },
+      data: { status: 'STARTED', startedAt: new Date() },
+    });
+    if (updatedDriverTripResult.count === 0) {
       throw { code: 400, message: 'Can only start an ACCEPTED trip' };
     }
 
-    const updatedDriverTrip = await tx.driverTrip.update({
-      where: { id: driverTrip.id },
-      data: { status: 'STARTED', startedAt: new Date() },
-    });
-
-    await tx.trip.update({
-      where: { id: tripId },
+    const tripUpdateResult = await tx.trip.updateMany({
+      where: { id: tripId, status: 'DRIVER_MATCHED' },
       data: { status: 'STARTED' },
     });
+    if (tripUpdateResult.count === 0) {
+      throw { code: 400, message: 'Trip was concurrently modified' };
+    }
 
-    return updatedDriverTrip;
+    return { ...driverTrip, status: 'STARTED', startedAt: new Date() };
   });
 };
 
@@ -156,20 +178,26 @@ exports.completeTrip = async (userId, tripId) => {
     if (!driverTrip || driverTrip.driverProfileId !== driverProfile.id) {
       throw { code: 403, message: 'Not authorized for this trip' };
     }
-    if (driverTrip.status !== 'STARTED') {
+    const now = new Date();
+
+    const updatedDriverTripResult = await tx.driverTrip.updateMany({
+      where: { id: driverTrip.id, status: 'STARTED' },
+      data: { status: 'COMPLETED', completedAt: now },
+    });
+    if (updatedDriverTripResult.count === 0) {
       throw { code: 400, message: 'Can only complete a STARTED trip' };
     }
 
-    const now = new Date();
-
-    const updatedDriverTrip = await tx.driverTrip.update({
-      where: { id: driverTrip.id },
+    const tripUpdateResult = await tx.trip.updateMany({
+      where: { id: tripId, status: 'STARTED' },
       data: { status: 'COMPLETED', completedAt: now },
     });
+    if (tripUpdateResult.count === 0) {
+      throw { code: 400, message: 'Trip was concurrently modified' };
+    }
 
-    const trip = await tx.trip.update({
+    const trip = await tx.trip.findUnique({
       where: { id: tripId },
-      data: { status: 'COMPLETED', completedAt: now },
       include: { tripUsers: true },
     });
 
@@ -182,7 +210,7 @@ exports.completeTrip = async (userId, tripId) => {
       },
     });
 
-    return updatedDriverTrip;
+    return { ...driverTrip, status: 'COMPLETED', completedAt: now };
   });
 };
 
