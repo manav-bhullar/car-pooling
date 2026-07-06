@@ -23,27 +23,11 @@
    z-index: 0;
 }
 
-.waiting-map-layer .trip-map,
-.waiting-map-layer .leaflet-container {
-   height: 100% !important;
-   width: 100% !important;
+.waiting-map-layer .direction-map-wrapper {
+   height: 100%;
+   width: 100%;
 }
 
-/* Route Animation on Map */
-.waiting-map-layer path.leaflet-interactive {
-   stroke: var(--color-md-primary) !important;
-   stroke-dasharray: 15, 15;
-   animation: map-route-dash 1.5s linear infinite;
-}
-
-.is-matched .waiting-map-layer path.leaflet-interactive {
-   animation-duration: 400ms;
-}
-
-@keyframes map-route-dash {
-   from { stroke-dashoffset: 60; }
-   to { stroke-dashoffset: 0; }
-}
 
 /* ============================================================
    ATMOSPHERIC BLUR SHAPES

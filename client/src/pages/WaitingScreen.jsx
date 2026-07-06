@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { cancelRideRequest } from '../api/rideRequests';
 import { getElapsedSeconds, formatElapsed } from '../utils/time';
-import TripMap from '../components/TripMap';
+import DirectionMap from '../components/DirectionMap';
 import './WaitingScreen.css';
 
 export default function WaitingScreen() {
@@ -54,23 +54,17 @@ export default function WaitingScreen() {
 
   const isMatched = state.uiState === 'MATCHED' || rideRequest.status === 'RIDERS_MATCHED';
 
-  const stops = [
-    { stopOrder: 1, type: 'PICKUP', lat: rideRequest.pickupLat, lng: rideRequest.pickupLng },
-    { stopOrder: 2, type: 'DROPOFF', lat: rideRequest.dropLat, lng: rideRequest.dropLng }
-  ];
-
-  // Shift the map's visual center to the right and zoom out slightly by increasing padding
-  const fitBoundsOptions = React.useMemo(() => ({
-    paddingTopLeft: window.innerWidth >= 768 ? [600, 150] : [100, 100],
-    paddingBottomRight: [100, 150]
-  }), []);
-
   return (
     <div className={`waiting-screen-expressive ${isMatched ? 'is-matched' : ''}`}>
 
-      {/* Map as Wallpaper */}
+      {/* Direction Map — Swiggy/Zomato style 3D perspective with straight dashed line */}
       <div className="waiting-map-layer">
-        <TripMap stops={stops} fitBoundsOptions={fitBoundsOptions} />
+        <DirectionMap
+          pickupLat={rideRequest.pickupLat}
+          pickupLng={rideRequest.pickupLng}
+          dropLat={rideRequest.dropLat}
+          dropLng={rideRequest.dropLng}
+        />
       </div>
 
       {/* Atmospheric Blur Shapes */}
