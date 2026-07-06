@@ -60,9 +60,8 @@ export default function App() {
     if (!userId) return;
     if (state.loading.init) return;
 
-    // Don't auto-redirect if we're on login, register, or verify-email
-    const authRoutes = ['/login', '/register', '/verify-email'];
-    if (authRoutes.includes(location.pathname)) return;
+    // Let the user stay on the verify-email page if they need to verify
+    if (location.pathname === '/verify-email') return;
 
     if (targetRoute && location.pathname !== targetRoute) {
       navigate(targetRoute, { replace: true });
