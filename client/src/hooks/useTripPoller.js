@@ -11,6 +11,12 @@ export function useTripPoller() {
 
   const userId = user?.id;
   const uiState = state.uiState;
+  
+  // Track trip in a ref to avoid interval teardown loop
+  const tripRef = useRef(state.trip);
+  useEffect(() => {
+    tripRef.current = state.trip;
+  }, [state.trip]);
 
   useEffect(() => {
     // Guard: do not start polling without an authenticated user
@@ -26,12 +32,12 @@ export function useTripPoller() {
         const updatedTrip = await getCurrentTrip(userId);
         if (!mounted) return;
 
-        if (!updatedTrip && state.trip) {
+        if (!updatedTrip && tripRef.current) {
           dispatch({ type: 'SET_TRIP', payload: null });
           return;
         }
 
-        if (updatedTrip && JSON.stringify(updatedTrip) !== JSON.stringify(state.trip)) {
+        if (updatedTrip && JSON.stringify(updatedTrip) !== JSON.stringify(tripRef.current)) {
           dispatch({ type: 'SET_TRIP', payload: updatedTrip });
         }
       } catch (err) {
@@ -55,7 +61,6 @@ export function useTripPoller() {
   }, [
     userId,
     uiState,
-    state.trip,
     dispatch,
   ]);
 }

@@ -70,9 +70,13 @@ function initSocket(server) {
           return;
         }
 
+        if (isDriver) {
+          socket.isDriverForTrip = tripId;
+        }
+
         const roomName = `trip_${tripId}`;
         socket.join(roomName);
-        console.log(`🚪 User ${socket.userId} joined room ${roomName}`);
+        console.log(`🚪 User ${socket.userId} joined room ${roomName} as ${isDriver ? 'driver' : 'rider'}`);
         
         socket.emit('tripJoined', { tripId });
       } catch (err) {
@@ -87,8 +91,11 @@ function initSocket(server) {
       
       if (!tripId || lat === undefined || lng === undefined) return;
 
-      // In a production app, we would cache the validation to avoid DB hits on every location ping.
-      // For this demo, we'll assume the driver is valid if they are connected and emitting.
+      // SECURITY FIX: Verify this socket is the authenticated driver for this trip
+      if (socket.isDriverForTrip !== tripId) {
+        console.warn(`⚠️ User ${socket.userId} attempted to spoof location for trip ${tripId}`);
+        return;
+      }
       
       const roomName = `trip_${tripId}`;
       

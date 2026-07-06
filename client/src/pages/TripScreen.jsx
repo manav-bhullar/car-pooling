@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
-import { completeTrip } from '../api/trips';
+
 import { cancelRideRequest } from '../api/rideRequests';
 import TripMap from '../components/TripMap';
 import CancelModal from '../components/CancelModal';
@@ -14,28 +14,7 @@ export default function TripScreen() {
   const { user } = useAuth();
   const [showCancelModal, setShowCancelModal] = useState(false);
 
-  async function handleComplete() {
-    if (!window.confirm('Completing this trip will finalize it for all riders. Are you sure?')) return;
 
-    try {
-      const data = await completeTrip(user?.id, state.trip.id);
-      const updatedTrip = { ...state.trip, ...data, status: 'COMPLETED' };
-      dispatch({ type: 'SET_TRIP', payload: updatedTrip });
-      dispatch({ type: 'SET_UI_STATE', payload: 'TRIP_COMPLETED' });
-    } catch (err) {
-      if (err.status === 400) {
-        dispatch({
-          type: 'SET_NOTIFICATION',
-          payload: { type: 'warning', message: 'Trip could not be completed. It may have been cancelled.' }
-        });
-      } else {
-        dispatch({
-          type: 'SET_NOTIFICATION',
-          payload: { type: 'error', message: 'Failed to complete trip. Please try again.' }
-        });
-      }
-    }
-  }
 
   async function confirmCancel() {
     try {
@@ -119,7 +98,6 @@ export default function TripScreen() {
           </div>
 
           <div className="trip-actions-row">
-            <button className="btn btn-primary" onClick={handleComplete}>Complete Trip</button>
             <button className="btn btn-danger" onClick={() => setShowCancelModal(true)}>Cancel</button>
           </div>
         </div>

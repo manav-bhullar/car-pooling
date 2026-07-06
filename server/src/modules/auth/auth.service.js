@@ -255,7 +255,7 @@ exports.getMe = async (userId) => {
 
 // Helper function
 async function createTokensForUser(user, existingTokenId = null) {
-  const accessToken = generateAccessToken(user.id);
+  const accessToken = generateAccessToken({ id: user.id, role: user.role, email: user.email });
   const refreshToken = generateRefreshToken(user.id);
   
   // Hash refresh token for DB storage
