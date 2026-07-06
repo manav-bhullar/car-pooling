@@ -109,7 +109,7 @@ function FitBoundsAndDrift({ positions, onDriftChange }) {
       const bounds = L.latLngBounds(positions);
       const isMobile = window.innerWidth < 768;
       map.flyToBounds(bounds, {
-        paddingTopLeft: isMobile ? [40, 40] : [450, 80],
+        paddingTopLeft: isMobile ? [40, 40] : [Math.min(window.innerWidth * 0.45, 600), 80],
         paddingBottomRight: isMobile ? [40, 320] : [80, 80],
         maxZoom: 15,
       });
@@ -120,8 +120,10 @@ function FitBoundsAndDrift({ positions, onDriftChange }) {
     if (!map || !positions || positions.length === 0) return;
 
     const checkAndScheduleRecenter = () => {
-      const expectedBounds = L.latLngBounds(positions).pad(0.5);
-      const isDrifted = !expectedBounds.contains(map.getCenter());
+      // Check if the current map bounds fully contain the route positions.
+      // If we pad the map heavily, the geographical center shifts, so we can't just check map.getCenter().
+      const routeBounds = L.latLngBounds(positions);
+      const isDrifted = !map.getBounds().contains(routeBounds);
       onDriftChange(isDrifted);
 
       if (isDrifted) {
@@ -132,7 +134,7 @@ function FitBoundsAndDrift({ positions, onDriftChange }) {
           } else {
             const isMobile = window.innerWidth < 768;
             map.flyToBounds(L.latLngBounds(positions), {
-              paddingTopLeft: isMobile ? [40, 40] : [450, 80],
+              paddingTopLeft: isMobile ? [40, 40] : [Math.min(window.innerWidth * 0.45, 600), 80],
               paddingBottomRight: isMobile ? [40, 320] : [80, 80],
               maxZoom: 15,
             });

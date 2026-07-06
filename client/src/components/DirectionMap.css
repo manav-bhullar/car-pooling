@@ -85,13 +85,11 @@
 
 @keyframes pickup-ripple {
    0% {
-      width: 16px;
-      height: 16px;
-      opacity: 0.6;
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.8;
    }
    100% {
-      width: 56px;
-      height: 56px;
+      transform: translate(-50%, -50%) scale(3.5);
       opacity: 0;
    }
 }
