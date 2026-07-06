@@ -13,7 +13,7 @@ model User {
   email     String   @unique
   password  String
   phone     String?
-  role      String   @default("RIDER")
+  role      Role     @default(RIDER)
   isVerified Boolean @default(false)
   createdAt DateTime @default(now())
 
@@ -34,7 +34,7 @@ model RideRequest {
   pickupAddress  String?
   dropAddress    String?
   preferredTime  DateTime
-  status         String   @default("PENDING")
+  status         RequestStatus @default(PENDING)
   pendingCycles  Int      @default(0)
   createdAt      DateTime @default(now())
 
@@ -50,7 +50,7 @@ model RideRequest {
 
 model Trip {
   id                   String    @id @default(uuid())
-  status               String
+  status               TripStatus
   totalDistanceKm      Float
   estimatedEtaMinutes  Int
   detourRatio          Float
@@ -84,7 +84,7 @@ model TripStop {
   id                           String @id @default(uuid())
   tripId                       String
   stopOrder                    Int
-  type                         String
+  type                         StopType
   lat                          Float
   lng                          Float
   rideRequestId                String
@@ -153,7 +153,7 @@ model DriverTrip {
   id              String    @id @default(uuid())
   driverProfileId String
   tripId          String    @unique
-  status          String    @default("ACCEPTED")
+  status          DriverTripStatus @default(ACCEPTED)
   acceptedAt      DateTime  @default(now())
   startedAt       DateTime?
   completedAt     DateTime?
@@ -162,4 +162,39 @@ model DriverTrip {
   trip          Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@index([driverProfileId])
+}
+
+enum Role {
+  RIDER
+  DRIVER
+  ADMIN
+}
+
+enum RequestStatus {
+  PENDING
+  RIDERS_MATCHED
+  DRIVER_MATCHED
+  STARTED
+  COMPLETED
+  CANCELLED
+}
+
+enum TripStatus {
+  RIDERS_MATCHED
+  DRIVER_MATCHED
+  STARTED
+  COMPLETED
+  CANCELLED
+}
+
+enum DriverTripStatus {
+  ACCEPTED
+  STARTED
+  COMPLETED
+  CANCELLED
+}
+
+enum StopType {
+  PICKUP
+  DROP
 }
