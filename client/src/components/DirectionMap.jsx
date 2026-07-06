@@ -104,9 +104,10 @@ function FitBoundsAndDrift({ positions, onDriftChange }) {
     prevData.current = currentData;
 
     if (positions.length === 1) {
-      map.flyTo(positions[0], 14);
+      map.flyTo(positions[0], 13);
     } else {
-      const bounds = L.latLngBounds(positions);
+      // Pad bounds by 18% to zoom out slightly
+      const bounds = L.latLngBounds(positions).pad(0.18);
       const isMobile = window.innerWidth < 768;
       map.flyToBounds(bounds, {
         paddingTopLeft: isMobile ? [40, 40] : [Math.min(window.innerWidth * 0.45, 600), 80],
@@ -130,10 +131,10 @@ function FitBoundsAndDrift({ positions, onDriftChange }) {
         if (driftTimer.current) clearTimeout(driftTimer.current);
         driftTimer.current = setTimeout(() => {
           if (positions.length === 1) {
-            map.flyTo(positions[0], 14);
+            map.flyTo(positions[0], 13);
           } else {
             const isMobile = window.innerWidth < 768;
-            map.flyToBounds(L.latLngBounds(positions), {
+            map.flyToBounds(L.latLngBounds(positions).pad(0.18), {
               paddingTopLeft: isMobile ? [40, 40] : [Math.min(window.innerWidth * 0.45, 600), 80],
               paddingBottomRight: isMobile ? [40, 320] : [80, 80],
               maxZoom: 15,
