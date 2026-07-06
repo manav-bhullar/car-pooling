@@ -189,6 +189,12 @@ exports.cancelRideRequest = async (id, userId) => {
         // Rider should not be MATCHED on a completed trip; this is an invalid state
         throw new Error("TRIP_ALREADY_COMPLETED: Cannot cancel request on completed trip");
       }
+      
+      if (trip.status === 'STARTED') {
+        // ❌ CRITICAL: Cannot cascade cancel a started trip
+        // The driver is already driving, cancelling ruins it for everyone.
+        throw new Error("TRIP_ALREADY_STARTED: Cannot cancel request on a trip that has already started");
+      }
 
       if (trip.status === 'CANCELLED') {
         // ✅ Idempotent: Trip already cancelled, co-riders already reverted
@@ -201,13 +207,17 @@ exports.cancelRideRequest = async (id, userId) => {
         };
       }
 
-      if (['RIDERS_MATCHED', 'DRIVER_MATCHED', 'STARTED'].includes(trip.status)) {
+      if (['RIDERS_MATCHED', 'DRIVER_MATCHED'].includes(trip.status)) {
         // ✅ Active trips can be cascaded
-        // 4. Cancel the trip
-        const updated = await tx.trip.update({
-          where: { id: tripId },
+        // 4. Atomic cancel the trip
+        const updatedTripResult = await tx.trip.updateMany({
+          where: { id: tripId, status: trip.status },
           data: { status: "CANCELLED" },
         });
+        
+        if (updatedTripResult.count === 0) {
+          throw new Error("Trip state changed concurrently, please try again");
+        }
 
         // 5. Get all ride requests in this trip
         const tripUsers = await tx.tripUser.findMany({

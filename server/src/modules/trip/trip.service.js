@@ -236,68 +236,10 @@ async function getCurrentTrip(userId) {
   return null;
 }
 
-async function completeTrip(tripId, userId) {
-  return await prisma.$transaction(async (tx) => {
-    const trip = await tx.trip.findUnique({
-      where: { id: tripId },
-      include: { tripUsers: true },
-    });
 
-    if (!trip) {
-      throw { code: 404, message: 'Trip not found' };
-    }
-
-    const isParticipant = trip.tripUsers.some((tu) => tu.userId === userId);
-    if (!isParticipant) {
-      throw { code: 403, message: 'Not a trip participant' };
-    }
-
-    if (trip.status === 'COMPLETED') {
-      return {
-        id: trip.id,
-        status: 'COMPLETED',
-        completedAt: trip.completedAt,
-      };
-    }
-
-    if (trip.status === 'CANCELLED') {
-      throw { code: 400, message: 'TRIP_NOT_COMPLETABLE' };
-    }
-
-    if (trip.status !== 'STARTED') {
-      throw { code: 400, message: 'TRIP_NOT_COMPLETABLE' };
-    }
-
-    const now = new Date();
-
-    const updatedTrip = await tx.trip.update({
-      where: { id: tripId },
-      data: {
-        status: 'COMPLETED',
-        completedAt: now,
-      },
-    });
-
-    await tx.rideRequest.updateMany({
-      where: {
-        id: { in: trip.tripUsers.map((tu) => tu.rideRequestId) },
-      },
-      data: {
-        status: 'COMPLETED',
-      },
-    });
-
-    return {
-      id: updatedTrip.id,
-      status: 'COMPLETED',
-      completedAt: updatedTrip.completedAt,
-    };
-  });
-}
 
 module.exports = {
   createTripFromMatch,
   getTripById,
   getCurrentTrip,
-  completeTrip,
 };

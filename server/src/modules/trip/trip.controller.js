@@ -142,22 +142,3 @@ exports.getCurrent = async (req, res) => {
 	}
 };
 
-exports.completeTrip = async (req, res) => {
-	try {
-		const userId = req.userId;
-		const { id } = req.params;
-		if (!id) {
-			return error(res, 'Missing trip id', 400);
-		}
-
-		const data = await service.completeTrip(id, userId);
-		return success(res, data);
-	} catch (err) {
-		console.error('Complete trip error:', err);
-		if (err && err.code) {
-			return error(res, err.message, err.code);
-		}
-		return error(res, err.message || 'Failed to complete trip', 500);
-	}
-};
-
