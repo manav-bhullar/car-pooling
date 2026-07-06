@@ -1,72 +1,48 @@
 /* ============================================================
-   DirectionMap — Swiggy/Zomato-style 3D Perspective Map
-   Shows direction line (not route) while waiting for ride match
+   DirectionMap — Arc Line with Shadow (3D effect on the line)
+   No map tilt — flat map, elevated arc line + ground shadow
    ============================================================ */
 
-/* Outer wrapper — provides the 3D perspective context */
+/* Outer wrapper */
 .direction-map-wrapper {
    position: absolute;
    inset: 0;
    overflow: hidden;
 }
 
-/* 3D tilt container */
-.direction-map-3d {
-   width: 100%;
-   height: 100%;
-   transform: perspective(1200px) rotateX(32deg);
-   transform-origin: center 65%;
-   transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* Leaflet container inside 3D space */
-.direction-map-3d .leaflet-container {
+.direction-map-wrapper .leaflet-container {
    height: 100% !important;
    width: 100% !important;
 }
 
-/* Vignette overlay — cinematic edges for the tilted map */
-.direction-map-vignette {
-   position: absolute;
-   inset: 0;
-   z-index: 2;
-   pointer-events: none;
-   background: radial-gradient(
-      ellipse 80% 70% at 50% 40%,
-      transparent 50%,
-      rgba(255, 255, 255, 0.35) 100%
-   );
-}
-
-/* Top fade — hides the vanishing point seam */
-.direction-map-top-fade {
-   position: absolute;
-   top: 0;
-   left: 0;
-   right: 0;
-   height: 25%;
-   z-index: 3;
-   pointer-events: none;
-   background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.9) 0%,
-      rgba(255, 255, 255, 0.4) 40%,
-      transparent 100%
-   );
-}
-
 /* ============================================================
-   ANIMATED DASHED LINE — flows pickup → dropoff
+   ARC LINE — animated dashed flow (pickup → dropoff)
    ============================================================ */
-.direction-map-3d path.leaflet-interactive {
-   stroke-dasharray: 12, 10 !important;
+.direction-arc-line {
+   filter: drop-shadow(0 0 3px rgba(10, 86, 209, 0.3));
+}
+
+/* Animated dash flow on the main arc */
+.direction-map-wrapper path.leaflet-interactive {
    stroke-linecap: round !important;
+}
+
+/* Target only the dashed arc line for animation */
+.direction-arc-line path.leaflet-interactive {
    animation: direction-dash-flow 1.8s linear infinite;
 }
 
 @keyframes direction-dash-flow {
    from { stroke-dashoffset: 44; }
    to   { stroke-dashoffset: 0; }
+}
+
+/* ============================================================
+   SHADOW LINE — soft blurred ground shadow beneath arc
+   ============================================================ */
+.direction-shadow-line path.leaflet-interactive {
+   stroke-dasharray: none !important;
+   filter: blur(3px);
 }
 
 /* ============================================================
@@ -120,20 +96,8 @@
    }
 }
 
-/* Dropoff marker — flag-style pin */
-.direction-marker-dropoff {
-   position: relative;
-   width: 28px;
-   height: 40px;
-}
-
-.direction-marker-dropoff-pin {
-   width: 28px;
-   height: 40px;
-}
-
 /* ============================================================
-   RECENTER FAB — auto-recenter after drift
+   RECENTER FAB
    ============================================================ */
 .direction-recenter-fab {
    position: absolute;
