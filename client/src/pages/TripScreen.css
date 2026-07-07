@@ -44,7 +44,30 @@
    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
    box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
    padding: 32px 24px;
-   overflow: hidden;
+   overflow-x: hidden;
+}
+
+@media (min-width: 900px) {
+  .trip-screen-expressive {
+    flex-direction: row;
+  }
+  .trip-map-container {
+    position: relative;
+    height: 100vh;
+    flex: 1;
+    top: auto;
+    left: auto;
+  }
+  .trip-bottom-sheet {
+    width: 400px;
+    min-width: 400px;
+    margin-top: 0;
+    height: 100vh;
+    border-radius: 0;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.1);
+    overflow-y: auto;
+    z-index: 10;
+  }
 }
 
 /* Blur shape behind sheet content */

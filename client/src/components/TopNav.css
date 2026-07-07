@@ -1,9 +1,36 @@
 .top-nav {
   position: absolute;
   top: 24px;
+  left: 24px;
   right: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   z-index: 1000;
+  pointer-events: none;
   animation: md3-fade-in var(--duration-medium) var(--ease-standard);
+}
+
+.top-nav > * {
+  pointer-events: auto;
+}
+
+.top-nav-brand-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 24px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-md-surface-container-low);
+  border: 1px solid var(--color-md-outline-variant);
+  box-shadow: var(--shadow-elevation-2);
+  transition: all var(--duration-short) var(--ease-standard);
+}
+
+.top-nav-brand-container:hover {
+  background-color: var(--color-md-surface-container);
+  box-shadow: var(--shadow-elevation-3);
+  transform: translateY(-1px);
 }
 
 .user-profile {
@@ -65,6 +92,7 @@
 @media (max-width: 480px) {
   .top-nav {
     top: 16px;
+    left: 16px;
     right: 16px;
   }
   

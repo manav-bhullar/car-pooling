@@ -124,35 +124,6 @@
 }
 
 /* ============================================================
-   STATS CARD
-   ============================================================ */
-.summary-stats-card {
-   background: var(--color-md-primary-container);
-   width: 100%;
-   margin-bottom: 48px;
-}
-
-.summary-stats-card .trip-card {
-   background: transparent;
-   box-shadow: none;
-   padding: 0;
-   color: var(--color-md-on-primary-container);
-}
-
-/* Ensure text inside the primary container is legible */
-.summary-stats-card .trip-distance,
-.summary-stats-card .trip-status,
-.summary-stats-card p,
-.summary-stats-card h3 {
-   color: var(--color-md-on-primary-container) !important;
-}
-
-.summary-stats-card .trip-status {
-   background: var(--color-md-on-primary-container);
-   color: var(--color-md-primary-container) !important;
-}
-
-/* ============================================================
    FAB
    ============================================================ */
 .summary-fab {

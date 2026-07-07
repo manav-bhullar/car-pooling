@@ -19,9 +19,13 @@ export default function TopNav() {
     <>
       <div className="top-nav">
         {state.uiState === 'IDLE' ? (
-          <Link to="/home" className="top-nav-brand" style={{ fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--color-md-primary)', textDecoration: 'none' }}>Floq</Link>
+          <Link to="/home" className="top-nav-brand-container glass-card" style={{ textDecoration: 'none' }}>
+             <span style={{ fontWeight: '800', fontSize: '1.25rem', color: 'var(--color-md-primary)', letterSpacing: '-0.5px' }}>Floq</span>
+          </Link>
         ) : (
-          <span className="top-nav-brand" style={{ fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--color-md-primary)' }}>Floq</span>
+          <div className="top-nav-brand-container glass-card">
+             <span style={{ fontWeight: '800', fontSize: '1.25rem', color: 'var(--color-md-primary)', letterSpacing: '-0.5px' }}>Floq</span>
+          </div>
         )}
       <div className="user-profile glass-card">
         <div className="user-avatar">
