@@ -6,8 +6,8 @@ export default function CancelModal({ isOpen, onClose, onConfirm }) {
   return (
     <div className="modal-backdrop">
       <div className="modal">
-        <h3>Cancel trip</h3>
-        <p>Your co-riders will be returned to the queue.</p>
+        <h3>Cancel your matched ride?</h3>
+        <p>Cancelling your matched ride will also cancel the trip for your co-riders. They will be placed back in the queue. Are you sure?</p>
         <div className="modal-actions">
           <button className="btn btn-secondary" onClick={onClose}>Close</button>
           <button className="btn btn-danger" onClick={onConfirm}>Confirm Cancel</button>

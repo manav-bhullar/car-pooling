@@ -310,6 +310,7 @@ export default function RideRequestForm({ onLocationSelect }) {
   return (
     <form className="ride-request-form" onSubmit={handleSubmit}>
       <h2 className="form-title">Request a Ride</h2>
+      <p className="form-subtitle" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem', marginTop: '-0.5rem' }}>We'll group you with nearby riders heading the same way.</p>
 
       <LocationInput
         label="Pickup location"
@@ -361,7 +362,7 @@ export default function RideRequestForm({ onLocationSelect }) {
         style={{ width: '100%', marginTop: '16px' }}
         disabled={!canSubmit}
       >
-        {loading ? 'Finding your ride...' : 'Request Ride'}
+        {loading ? 'Submitting request...' : 'Request Ride'}
       </button>
     </form>
   );
