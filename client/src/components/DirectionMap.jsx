@@ -1,16 +1,22 @@
-import { useMemo, useEffect, useRef, useState, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import '@luomus/leaflet-smooth-wheel-zoom';
-import './DirectionMap.css';
+import { useMemo, useEffect, useRef, useState, useCallback } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polyline,
+  useMap,
+} from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import "@luomus/leaflet-smooth-wheel-zoom";
+import "./DirectionMap.css";
 
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
 // ── Custom SVG markers ────────────────────────────────────────
 
 const pickupIcon = L.divIcon({
-  className: 'direction-marker-pickup',
+  className: "direction-marker-pickup",
   html: `
     <div class="direction-marker-pickup-ripple"></div>
     <div class="direction-marker-pickup-dot"></div>
@@ -81,10 +87,7 @@ function generateShadowArc(arcPoints, shadowOffset = 0.003) {
     // Taper the shadow offset so it is 0 at the start and end (touching the ground)
     const t = i / (arcPoints.length - 1);
     const factor = 4 * t * (1 - t); // Parabola: 0 at ends, 1 in middle
-    return [
-      lat - shadowOffset * factor,
-      lng + shadowOffset * 0.5 * factor,
-    ];
+    return [lat - shadowOffset * factor, lng + shadowOffset * 0.5 * factor];
   });
 }
 
@@ -94,7 +97,7 @@ const AUTO_RECENTER_DELAY = 5000;
 
 function FitBoundsAndDrift({ positions, onDriftChange }) {
   const map = useMap();
-  const prevData = useRef('');
+  const prevData = useRef("");
   const driftTimer = useRef(null);
 
   useEffect(() => {
@@ -110,7 +113,9 @@ function FitBoundsAndDrift({ positions, onDriftChange }) {
       const bounds = L.latLngBounds(positions).pad(0.18);
       const isMobile = window.innerWidth < 768;
       map.flyToBounds(bounds, {
-        paddingTopLeft: isMobile ? [40, 40] : [Math.min(window.innerWidth * 0.45, 600), 80],
+        paddingTopLeft: isMobile
+          ? [40, 40]
+          : [Math.min(window.innerWidth * 0.45, 600), 80],
         paddingBottomRight: isMobile ? [40, 320] : [80, 80],
         maxZoom: 15,
       });
@@ -135,7 +140,9 @@ function FitBoundsAndDrift({ positions, onDriftChange }) {
           } else {
             const isMobile = window.innerWidth < 768;
             map.flyToBounds(L.latLngBounds(positions).pad(0.18), {
-              paddingTopLeft: isMobile ? [40, 40] : [Math.min(window.innerWidth * 0.45, 600), 80],
+              paddingTopLeft: isMobile
+                ? [40, 40]
+                : [Math.min(window.innerWidth * 0.45, 600), 80],
               paddingBottomRight: isMobile ? [40, 320] : [80, 80],
               maxZoom: 15,
             });
@@ -145,9 +152,9 @@ function FitBoundsAndDrift({ positions, onDriftChange }) {
       }
     };
 
-    map.on('moveend', checkAndScheduleRecenter);
+    map.on("moveend", checkAndScheduleRecenter);
     return () => {
-      map.off('moveend', checkAndScheduleRecenter);
+      map.off("moveend", checkAndScheduleRecenter);
       if (driftTimer.current) clearTimeout(driftTimer.current);
     };
   }, [map, positions, onDriftChange]);
@@ -157,7 +164,12 @@ function FitBoundsAndDrift({ positions, onDriftChange }) {
 
 // ── Main Component ────────────────────────────────────────────
 
-export default function DirectionMap({ pickupLat, pickupLng, dropLat, dropLng }) {
+export default function DirectionMap({
+  pickupLat,
+  pickupLng,
+  dropLat,
+  dropLng,
+}) {
   const [isDrifted, setIsDrifted] = useState(false);
   const [recenterKey, setRecenterKey] = useState(0);
   const mapRef = useRef(null);
@@ -167,7 +179,10 @@ export default function DirectionMap({ pickupLat, pickupLng, dropLat, dropLng })
   const positions = useMemo(() => [pickup, dropoff], [pickup, dropoff]);
 
   // Generate the curved arc line (3D flight-path effect)
-  const arcPoints = useMemo(() => generateArc(pickup, dropoff, 50, 0.15), [pickup, dropoff]);
+  const arcPoints = useMemo(
+    () => generateArc(pickup, dropoff, 50, 0.15),
+    [pickup, dropoff],
+  );
 
   // Shadow arc — offset south-east to simulate shadow on ground
   // Scale shadow offset based on distance between points
@@ -179,13 +194,13 @@ export default function DirectionMap({ pickupLat, pickupLng, dropLat, dropLng })
     return generateShadowArc(arcPoints, shadowOffset);
   }, [arcPoints, pickupLat, pickupLng, dropLat, dropLng]);
 
-  const center = useMemo(() => [
-    (pickupLat + dropLat) / 2,
-    (pickupLng + dropLng) / 2,
-  ], [pickupLat, pickupLng, dropLat, dropLng]);
+  const center = useMemo(
+    () => [(pickupLat + dropLat) / 2, (pickupLng + dropLng) / 2],
+    [pickupLat, pickupLng, dropLat, dropLng],
+  );
 
   const handleRecenter = useCallback(() => {
-    setRecenterKey(k => k + 1);
+    setRecenterKey((k) => k + 1);
     setIsDrifted(false);
   }, []);
 
@@ -203,7 +218,7 @@ export default function DirectionMap({ pickupLat, pickupLng, dropLat, dropLng })
         smoothSensitivity={1}
         dragging={true}
         zoomControl={false}
-        style={{ height: '100%', width: '100%' }}
+        style={{ height: "100%", width: "100%" }}
         ref={mapRef}
       >
         <TileLayer
@@ -215,11 +230,11 @@ export default function DirectionMap({ pickupLat, pickupLng, dropLat, dropLng })
         <Polyline
           positions={shadowArc}
           pathOptions={{
-            color: '#000000',
+            color: "#000000",
             weight: 5,
             opacity: 0.12,
-            lineCap: 'round',
-            lineJoin: 'round',
+            lineCap: "round",
+            lineJoin: "round",
             dashArray: null,
           }}
           className="direction-shadow-line"
@@ -229,10 +244,10 @@ export default function DirectionMap({ pickupLat, pickupLng, dropLat, dropLng })
         <Polyline
           positions={arcPoints}
           pathOptions={{
-            color: '#0A56D1',
+            color: "#0A56D1",
             weight: 4,
-            dashArray: '12, 10',
-            lineCap: 'round',
+            dashArray: "12, 10",
+            lineCap: "round",
             opacity: 0.9,
           }}
           className="direction-arc-line"
@@ -259,8 +274,14 @@ export default function DirectionMap({ pickupLat, pickupLng, dropLat, dropLng })
           aria-label="Recenter map"
           className="direction-recenter-fab"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
-            <path d="M440-42v-80q-125-14-214.5-103.5T122-440H42v-80h80q14-125 103.5-214.5T440-838v-80h80v80q125 14 214.5 103.5T838-520h80v80h-80q-14 125-103.5 214.5T520-122v80h-80Zm40-158q116 0 198-82t82-198q0-116-82-198t-198-82q-116 0-198 82t-82 198q0 116 82 198t198 82Zm0-120q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T560-480q0-33-23.5-56.5T480-560q-33 0-56.5 23.5T400-480q0 33 23.5 56.5T480-400Z"/>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            height="24px"
+            viewBox="0 -960 960 960"
+            width="24px"
+            fill="currentColor"
+          >
+            <path d="M440-42v-80q-125-14-214.5-103.5T122-440H42v-80h80q14-125 103.5-214.5T440-838v-80h80v80q125 14 214.5 103.5T838-520h80v80h-80q-14 125-103.5 214.5T520-122v80h-80Zm40-158q116 0 198-82t82-198q0-116-82-198t-198-82q-116 0-198 82t-82 198q0 116 82 198t198 82Zm0-120q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T560-480q0-33-23.5-56.5T480-560q-33 0-56.5 23.5T400-480q0 33 23.5 56.5T480-400Z" />
           </svg>
           <span>Recenter</span>
         </button>

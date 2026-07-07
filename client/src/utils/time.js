@@ -6,9 +6,7 @@
 export function getElapsedSeconds(isoTimestamp) {
   if (!isoTimestamp) return 0;
 
-  return Math.floor(
-    (Date.now() - new Date(isoTimestamp).getTime()) / 1000
-  );
+  return Math.floor((Date.now() - new Date(isoTimestamp).getTime()) / 1000);
 }
 
 export function formatElapsed(seconds) {
@@ -21,16 +19,16 @@ export function formatElapsed(seconds) {
 }
 
 export function formatETA(estimatedEtaMinutes) {
-  if (!estimatedEtaMinutes) return 'Unknown';
+  if (!estimatedEtaMinutes) return "Unknown";
 
   return `~${estimatedEtaMinutes} min`;
 }
 
 export function formatTime(isoTimestamp) {
-  if (!isoTimestamp) return '';
+  if (!isoTimestamp) return "";
 
   return new Date(isoTimestamp).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }

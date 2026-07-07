@@ -1,216 +1,228 @@
 .waiting-screen-expressive {
-   position: relative;
-   min-height: 100vh;
-   width: 100vw;
-   overflow: hidden;
+  position: relative;
+  min-height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
 /* Optional Exit Animation */
 .waiting-screen-expressive.is-matched {
-   animation: screen-exit var(--duration-long) var(--ease-standard) 800ms forwards;
+  animation: screen-exit var(--duration-long) var(--ease-standard) 800ms
+    forwards;
 }
 
 @keyframes screen-exit {
-   to { opacity: 0; transform: translateY(8px); }
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
 }
 
 /* ============================================================
    MAP AS WALLPAPER
    ============================================================ */
 .waiting-map-layer {
-   position: absolute;
-   inset: 0;
-   z-index: 0;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
 .waiting-map-layer .direction-map-wrapper {
-   height: 100%;
-   width: 100%;
+  height: 100%;
+  width: 100%;
 }
-
 
 /* ============================================================
    ATMOSPHERIC BLUR SHAPES
    ============================================================ */
 .waiting-blur-1 {
-   width: 50vw;
-   height: 50vw;
-   background: var(--color-md-primary);
-   opacity: 0.15;
-   top: -10%;
-   right: -10%;
-   animation: drift 20s ease-in-out infinite alternate;
+  width: 50vw;
+  height: 50vw;
+  background: var(--color-md-primary);
+  opacity: 0.15;
+  top: -10%;
+  right: -10%;
+  animation: drift 20s ease-in-out infinite alternate;
 }
 
 .waiting-blur-2 {
-   width: 40vw;
-   height: 40vw;
-   background: var(--color-md-tertiary);
-   opacity: 0.15;
-   bottom: -10%;
-   left: 20%;
-   animation: drift 25s ease-in-out infinite alternate-reverse;
+  width: 40vw;
+  height: 40vw;
+  background: var(--color-md-tertiary);
+  opacity: 0.15;
+  bottom: -10%;
+  left: 20%;
+  animation: drift 25s ease-in-out infinite alternate-reverse;
 }
 
 /* ============================================================
    FOREGROUND CONTENT (Matches HomeScreen Anchoring)
    ============================================================ */
 .waiting-content-layer {
-   position: relative;
-   z-index: 10;
-   min-height: 100vh;
-   display: flex;
-   flex-direction: column;
-   justify-content: flex-end; /* Anchor bottom on mobile */
-   padding: 0;
-   pointer-events: none; /* Let map be interactive where exposed */
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Anchor bottom on mobile */
+  padding: 0;
+  pointer-events: none; /* Let map be interactive where exposed */
 }
 
 .waiting-glass-card {
-   pointer-events: auto;
-   width: calc(100% - 32px);
-   max-width: 500px;
-   margin: 0 16px 24px 16px;
-   border-radius: var(--radius-2xl);
-   padding: 24px;
-   box-shadow: var(--shadow-elevation-3);
-   animation: md3-fade-in var(--duration-spring) var(--ease-spring) both;
-   transition: height 0.3s ease-in-out, padding 0.3s ease-in-out, background 500ms var(--ease-standard);
+  pointer-events: auto;
+  width: calc(100% - 32px);
+  max-width: 500px;
+  margin: 0 16px 24px 16px;
+  border-radius: var(--radius-2xl);
+  padding: 24px;
+  box-shadow: var(--shadow-elevation-3);
+  animation: md3-fade-in var(--duration-spring) var(--ease-spring) both;
+  transition:
+    height 0.3s ease-in-out,
+    padding 0.3s ease-in-out,
+    background 500ms var(--ease-standard);
 }
 
 .waiting-expanded-content {
-   animation: md3-fade-in 0.3s var(--ease-standard) both;
+  animation: md3-fade-in 0.3s var(--ease-standard) both;
 }
 
 .is-matched .waiting-glass-card {
-   background: rgba(103, 80, 164, 0.85); /* Tinted glass on match */
+  background: rgba(103, 80, 164, 0.85); /* Tinted glass on match */
 }
 
 /* ============================================================
    TYPOGRAPHY inside Glass Card
    ============================================================ */
 .waiting-primary-msg {
-   font: var(--type-display-large);
-   font-weight: 510;
-   color: var(--color-md-on-surface);
-   margin-bottom: 12px;
-   transition: color 200ms var(--ease-standard);
+  font: var(--type-display-large);
+  font-weight: 510;
+  color: var(--color-md-on-surface);
+  margin-bottom: 12px;
+  transition: color 200ms var(--ease-standard);
 }
 
 .is-matched .waiting-primary-msg {
-   color: var(--color-md-on-primary-container);
+  color: var(--color-md-on-primary-container);
 }
 
 .waiting-secondary-msg {
-   font: var(--type-title-large);
-   color: var(--color-md-on-surface-variant);
-   margin-bottom: 24px;
-   animation: md3-fade-in 200ms var(--ease-standard) both;
+  font: var(--type-title-large);
+  color: var(--color-md-on-surface-variant);
+  margin-bottom: 24px;
+  animation: md3-fade-in 200ms var(--ease-standard) both;
 }
 
 /* ============================================================
    STATUS BLOCK
    ============================================================ */
 .waiting-status-block {
-   display: flex;
-   flex-direction: column;
-   gap: 4px;
-   margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 24px;
 }
 
 .waiting-timer {
-   font-family: monospace;
-   font-size: 16px;
-   color: var(--color-md-on-surface);
+  font-family: monospace;
+  font-size: 16px;
+  color: var(--color-md-on-surface);
 }
 
 /* ============================================================
    REQUEST SUMMARY
    ============================================================ */
 .waiting-divider {
-   border: none;
-   border-top: 1px solid var(--color-md-outline);
-   opacity: 0.5;
-   margin-bottom: 24px;
+  border: none;
+  border-top: 1px solid var(--color-md-outline);
+  opacity: 0.5;
+  margin-bottom: 24px;
 }
 
 .waiting-request-summary {
-   display: flex;
-   flex-direction: column;
-   gap: 4px;
-   font: var(--type-body-medium);
-   color: var(--color-md-on-surface-variant);
-   margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font: var(--type-body-medium);
+  color: var(--color-md-on-surface-variant);
+  margin-bottom: 32px;
 }
 
 .waiting-section-label {
-   font: var(--type-label-medium);
-   color: var(--color-md-on-surface);
-   margin-bottom: 8px;
+  font: var(--type-label-medium);
+  color: var(--color-md-on-surface);
+  margin-bottom: 8px;
 }
 
 .waiting-route-text {
-   font: var(--type-body-large);
-   font-weight: 500;
-   color: var(--color-md-on-surface);
+  font: var(--type-body-large);
+  font-weight: 500;
+  color: var(--color-md-on-surface);
 }
 
 .waiting-time-text {
-   font: var(--type-body-medium);
-   color: var(--color-md-on-surface-variant);
+  font: var(--type-body-medium);
+  color: var(--color-md-on-surface-variant);
 }
 
 /* ============================================================
    CANCEL ZONE
    ============================================================ */
 .waiting-cancel-zone {
-   display: flex;
-   justify-content: flex-start;
-   min-height: 48px;
+  display: flex;
+  justify-content: flex-start;
+  min-height: 48px;
 }
 
 .waiting-cancel-zone .btn-danger {
-   width: 100%;
+  width: 100%;
 }
 
 .cancel-confirm-inline {
-   display: flex;
-   flex-direction: column;
-   align-items: flex-start;
-   gap: 16px;
-   width: 100%;
-   animation: md3-fade-in 200ms var(--ease-standard) both;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  animation: md3-fade-in 200ms var(--ease-standard) both;
 }
 
 .cancel-confirm-inline p {
-   font: var(--type-body-large);
-   color: var(--color-md-on-surface);
+  font: var(--type-body-large);
+  color: var(--color-md-on-surface);
 }
 
 .cancel-confirm-actions {
-   display: flex;
-   gap: 16px;
-   width: 100%;
+  display: flex;
+  gap: 16px;
+  width: 100%;
 }
 
 .cancel-confirm-actions button {
-   flex: 1;
+  flex: 1;
 }
 
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (min-width: 768px) {
-   .waiting-content-layer {
-      justify-content: center;
-      padding: 24px;
-      padding-left: 10vw; /* Anchor left on desktop like HomeScreen */
-   }
-   .waiting-glass-card {
-      width: 100%;
-      margin: 0;
-      padding: 32px;
-      max-width: 500px;
-      border-radius: var(--radius-2xl);
-   }
+  .waiting-content-layer {
+    justify-content: center;
+    padding: 24px;
+    padding-left: 10vw; /* Anchor left on desktop like HomeScreen */
+  }
+  .waiting-glass-card {
+    width: 100%;
+    margin: 0;
+    padding: 32px;
+    max-width: 500px;
+    border-radius: var(--radius-2xl);
+  }
+}
+
+.drag-handle-wrapper:focus-visible {
+  outline: 2px solid var(--color-md-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
 }

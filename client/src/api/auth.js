@@ -1,8 +1,8 @@
-import { apiClient } from './apiClient';
+import { apiClient } from "./apiClient";
 
 export async function registerUser(data) {
-  const res = await apiClient.fetch('/auth/register', {
-    method: 'POST',
+  const res = await apiClient.fetch("/auth/register", {
+    method: "POST",
     body: JSON.stringify(data),
   });
 
@@ -12,25 +12,25 @@ export async function registerUser(data) {
 }
 
 export async function loginUser(email, password) {
-  const res = await apiClient.fetch('/auth/login', {
-    method: 'POST',
+  const res = await apiClient.fetch("/auth/login", {
+    method: "POST",
     body: JSON.stringify({ email, password }),
   });
 
   const json = await res.json();
   if (!json.success) {
-    throw { 
-      status: res.status, 
-      message: json.error?.message, 
-      needsVerification: json.error?.needsVerification 
+    throw {
+      status: res.status,
+      message: json.error?.message,
+      needsVerification: json.error?.needsVerification,
     };
   }
   return json.data;
 }
 
 export async function verifyEmail(email, otp) {
-  const res = await apiClient.fetch('/auth/verify-email', {
-    method: 'POST',
+  const res = await apiClient.fetch("/auth/verify-email", {
+    method: "POST",
     body: JSON.stringify({ email, otp }),
   });
 
@@ -40,8 +40,8 @@ export async function verifyEmail(email, otp) {
 }
 
 export async function resendOtp(email) {
-  const res = await apiClient.fetch('/auth/resend-otp', {
-    method: 'POST',
+  const res = await apiClient.fetch("/auth/resend-otp", {
+    method: "POST",
     body: JSON.stringify({ email }),
   });
 
@@ -51,14 +51,14 @@ export async function resendOtp(email) {
 }
 
 export async function logoutUser() {
-  const res = await apiClient.fetch('/auth/logout', { method: 'POST' });
+  const res = await apiClient.fetch("/auth/logout", { method: "POST" });
   const json = await res.json();
   if (!json.success) throw { status: res.status, message: json.error?.message };
   return json.data;
 }
 
 export async function getMe() {
-  const res = await apiClient.fetch('/auth/me');
+  const res = await apiClient.fetch("/auth/me");
   const json = await res.json();
   if (!json.success) throw { status: res.status, message: json.error?.message };
   return json.data;

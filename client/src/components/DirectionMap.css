@@ -5,44 +5,48 @@
 
 /* Outer wrapper */
 .direction-map-wrapper {
-   position: absolute;
-   inset: 0;
-   overflow: hidden;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
 }
 
 .direction-map-wrapper .leaflet-container {
-   height: 100% !important;
-   width: 100% !important;
+  height: 100% !important;
+  width: 100% !important;
 }
 
 /* ============================================================
    ARC LINE — animated dashed flow (pickup → dropoff)
    ============================================================ */
 .direction-arc-line {
-   filter: drop-shadow(0 0 3px rgba(10, 86, 209, 0.3));
+  filter: drop-shadow(0 0 3px rgba(10, 86, 209, 0.3));
 }
 
 /* Animated dash flow on the main arc */
 .direction-map-wrapper path.leaflet-interactive {
-   stroke-linecap: round !important;
+  stroke-linecap: round !important;
 }
 
 /* Target only the dashed arc line for animation */
 .direction-arc-line path.leaflet-interactive {
-   animation: direction-dash-flow 1.8s linear infinite;
+  animation: direction-dash-flow 1.8s linear infinite;
 }
 
 @keyframes direction-dash-flow {
-   from { stroke-dashoffset: 44; }
-   to   { stroke-dashoffset: 0; }
+  from {
+    stroke-dashoffset: 44;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 /* ============================================================
    SHADOW LINE — soft blurred ground shadow beneath arc
    ============================================================ */
 .direction-shadow-line path.leaflet-interactive {
-   stroke-dasharray: none !important;
-   filter: blur(3px);
+  stroke-dasharray: none !important;
+  filter: blur(3px);
 }
 
 /* ============================================================
@@ -51,102 +55,116 @@
 
 /* Pickup ripple pulse — rendered as an HTML div marker */
 .direction-marker-pickup {
-   position: relative;
-   width: 20px;
-   height: 20px;
+  position: relative;
+  width: 20px;
+  height: 20px;
 }
 
 .direction-marker-pickup-dot {
-   position: absolute;
-   top: 50%;
-   left: 50%;
-   transform: translate(-50%, -50%);
-   width: 16px;
-   height: 16px;
-   border-radius: 50%;
-   background: #0A56D1;
-   border: 3px solid #ffffff;
-   box-shadow: 0 2px 8px rgba(10, 86, 209, 0.4);
-   z-index: 2;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #0a56d1;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(10, 86, 209, 0.4);
+  z-index: 2;
 }
 
 .direction-marker-pickup-ripple {
-   position: absolute;
-   top: 50%;
-   left: 50%;
-   transform: translate(-50%, -50%);
-   width: 16px;
-   height: 16px;
-   border-radius: 50%;
-   background: rgba(10, 86, 209, 0.25);
-   animation: pickup-ripple 2s ease-out infinite;
-   z-index: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(10, 86, 209, 0.25);
+  animation: pickup-ripple 2s ease-out infinite;
+  z-index: 1;
 }
 
 @keyframes pickup-ripple {
-   0% {
-      transform: translate(-50%, -50%) scale(1);
-      opacity: 0.8;
-   }
-   100% {
-      transform: translate(-50%, -50%) scale(3.5);
-      opacity: 0;
-   }
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3.5);
+    opacity: 0;
+  }
 }
 
 /* ============================================================
    RECENTER FAB
    ============================================================ */
 .direction-recenter-fab {
-   position: absolute;
-   bottom: calc(max(1.5rem, env(safe-area-inset-bottom, 0px)) + 1.25rem);
-   right: 1.25rem;
-   z-index: 500;
-   display: flex;
-   align-items: center;
-   gap: 6px;
-   padding: 0 16px 0 12px;
-   height: 44px;
-   border: none;
-   border-radius: var(--radius-full);
-   cursor: pointer;
-   background: var(--color-md-surface);
-   color: var(--color-md-primary, #0A56D1);
-   box-shadow: 0 2px 8px rgba(0,0,0,0.20), 0 0 0 1px rgba(0,0,0,0.06);
-   font: var(--type-label-medium, 500 0.875rem/1 'Inter', sans-serif);
-   font-weight: 600;
-   white-space: nowrap;
-   animation: direction-recenter-slide-in 220ms var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
-   transition: box-shadow 150ms ease, transform 150ms ease, background 150ms ease;
+  position: absolute;
+  bottom: calc(max(1.5rem, env(safe-area-inset-bottom, 0px)) + 1.25rem);
+  right: 1.25rem;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px 0 12px;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  background: var(--color-md-surface);
+  color: var(--color-md-primary, #0a56d1);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+  font: var(--type-label-medium, 500 0.875rem/1 "Inter", sans-serif);
+  font-weight: 600;
+  white-space: nowrap;
+  animation: direction-recenter-slide-in 220ms
+    var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+  transition:
+    box-shadow 150ms ease,
+    transform 150ms ease,
+    background 150ms ease;
 }
 
 .direction-recenter-fab:hover {
-   background: var(--color-md-primary-container, #D3E4FF);
-   color: var(--color-md-on-primary-container, #001849);
-   box-shadow: 0 4px 16px rgba(10, 86, 209, 0.28), 0 0 0 1px rgba(10,86,209,0.12);
-   transform: translateY(-1px);
+  background: var(--color-md-primary-container, #d3e4ff);
+  color: var(--color-md-on-primary-container, #001849);
+  box-shadow:
+    0 4px 16px rgba(10, 86, 209, 0.28),
+    0 0 0 1px rgba(10, 86, 209, 0.12);
+  transform: translateY(-1px);
 }
 
 .direction-recenter-fab:active {
-   transform: scale(0.95);
-   transition-duration: 80ms;
+  transform: scale(0.95);
+  transition-duration: 80ms;
 }
 
 .direction-recenter-fab svg {
-   flex-shrink: 0;
-   width: 20px;
-   height: 20px;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
 }
 
 @keyframes direction-recenter-slide-in {
-   from { opacity: 0; transform: translateX(24px) scale(0.88); }
-   to   { opacity: 1; transform: translateX(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 /* Mobile: push recenter above the bottom glass card */
 @media (max-width: 767px) {
-   .direction-recenter-fab {
-      bottom: calc(280px + env(safe-area-inset-bottom, 0px) + 0.75rem);
-      right: 1rem;
-   }
+  .direction-recenter-fab {
+    bottom: calc(280px + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    right: 1rem;
+  }
 }

@@ -1,81 +1,81 @@
 .trip-screen-loading {
-   min-height: 100vh;
-   display: flex;
-   flex-direction: column;
-   align-items: center;
-   justify-content: center;
-   background: var(--color-md-surface);
-   color: var(--color-md-on-surface);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-md-surface);
+  color: var(--color-md-on-surface);
 }
 
 .trip-screen-expressive {
-   position: relative;
-   min-height: 100vh;
-   width: 100vw;
-   overflow: hidden;
+  position: relative;
+  min-height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
 /* ============================================================
    MAP CONTAINER (Full Bleed Wallpaper)
    ============================================================ */
 .trip-map-container {
-   position: absolute;
-   inset: 0;
-   z-index: 0;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
 .trip-map-container .trip-map {
-   height: 100% !important;
+  height: 100% !important;
 }
 
 /* ============================================================
    FLOATING CONTENT LAYER
    ============================================================ */
 .trip-content-layer {
-   position: relative;
-   z-index: 10;
-   min-height: 100vh;
-   display: flex;
-   flex-direction: column;
-   justify-content: flex-end; /* Mobile: Anchor to bottom */
-   padding: 0;
-   pointer-events: none; /* Map clickable underneath */
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Mobile: Anchor to bottom */
+  padding: 0;
+  pointer-events: none; /* Map clickable underneath */
 }
 
 /* ============================================================
    THE GLASS CARD (Sidebar on Desktop, Sheet on Mobile)
    ============================================================ */
 .trip-sidebar-card {
-   pointer-events: auto; /* Re-enable clicks */
-   width: 100%;
-   background: rgba(255, 255, 255, 0.85); /* Premium white frosted glass */
-   backdrop-filter: blur(16px);
-   -webkit-backdrop-filter: blur(16px);
-   border-top: 1px solid rgba(0,0,0,0.1);
-   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
-   box-shadow: 0 -8px 32px rgba(0,0,0,0.1);
-   padding: 32px 24px;
-   max-height: 85vh;
-   overflow-y: auto;
-   display: flex;
-   flex-direction: column;
-   gap: 24px;
-   animation: md3-fade-in var(--duration-spring) var(--ease-spring) both;
+  pointer-events: auto; /* Re-enable clicks */
+  width: 100%;
+  background: rgba(255, 255, 255, 0.85); /* Premium white frosted glass */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.1);
+  padding: 32px 24px;
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: md3-fade-in var(--duration-spring) var(--ease-spring) both;
 }
 
 @media (min-width: 900px) {
   .trip-content-layer {
-     justify-content: center;
-     padding: 24px;
-     padding-left: 24px;
+    justify-content: center;
+    padding: 24px;
+    padding-left: 24px;
   }
   .trip-sidebar-card {
-     width: 400px;
-     max-height: calc(100vh - 120px);
-     margin-top: 64px; /* Give space for TopNav */
-     border-radius: var(--radius-2xl);
-     border: 1px solid rgba(0,0,0,0.1);
-     box-shadow: var(--shadow-elevation-3);
+    width: 400px;
+    max-height: calc(100vh - 120px);
+    margin-top: 64px; /* Give space for TopNav */
+    border-radius: var(--radius-2xl);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-elevation-3);
   }
 }
 
@@ -83,76 +83,126 @@
    HEADER & STATUS
    ============================================================ */
 .trip-sheet-header {
-   display: flex;
-   flex-direction: column;
-   gap: 12px;
-   align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
 }
 
 .trip-headline {
-   font: var(--type-display-large);
-   font-weight: 510;
-   color: var(--color-md-on-surface);
+  font: var(--type-display-large);
+  font-weight: 510;
+  color: var(--color-md-on-surface);
 }
 
 .trip-status-chip {
-   font: var(--type-label-medium);
-   padding: 8px 16px;
-   border-radius: var(--radius-full);
-   transition: background var(--duration-medium) var(--ease-standard),
-               color var(--duration-medium) var(--ease-standard);
+  font: var(--type-label-medium);
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  transition:
+    background var(--duration-medium) var(--ease-standard),
+    color var(--duration-medium) var(--ease-standard);
 }
 
 .trip-status-chip--pending {
-   background: var(--color-md-express-ride-pending);
-   color: var(--color-md-on-tertiary-container);
+  background: var(--color-md-express-ride-pending);
+  color: var(--color-md-on-tertiary-container);
 }
 
 .trip-status-chip--active {
-   background: var(--color-md-express-ride-active);
-   color: var(--color-md-on-primary-container);
+  background: var(--color-md-express-ride-active);
+  color: var(--color-md-on-primary-container);
 }
 
 .trip-status-chip--done {
-   background: var(--color-md-express-ride-done);
-   color: #004d00;
+  background: var(--color-md-express-ride-done);
+  color: #004d00;
 }
 
 /* ============================================================
    ETA BLOCK
    ============================================================ */
 .trip-eta-block {
-   display: flex;
-   align-items: baseline;
-   gap: 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .trip-eta-value {
-   font: var(--type-display-large);
-   color: var(--color-md-primary);
-   line-height: 1;
+  font: var(--type-display-large);
+  color: var(--color-md-primary);
+  line-height: 1;
 }
 
 .trip-eta-label {
-   font: var(--type-title-large);
-   color: var(--color-md-on-surface-variant);
+  font: var(--type-title-large);
+  color: var(--color-md-on-surface-variant);
 }
 
 /* ============================================================
    DRIVER CARD (Glassmorphism inside sheet)
    ============================================================ */
 .trip-driver-card {
-   background: rgba(243, 237, 247, 0.80); /* surface-container/80 */
-   border-radius: var(--radius-md); /* 16px */
-   padding: 24px;
-   border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(243, 237, 247, 0.8); /* surface-container/80 */
+  border-radius: var(--radius-md); /* 16px */
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 /* ============================================================
    ACTIONS
    ============================================================ */
 .trip-actions-row {
-   display: flex;
-   gap: 16px;
-   margin-top: 16px;
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* ============================================================
+   STATS ROW & ROUTE CONTEXT
+   ============================================================ */
+.trip-stats-label {
+  font: var(--type-label-medium);
+  font-weight: 600;
+  opacity: 0.6;
+  margin: 0;
+  padding-bottom: 4px;
+  color: var(--color-md-on-surface);
+}
+
+.trip-stats-value-fare {
+  font: var(--type-display-large);
+  margin: 0;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1px;
+  color: var(--color-md-on-surface);
+}
+
+.trip-stats-value-eta {
+  font: var(--type-headline-large);
+  margin: 0;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-md-on-surface);
+}
+
+.trip-stats-value-eta-unit {
+  font: var(--type-body-medium);
+  font-weight: 500;
+  margin-left: 4px;
+  opacity: 0.8;
+}
+
+.trip-route-context-title {
+  font: var(--type-body-medium);
+  margin: 0 0 8px 0;
+  font-weight: 600;
+  color: var(--color-md-on-surface);
+}
+
+.trip-route-context-text {
+  margin: 0;
+  font: var(--type-label-medium);
+  color: var(--color-md-on-surface-variant);
 }

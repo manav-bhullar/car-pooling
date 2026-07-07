@@ -7,579 +7,612 @@
    BUTTONS — M3 Expressive Filled Pill
    ============================================================ */
 .btn {
-   display: inline-flex;
-   align-items: center;
-   justify-content: center;
-   gap: 8px;
-   border: none;
-   cursor: pointer;
-   font: var(--type-label-medium);
-   text-decoration: none;
-   border-radius: var(--radius-full);
-   padding: 0 24px;
-   min-height: 40px;
-   position: relative;
-   overflow: hidden;
-   transition: background var(--duration-short) var(--ease-standard),
-               transform var(--duration-spring) var(--ease-spring),
-               box-shadow var(--duration-medium) var(--ease-standard);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  font: var(--type-label-medium);
+  text-decoration: none;
+  border-radius: var(--radius-full);
+  padding: 0 24px;
+  min-height: 40px;
+  position: relative;
+  overflow: hidden;
+  transition:
+    background var(--duration-short) var(--ease-standard),
+    transform var(--duration-spring) var(--ease-spring),
+    box-shadow var(--duration-medium) var(--ease-standard);
 }
 
 .btn:active {
-   transform: scale(0.95);
-   transition-duration: 150ms;
+  transform: scale(0.95);
+  transition-duration: 150ms;
 }
 
 .btn:disabled {
-   opacity: 0.5;
-   cursor: not-allowed;
-   pointer-events: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Primary — CTA, submit actions */
-.btn-primary, .btn-filled {
-   background: var(--color-md-primary);
-   color: var(--color-md-on-primary);
+.btn-primary,
+.btn-filled {
+  background: var(--color-md-primary);
+  color: var(--color-md-on-primary);
 }
 
-.btn-primary:hover, .btn-filled:hover {
-   background: color-mix(in srgb, var(--color-md-primary) 90%, white);
-   box-shadow: var(--shadow-elevation-1);
+.btn-primary:hover,
+.btn-filled:hover {
+  background: color-mix(in srgb, var(--color-md-primary) 90%, white);
+  box-shadow: var(--shadow-elevation-1);
 }
 
 /* Tonal (Secondary) — less prominent actions */
 .btn-tonal {
-   background: var(--color-md-secondary-container);
-   color: var(--color-md-on-secondary-container);
+  background: var(--color-md-secondary-container);
+  color: var(--color-md-on-secondary-container);
 }
 
 .btn-tonal:hover {
-   background: color-mix(in srgb, var(--color-md-secondary-container) 90%, white);
+  background: color-mix(
+    in srgb,
+    var(--color-md-secondary-container) 90%,
+    white
+  );
 }
 
 /* Outlined — borders only */
 .btn-outlined {
-   background: transparent;
-   color: var(--color-md-primary);
-   border: 1px solid var(--color-md-outline);
+  background: transparent;
+  color: var(--color-md-primary);
+  border: 1px solid var(--color-md-outline);
 }
 
 .btn-outlined:hover {
-   background: var(--color-md-primary-container);
-   border-color: var(--color-md-primary);
+  background: var(--color-md-primary-container);
+  border-color: var(--color-md-primary);
 }
 
 /* Danger — destructive actions (cancel trip) */
 .btn-danger {
-   background: transparent;
-   color: var(--color-md-on-surface);
-   border: 1px solid var(--color-md-outline);
+  background: transparent;
+  color: var(--color-md-on-surface);
+  border: 1px solid var(--color-md-outline);
 }
 
 .btn-danger:hover {
-   background: #FFD8E4; /* Tertiary container for danger */
-   color: #31111D; /* On tertiary container */
-   border-color: #7D5260;
+  background: #ffd8e4; /* Tertiary container for danger */
+  color: #31111d; /* On tertiary container */
+  border-color: #7d5260;
 }
 
 /* Extended FAB */
 .fab-extended {
-   background: var(--color-md-tertiary);
-   color: white;
-   border-radius: var(--radius-md); /* 16px */
-   height: 56px;
-   padding: 0 24px;
-   display: inline-flex;
-   align-items: center;
-   justify-content: center;
-   gap: 12px;
-   font: var(--type-label-medium);
-   box-shadow: var(--shadow-elevation-2);
-   border: none;
-   cursor: pointer;
-   transition: box-shadow var(--duration-medium) var(--ease-standard),
-               transform var(--duration-spring) var(--ease-spring);
+  background: var(--color-md-tertiary);
+  color: white;
+  border-radius: var(--radius-md); /* 16px */
+  height: 56px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font: var(--type-label-medium);
+  box-shadow: var(--shadow-elevation-2);
+  border: none;
+  cursor: pointer;
+  transition:
+    box-shadow var(--duration-medium) var(--ease-standard),
+    transform var(--duration-spring) var(--ease-spring);
 }
 
 .fab-extended:hover {
-   box-shadow: var(--shadow-elevation-3), var(--shadow-glow-tertiary);
-   transform: translateY(-2px);
+  box-shadow: var(--shadow-elevation-3), var(--shadow-glow-tertiary);
+  transform: translateY(-2px);
 }
 
 .fab-extended:active {
-   transform: scale(0.95);
-   transition-duration: 150ms;
+  transform: scale(0.95);
+  transition-duration: 150ms;
 }
-
 
 /* ============================================================
    CARDS — M3 Expressive
    ============================================================ */
 .card {
-   background: var(--color-md-surface-container);
-   border-radius: var(--radius-lg); /* 24px */
-   padding: 24px;
-   box-shadow: var(--shadow-elevation-1);
-   border: none;
-   transition: box-shadow var(--duration-medium) var(--ease-standard),
-               transform var(--duration-spring) var(--ease-spring),
-               background var(--duration-short) var(--ease-standard);
+  background: var(--color-md-surface-container);
+  border-radius: var(--radius-lg); /* 24px */
+  padding: 24px;
+  box-shadow: var(--shadow-elevation-1);
+  border: none;
+  transition:
+    box-shadow var(--duration-medium) var(--ease-standard),
+    transform var(--duration-spring) var(--ease-spring),
+    background var(--duration-short) var(--ease-standard);
 }
 
 /* Elevated hover lift */
 .card--elevated:hover {
-   box-shadow: var(--shadow-elevation-2);
-   transform: translateY(-2px) scale(1.01);
+  box-shadow: var(--shadow-elevation-2);
+  transform: translateY(-2px) scale(1.01);
 }
 
 .card--elevated:active {
-   transform: scale(0.97);
-   transition-duration: var(--duration-short);
+  transform: scale(0.97);
+  transition-duration: var(--duration-short);
 }
 
 /* Feature/Expressive card with asymmetric radius */
 .card--expressive {
-   border-radius: var(--radius-express-card);
+  border-radius: var(--radius-express-card);
 }
-
 
 /* ============================================================
    M3 INPUTS — Filled Text Field Style
    ============================================================ */
 .md3-input-group {
-   display: flex;
-   flex-direction: column;
-   gap: 4px;
-   margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
 }
 
 .md3-label {
-   font: var(--type-body-medium);
-   color: var(--color-md-on-surface-variant);
-   margin-left: 12px;
+  font: var(--type-body-medium);
+  color: var(--color-md-on-surface-variant);
+  margin-left: 12px;
 }
 
-.md3-input, .form-input {
-   appearance: none;
-   width: 100%;
-   height: 56px;
-   padding: 16px;
-   background: var(--color-md-surface-container-low);
-   border: none;
-   border-radius: 12px;
-   font: var(--type-body-large);
-   color: var(--color-md-on-surface);
-   transition: box-shadow var(--duration-short) var(--ease-standard),
-               background var(--duration-short) var(--ease-standard);
+.md3-input,
+.form-input {
+  appearance: none;
+  width: 100%;
+  height: 56px;
+  padding: 16px;
+  background: var(--color-md-surface-container-low);
+  border: none;
+  border-radius: 12px;
+  font: var(--type-body-large);
+  color: var(--color-md-on-surface);
+  transition:
+    box-shadow var(--duration-short) var(--ease-standard),
+    background var(--duration-short) var(--ease-standard);
 }
 
-.md3-input::placeholder, .form-input::placeholder {
-   color: var(--color-md-on-surface-variant);
+.md3-input::placeholder,
+.form-input::placeholder {
+  color: var(--color-md-on-surface-variant);
 }
 
-.md3-input:focus, .form-input:focus {
-   outline: none;
-   box-shadow: 0 0 0 2px var(--color-md-primary);
-   background: var(--color-md-surface-container);
+.md3-input:focus,
+.form-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-md-primary);
+  background: var(--color-md-surface-container);
 }
 
 /* Custom Datetime Expressive Styles */
 .md3-input-group.datetime-input-group {
-   position: relative;
+  position: relative;
 }
 
 .md3-input.datetime-expressive {
-   padding-right: 48px;
-   font-family: inherit;
+  padding-right: 48px;
+  font-family: inherit;
 }
 
 /* Hide default calendar icon but stretch its click target over the custom icon */
 .md3-input.datetime-expressive::-webkit-calendar-picker-indicator {
-   position: absolute;
-   right: 0;
-   bottom: 0;
-   width: 56px; /* give it a good width to be clickable */
-   height: 56px;
-   opacity: 0;
-   cursor: pointer;
-   z-index: 2;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 56px; /* give it a good width to be clickable */
+  height: 56px;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
 }
 
 .datetime-icon {
-   position: absolute;
-   right: 16px;
-   bottom: 28px;
-   transform: translateY(50%);
-   color: var(--color-md-primary);
-   pointer-events: none;
-   z-index: 1;
-   display: flex;
-   align-items: center;
-   justify-content: center;
+  position: absolute;
+  right: 16px;
+  bottom: 28px;
+  transform: translateY(50%);
+  color: var(--color-md-primary);
+  pointer-events: none;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
 
 /* ============================================================
    MODALS / DIALOGS
    ============================================================ */
 .modal-backdrop {
-   position: fixed;
-   inset: 0;
-   z-index: 1000;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   background: rgba(28, 27, 31, 0.4);
-   backdrop-filter: blur(4px);
-   animation: md3-fade-in var(--duration-short) var(--ease-standard) both;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(28, 27, 31, 0.4);
+  backdrop-filter: blur(4px);
+  animation: md3-fade-in var(--duration-short) var(--ease-standard) both;
 }
 
 .modal {
-   background: var(--color-md-surface-container-high);
-   border-radius: var(--radius-xl);
-   padding: 24px;
-   max-width: 400px;
-   width: 90%;
-   box-shadow: var(--shadow-elevation-3);
-   animation: md3-scale-in var(--duration-medium) var(--ease-spring) both;
+  background: var(--color-md-surface-container-high);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: var(--shadow-elevation-3);
+  animation: md3-scale-in var(--duration-medium) var(--ease-spring) both;
 }
 
 .modal h3 {
-   font: var(--type-headline-large);
-   color: var(--color-md-on-surface);
-   margin-bottom: 16px;
+  font: var(--type-headline-large);
+  color: var(--color-md-on-surface);
+  margin-bottom: 16px;
 }
 
 .modal p {
-   font: var(--type-body-medium);
-   color: var(--color-md-on-surface-variant);
-   margin-bottom: 24px;
+  font: var(--type-body-medium);
+  color: var(--color-md-on-surface-variant);
+  margin-bottom: 24px;
 }
 
 .modal-actions {
-   display: flex;
-   gap: 8px;
-   justify-content: flex-end;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 /* ============================================================
    DRAG HANDLE (Expandable Bottom Sheets)
    ============================================================ */
 .drag-handle {
-   width: 48px;
-   height: 6px;
-   background: var(--color-md-outline);
-   border-radius: var(--radius-full);
-   margin: 0 auto 24px auto;
-   opacity: 0.5;
+  width: 48px;
+  height: 6px;
+  background: var(--color-md-outline);
+  border-radius: var(--radius-full);
+  margin: 0 auto 24px auto;
+  opacity: 0.5;
 }
 
 .drag-handle-wrapper {
-   width: 100%;
-   padding-top: 8px;
-   padding-bottom: 8px;
-   margin-top: -16px;
-   cursor: pointer;
-   display: flex;
-   justify-content: center;
+  width: 100%;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  margin-top: -16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
 }
 
 @media (min-width: 768px) {
-   .drag-handle-wrapper {
-      display: none;
-   }
+  .drag-handle-wrapper {
+    display: none;
+  }
 }
-
 
 /* ============================================================
    STATUS BANNER
    ============================================================ */
 .status-banner {
-   position: fixed;
-   top: 16px;
-   /* Center horizontally but stay within safe viewport on mobile */
-   left: 50%;
-   transform: translateX(-50%);
-   z-index: 2000;
-   display: flex;
-   align-items: flex-start;
-   gap: 12px;
-   padding: 12px 20px;
-   border-radius: var(--radius-lg);
-   background: var(--color-md-on-surface);
-   color: var(--color-md-surface);
-   box-shadow: var(--shadow-elevation-3);
-   animation: md3-slide-in-top var(--duration-spring) var(--ease-spring) both;
-   /* Constrain width so it never overflows on narrow screens */
-   max-width: min(420px, calc(100vw - 32px));
-   width: max-content;
-   border: 1px solid rgba(255, 255, 255, 0.1);
-   /* Ensure text wraps rather than clipping */
-   word-break: break-word;
-   white-space: normal;
+  position: fixed;
+  top: 16px;
+  /* Center horizontally but stay within safe viewport on mobile */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--color-md-on-surface);
+  color: var(--color-md-surface);
+  box-shadow: var(--shadow-elevation-3);
+  animation: md3-slide-in-top var(--duration-spring) var(--ease-spring) both;
+  /* Constrain width so it never overflows on narrow screens */
+  max-width: min(420px, calc(100vw - 32px));
+  width: max-content;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* Ensure text wraps rather than clipping */
+  word-break: break-word;
+  white-space: normal;
 }
 
-.status-banner--info { background: var(--color-md-secondary-container); color: var(--color-md-on-secondary-container); border-color: rgba(0,0,0,0.1); }
-.status-banner--error { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
-.status-banner--warning { background: var(--color-md-primary); color: #422006; border-color: rgba(0,0,0,0.1); }
-.status-banner--success { background: #dcfce7; color: #166534; border-color: #86efac; }
+.status-banner--info {
+  background: var(--color-md-secondary-container);
+  color: var(--color-md-on-secondary-container);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+.status-banner--error {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+.status-banner--warning {
+  background: var(--color-md-primary);
+  color: #422006;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+.status-banner--success {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
 
 .status-banner-icon {
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .status-banner-message {
-   font: var(--type-body-medium);
-   font-weight: 500;
-   flex-grow: 1;
+  font: var(--type-body-medium);
+  font-weight: 500;
+  flex-grow: 1;
 }
 
 .status-banner-close {
-   background: transparent;
-   border: none;
-   color: inherit;
-   opacity: 0.7;
-   cursor: pointer;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   padding: 4px;
-   border-radius: 50%;
-   transition: background 0.2s, opacity 0.2s;
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition:
+    background 0.2s,
+    opacity 0.2s;
 }
 
 .status-banner-close:hover {
-   background: rgba(0, 0, 0, 0.05);
-   opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
+  opacity: 1;
 }
-
 
 /* ============================================================
    LOADING SPINNER
    ============================================================ */
 .loading-state {
-   display: flex;
-   flex-direction: column;
-   align-items: center;
-   gap: 16px;
-   padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
 }
 
 .loading-spinner {
-   width: 48px;
-   height: 48px;
-   border-radius: 50%;
-   border: 4px solid var(--color-md-surface-container-high);
-   border-top-color: var(--color-md-primary);
-   animation: md3-spin 1s linear infinite;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 4px solid var(--color-md-surface-container-high);
+  border-top-color: var(--color-md-primary);
+  animation: md3-spin 1s linear infinite;
 }
-
 
 /* ============================================================
    RIDE REQUEST FORM (Inside Glass Card)
    ============================================================ */
 .ride-request-form {
-   display: flex;
-   flex-direction: column;
-   gap: 16px;
-   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
 }
 
 .form-title {
-   font: var(--type-display-large);
-   color: var(--color-md-on-surface);
-   margin-bottom: 8px;
+  font: var(--type-display-large);
+  color: var(--color-md-on-surface);
+  margin-bottom: 8px;
 }
 
 .form-group {
-   display: flex;
-   flex-direction: column;
-   gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .form-error {
-   font: var(--type-body-medium);
-   color: var(--color-md-on-tertiary-container);
-   padding: 8px 12px;
-   background: var(--color-md-tertiary-container);
-   border-radius: var(--radius-xs);
-   margin-top: 4px;
+  font: var(--type-body-medium);
+  color: var(--color-md-on-tertiary-container);
+  padding: 8px 12px;
+  background: var(--color-md-tertiary-container);
+  border-radius: var(--radius-xs);
+  margin-top: 4px;
 }
-
 
 /* ============================================================
    LOCATION INPUT DROP DOWN
    ============================================================ */
 .location-input-wrapper {
-   position: relative;
-   display: flex;
-   flex-direction: column;
-   gap: 4px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .location-dropdown {
-   position: absolute;
-   top: 100%;
-   left: 0;
-   right: 0;
-   z-index: 50;
-   background: var(--color-md-surface-container-high);
-   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-   margin-top: -2px;
-   max-height: 240px;
-   overflow-y: auto;
-   box-shadow: var(--shadow-elevation-2);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--color-md-surface-container-high);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  margin-top: -2px;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: var(--shadow-elevation-2);
 }
 
 .location-dropdown-item {
-   display: block;
-   width: 100%;
-   padding: 16px;
-   background: transparent;
-   border: none;
-   border-bottom: 1px solid var(--color-md-outline);
-   text-align: left;
-   font: var(--type-body-large);
-   color: var(--color-md-on-surface);
-   cursor: pointer;
-   transition: background var(--duration-short) var(--ease-standard);
+  display: block;
+  width: 100%;
+  padding: 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-md-outline);
+  text-align: left;
+  font: var(--type-body-large);
+  color: var(--color-md-on-surface);
+  cursor: pointer;
+  transition: background var(--duration-short) var(--ease-standard);
 }
 
 .location-dropdown-item:hover {
-   background: var(--color-md-surface-container-highest);
+  background: var(--color-md-surface-container-highest);
 }
-
 
 /* ============================================================
    PASSENGER LIST
    ============================================================ */
 .passenger-list {
-   display: flex;
-   flex-direction: column;
-   gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .passenger-item {
-   display: flex;
-   align-items: center;
-   gap: 12px;
-   padding: 8px 12px;
-   border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-full);
 }
 
 .passenger-avatar {
-   width: 40px;
-   height: 40px;
-   border-radius: 50%;
-   background: var(--color-md-secondary-container);
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   font: var(--type-title-large);
-   color: var(--color-md-on-secondary-container);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-md-secondary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: var(--type-title-large);
+  color: var(--color-md-on-secondary-container);
 }
 
 .passenger-name {
-   font: var(--type-body-large);
-   color: var(--color-md-on-surface);
+  font: var(--type-body-large);
+  color: var(--color-md-on-surface);
 }
-
 
 /* ============================================================
    STOP LIST
    ============================================================ */
 .stop-list {
-   display: flex;
-   flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .stop-item {
-   display: flex;
-   align-items: flex-start;
-   gap: 16px;
-   padding: 12px 0;
-   position: relative;
-   padding-left: 28px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 12px 0;
+  position: relative;
+  padding-left: 28px;
 }
 
 .stop-item::before {
-   content: '';
-   position: absolute;
-   left: 10px;
-   top: 50%;
-   transform: translateY(-50%);
-   width: 12px;
-   height: 12px;
-   border-radius: 50%;
-   background: var(--color-md-primary-container);
-   border: 3px solid var(--color-md-primary);
-   z-index: 1;
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-md-primary-container);
+  border: 3px solid var(--color-md-primary);
+  z-index: 1;
 }
 
 .stop-item::after {
-   content: '';
-   position: absolute;
-   left: 15px;
-   top: 0;
-   width: 2px;
-   height: 100%;
-   background: var(--color-md-outline);
-   z-index: 0;
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--color-md-outline);
+  z-index: 0;
 }
 
-.stop-item:first-child::after { top: 50%; height: 50%; }
-.stop-item:last-child::after { height: 50%; }
+.stop-item:first-child::after {
+  top: 50%;
+  height: 50%;
+}
+.stop-item:last-child::after {
+  height: 50%;
+}
 
 .stop-type {
-   font: var(--type-label-medium);
-   padding: 4px 12px;
-   border-radius: var(--radius-full);
-   white-space: nowrap;
+  font: var(--type-label-medium);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
 }
 
-.stop-type--pickup { background: var(--color-md-primary-container); color: var(--color-md-on-primary-container); }
-.stop-type--drop { background: var(--color-md-secondary-container); color: var(--color-md-on-secondary-container); }
+.stop-type--pickup {
+  background: var(--color-md-primary-container);
+  color: var(--color-md-on-primary-container);
+}
+.stop-type--drop {
+  background: var(--color-md-secondary-container);
+  color: var(--color-md-on-secondary-container);
+}
 
 .stop-coords {
-   font: var(--type-body-medium);
-   color: var(--color-md-on-surface-variant);
-   flex: 1;
+  font: var(--type-body-medium);
+  color: var(--color-md-on-surface-variant);
+  flex: 1;
 }
 
 /* ============================================================
    TRIP CARD
    ============================================================ */
 .trip-card {
-   background: var(--color-md-surface-container);
-   border-radius: var(--radius-express-card);
-   padding: 24px;
-   display: flex;
-   flex-direction: column;
-   gap: 20px;
-   box-shadow: var(--shadow-elevation-1);
+  background: var(--color-md-surface-container);
+  border-radius: var(--radius-express-card);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: var(--shadow-elevation-1);
 }
 
 .trip-status {
-   font: var(--type-label-medium);
-   text-transform: uppercase;
-   padding: 6px 16px;
-   border-radius: var(--radius-full);
-   background: var(--color-md-secondary-container);
-   color: var(--color-md-on-secondary-container);
-   display: inline-block;
+  font: var(--type-label-medium);
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  background: var(--color-md-secondary-container);
+  color: var(--color-md-on-secondary-container);
+  display: inline-block;
 }
 
 .trip-distance {
-   font: var(--type-body-medium);
-   color: var(--color-md-on-surface-variant);
+  font: var(--type-body-medium);
+  color: var(--color-md-on-surface-variant);
 }
 
 .trip-eta-value {
-   font: var(--type-display-large);
-   color: var(--color-md-primary);
+  font: var(--type-display-large);
+  color: var(--color-md-primary);
 }
 
 /* ============================================================
@@ -604,22 +637,30 @@
   cursor: pointer;
 
   background: var(--color-md-surface);
-  color: var(--color-md-primary, #0A56D1);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.20), 0 0 0 1px rgba(0,0,0,0.06);
+  color: var(--color-md-primary, #0a56d1);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
 
-  font: var(--type-label-medium, 500 0.875rem/1 'Inter', sans-serif);
+  font: var(--type-label-medium, 500 0.875rem/1 "Inter", sans-serif);
   font-weight: 600;
   white-space: nowrap;
 
   /* Slide in from the right edge */
-  animation: recenter-slide-in 220ms var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
-  transition: box-shadow 150ms ease, transform 150ms ease, background 150ms ease;
+  animation: recenter-slide-in 220ms
+    var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+  transition:
+    box-shadow 150ms ease,
+    transform 150ms ease,
+    background 150ms ease;
 }
 
 .recenter-fab:hover {
-  background: var(--color-md-primary-container, #D3E4FF);
+  background: var(--color-md-primary-container, #d3e4ff);
   color: var(--color-md-on-primary-container, #001849);
-  box-shadow: 0 4px 16px rgba(10, 86, 209, 0.28), 0 0 0 1px rgba(10,86,209,0.12);
+  box-shadow:
+    0 4px 16px rgba(10, 86, 209, 0.28),
+    0 0 0 1px rgba(10, 86, 209, 0.12);
   transform: translateY(-1px);
 }
 

@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
-import { useApp } from '../context/AppContext';
-import { useAuth } from '../context/AuthContext';
-import { getCurrentRideRequest } from '../api/rideRequests';
-import { getCurrentTrip } from '../api/trips';
+import { useEffect } from "react";
+import { useApp } from "../context/AppContext";
+import { useAuth } from "../context/AuthContext";
+import { getCurrentRideRequest } from "../api/rideRequests";
+import { getCurrentTrip } from "../api/trips";
 
 export function useAppInit() {
   const { state, dispatch } = useApp();
@@ -15,7 +15,10 @@ export function useAppInit() {
     // If there is no authenticated user, complete initialization immediately
     if (!isAuthenticated) {
       if (state.loading.init) {
-        dispatch({ type: 'INIT_COMPLETE', payload: { rideRequest: null, trip: null } });
+        dispatch({
+          type: "INIT_COMPLETE",
+          payload: { rideRequest: null, trip: null },
+        });
       }
       return;
     }
@@ -36,16 +39,19 @@ export function useAppInit() {
 
         if (!mounted) return;
 
-        dispatch({ type: 'SET_RIDE_REQUEST', payload: rideRequest });
-        dispatch({ type: 'SET_TRIP', payload: trip });
-        dispatch({ type: 'INIT_COMPLETE', payload: { rideRequest, trip } });
+        dispatch({ type: "SET_RIDE_REQUEST", payload: rideRequest });
+        dispatch({ type: "SET_TRIP", payload: trip });
+        dispatch({ type: "INIT_COMPLETE", payload: { rideRequest, trip } });
       } catch (err) {
-        console.error('Init failed:', err);
+        console.error("Init failed:", err);
 
         // Fail-safe → don’t block UI, normalize to empty source state
-        dispatch({ type: 'SET_RIDE_REQUEST', payload: null });
-        dispatch({ type: 'SET_TRIP', payload: null });
-        dispatch({ type: 'INIT_COMPLETE', payload: { rideRequest: null, trip: null } });
+        dispatch({ type: "SET_RIDE_REQUEST", payload: null });
+        dispatch({ type: "SET_TRIP", payload: null });
+        dispatch({
+          type: "INIT_COMPLETE",
+          payload: { rideRequest: null, trip: null },
+        });
       }
     }
 
@@ -54,11 +60,5 @@ export function useAppInit() {
     return () => {
       mounted = false;
     };
-  }, [
-    isAuthenticated,
-    authLoading,
-    user?.id,
-    state.loading.init,
-    dispatch,
-  ]);
+  }, [isAuthenticated, authLoading, user?.id, state.loading.init, dispatch]);
 }

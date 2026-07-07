@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
-import { useApp } from '../context/AppContext';
-import { useAuth } from '../context/AuthContext';
-import { getCurrentRideRequest } from '../api/rideRequests';
-import { getCurrentTrip } from '../api/trips';
+import { useEffect, useRef } from "react";
+import { useApp } from "../context/AppContext";
+import { useAuth } from "../context/AuthContext";
+import { getCurrentRideRequest } from "../api/rideRequests";
+import { getCurrentTrip } from "../api/trips";
 
 // Poll ride requests only when UI lifecycle is PENDING or MATCHED.
 export function useRideRequestPoller() {
@@ -18,7 +18,7 @@ export function useRideRequestPoller() {
     if (!userId) return;
 
     // Activate only during PENDING or MATCHED lifecycle states
-    if (uiState !== 'PENDING' && uiState !== 'MATCHED') return;
+    if (uiState !== "PENDING" && uiState !== "MATCHED") return;
 
     let mounted = true;
     let hasError = false;
@@ -29,42 +29,53 @@ export function useRideRequestPoller() {
         if (!mounted) return;
 
         if (!updated && state.rideRequest) {
-          dispatch({ type: 'SET_RIDE_REQUEST', payload: null });
+          dispatch({ type: "SET_RIDE_REQUEST", payload: null });
           return;
         }
 
-        if (updated && JSON.stringify(updated) !== JSON.stringify(state.rideRequest)) {
-          dispatch({ type: 'SET_RIDE_REQUEST', payload: updated });
-          
-          if (state.rideRequest && state.rideRequest.status === 'PENDING' && updated.status === 'CANCELLED') {
+        if (
+          updated &&
+          JSON.stringify(updated) !== JSON.stringify(state.rideRequest)
+        ) {
+          dispatch({ type: "SET_RIDE_REQUEST", payload: updated });
+
+          if (
+            state.rideRequest &&
+            state.rideRequest.status === "PENDING" &&
+            updated.status === "CANCELLED"
+          ) {
             dispatch({
-              type: 'SET_NOTIFICATION',
+              type: "SET_NOTIFICATION",
               payload: {
-                type: 'warning',
-                message: 'Your ride request was cancelled because the preferred time has passed without a match.'
-              }
+                type: "warning",
+                message:
+                  "Your ride request was cancelled because the preferred time has passed without a match.",
+              },
             });
           }
         }
 
-        if (uiState === 'MATCHED' && !state.trip) {
+        if (uiState === "MATCHED" && !state.trip) {
           const currentTrip = await getCurrentTrip(userId);
           if (!mounted) return;
           if (currentTrip) {
-            dispatch({ type: 'SET_TRIP', payload: currentTrip });
+            dispatch({ type: "SET_TRIP", payload: currentTrip });
           }
         }
-        
+
         if (hasError) {
           hasError = false;
-          dispatch({ type: 'CLEAR_NOTIFICATION' });
+          dispatch({ type: "CLEAR_NOTIFICATION" });
         }
       } catch (err) {
-        console.error('RideRequest poll failed:', err);
+        console.error("RideRequest poll failed:", err);
         hasError = true;
         dispatch({
-          type: 'SET_NOTIFICATION',
-          payload: { type: 'error', message: 'Connection interrupted — retrying...' }
+          type: "SET_NOTIFICATION",
+          payload: {
+            type: "error",
+            message: "Connection interrupted — retrying...",
+          },
         });
       }
     }
@@ -82,11 +93,5 @@ export function useRideRequestPoller() {
       }
     };
     // Depend on primitives only to avoid unnecessary interval recreation
-  }, [
-    userId,
-    uiState,
-    state.rideRequest,
-    state.trip,
-    dispatch,
-  ]);
+  }, [userId, uiState, state.rideRequest, state.trip, dispatch]);
 }

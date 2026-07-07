@@ -4,7 +4,8 @@
   width: 100vw;
   overflow: hidden;
   background-color: #1a1a1a;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), url('/auth-bg.png');
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), url("/auth-bg.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -16,7 +17,8 @@
   z-index: 0;
 }
 
-.auth-blur-1, .auth-blur-2 {
+.auth-blur-1,
+.auth-blur-2 {
   display: none;
 }
 
@@ -109,8 +111,9 @@
   border-radius: 12px;
   font: var(--type-body-large);
   color: var(--color-md-on-surface);
-  transition: box-shadow var(--duration-short) var(--ease-standard),
-              background var(--duration-short) var(--ease-standard);
+  transition:
+    box-shadow var(--duration-short) var(--ease-standard),
+    background var(--duration-short) var(--ease-standard);
 }
 
 .form-group input:focus {
@@ -148,7 +151,9 @@
   justify-content: center;
   padding: 8px;
   border-radius: 50%;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .password-toggle-btn:hover {
@@ -170,8 +175,9 @@
   box-shadow: var(--shadow-elevation-2);
   border: none;
   cursor: pointer;
-  transition: box-shadow var(--duration-medium) var(--ease-standard),
-              transform var(--duration-spring) var(--ease-spring);
+  transition:
+    box-shadow var(--duration-medium) var(--ease-standard),
+    transform var(--duration-spring) var(--ease-spring);
   width: 100%;
   margin-top: 16px;
 }
@@ -247,8 +253,9 @@
   border: none;
   border-radius: 12px;
   color: var(--color-md-on-surface);
-  transition: box-shadow var(--duration-short) var(--ease-standard),
-              background var(--duration-short) var(--ease-standard);
+  transition:
+    box-shadow var(--duration-short) var(--ease-standard),
+    background var(--duration-short) var(--ease-standard);
 }
 
 .otp-input:focus {

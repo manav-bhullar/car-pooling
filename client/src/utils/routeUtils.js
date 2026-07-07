@@ -1,32 +1,32 @@
 export const ROUTES = {
-  ROOT: '/',
-  HOME: '/home',
-  WAITING: '/waiting',
-  TRIP_BASE: '/trip',
-  SUMMARY_BASE: '/summary',
-  ADMIN: '/admin',
+  ROOT: "/",
+  HOME: "/home",
+  WAITING: "/waiting",
+  TRIP_BASE: "/trip",
+  SUMMARY_BASE: "/summary",
+  ADMIN: "/admin",
 };
 
 const ALLOWED_UI_STATES = {
-  [ROUTES.HOME]: ['IDLE', 'CANCELLED'],
-  [ROUTES.WAITING]: ['PENDING'],
-  [ROUTES.TRIP_BASE]: ['MATCHED', 'TRIP_ACTIVE'],
-  [ROUTES.SUMMARY_BASE]: ['TRIP_COMPLETED'],
+  [ROUTES.HOME]: ["IDLE", "CANCELLED"],
+  [ROUTES.WAITING]: ["PENDING"],
+  [ROUTES.TRIP_BASE]: ["MATCHED", "TRIP_ACTIVE"],
+  [ROUTES.SUMMARY_BASE]: ["TRIP_COMPLETED"],
   [ROUTES.ADMIN]: null,
   [ROUTES.ROOT]: null,
 };
 
 export function getRouteForUiState(uiState, tripId) {
   switch (uiState) {
-    case 'IDLE':
-    case 'CANCELLED':
+    case "IDLE":
+    case "CANCELLED":
       return ROUTES.HOME;
-    case 'PENDING':
+    case "PENDING":
       return ROUTES.WAITING;
-    case 'MATCHED':
-    case 'TRIP_ACTIVE':
+    case "MATCHED":
+    case "TRIP_ACTIVE":
       return tripId ? `${ROUTES.TRIP_BASE}/${tripId}` : ROUTES.TRIP_BASE;
-    case 'TRIP_COMPLETED':
+    case "TRIP_COMPLETED":
       return tripId ? `${ROUTES.SUMMARY_BASE}/${tripId}` : ROUTES.SUMMARY_BASE;
     default:
       return ROUTES.HOME;
@@ -38,7 +38,10 @@ export function getRouteKey(pathname) {
   if (pathname === ROUTES.HOME) return ROUTES.HOME;
   if (pathname === ROUTES.WAITING) return ROUTES.WAITING;
   if (pathname === ROUTES.ADMIN) return ROUTES.ADMIN;
-  if (pathname.startsWith(`${ROUTES.TRIP_BASE}/`) || pathname === ROUTES.TRIP_BASE) {
+  if (
+    pathname.startsWith(`${ROUTES.TRIP_BASE}/`) ||
+    pathname === ROUTES.TRIP_BASE
+  ) {
     return ROUTES.TRIP_BASE;
   }
   if (pathname.startsWith(`${ROUTES.SUMMARY_BASE}/`)) {
@@ -77,11 +80,13 @@ export function isRouteValidForUiState(pathname, state) {
   }
 
   if (routeKey === ROUTES.TRIP_BASE && !state.trip?.id) {
-    return state.uiState === 'MATCHED';
+    return state.uiState === "MATCHED";
   }
 
   if (routeKey === ROUTES.SUMMARY_BASE) {
-    return state.trip?.id ? isSummaryRouteMatch(pathname, state.trip.id) : false;
+    return state.trip?.id
+      ? isSummaryRouteMatch(pathname, state.trip.id)
+      : false;
   }
 
   return true;
