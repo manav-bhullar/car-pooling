@@ -291,7 +291,7 @@ export default function RideRequestForm({ onLocationSelect }) {
             type: 'SET_NOTIFICATION',
             payload: {
               type: 'info',
-              message: 'You already have an active ride request.',
+              message: 'You already have an active ride request. View it here.',
             },
           });
           setLoading(false);

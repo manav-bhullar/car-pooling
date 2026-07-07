@@ -78,6 +78,10 @@ function reducer(state, action) {
           ...state,
           trip: null,
           uiState: 'PENDING',
+          notification: {
+            type: 'warning',
+            message: "A co-rider cancelled. You've been returned to the queue with your original search priority — you won't lose your place."
+          }
         };
       }
 

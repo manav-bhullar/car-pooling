@@ -21,6 +21,7 @@ export function useRideRequestPoller() {
     if (uiState !== 'PENDING' && uiState !== 'MATCHED') return;
 
     let mounted = true;
+    let hasError = false;
 
     async function poll() {
       try {
@@ -53,8 +54,18 @@ export function useRideRequestPoller() {
             dispatch({ type: 'SET_TRIP', payload: currentTrip });
           }
         }
+        
+        if (hasError) {
+          hasError = false;
+          dispatch({ type: 'CLEAR_NOTIFICATION' });
+        }
       } catch (err) {
         console.error('RideRequest poll failed:', err);
+        hasError = true;
+        dispatch({
+          type: 'SET_NOTIFICATION',
+          payload: { type: 'error', message: 'Connection interrupted — retrying...' }
+        });
       }
     }
 
