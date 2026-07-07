@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
 import './TopNav.css';
 
 export default function TopNav() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { state } = useApp();
   const location = useLocation();
   const [showModal, setShowModal] = useState(false);
 
@@ -16,6 +18,15 @@ export default function TopNav() {
   return (
     <>
       <div className="top-nav">
+        {state.uiState === 'IDLE' ? (
+          <Link to="/home" className="top-nav-brand-container glass-card" style={{ textDecoration: 'none' }}>
+             <span style={{ fontWeight: '800', fontSize: '1.25rem', color: 'var(--color-md-primary)', letterSpacing: '-0.5px' }}>Floq</span>
+          </Link>
+        ) : (
+          <div className="top-nav-brand-container glass-card">
+             <span style={{ fontWeight: '800', fontSize: '1.25rem', color: 'var(--color-md-primary)', letterSpacing: '-0.5px' }}>Floq</span>
+          </div>
+        )}
       <div className="user-profile glass-card">
         <div className="user-avatar">
           {user?.name?.charAt(0).toUpperCase() || 'U'}

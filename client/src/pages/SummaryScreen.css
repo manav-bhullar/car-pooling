@@ -1,49 +1,47 @@
 .summary-screen-expressive {
-   min-height: 100vh;
-   display: flex;
-   flex-direction: column;
-   align-items: center;
-   justify-content: center;
    position: relative;
+   min-height: 100vh;
+   width: 100vw;
    overflow: hidden;
-   background: var(--color-md-surface);
-   padding: 24px;
 }
 
 /* ============================================================
-   ACTIVE BLUR SHAPES (Pulse + Drift)
+   MAP CONTAINER (Full Bleed Wallpaper)
    ============================================================ */
-@keyframes pulse-drift {
-   0% { transform: translate(0, 0) scale(1); opacity: 0.15; }
-   50% { transform: translate(15px, -20px) scale(1.1); opacity: 0.25; }
-   100% { transform: translate(0, 0) scale(1); opacity: 0.15; }
+.summary-map-container {
+   position: absolute;
+   inset: 0;
+   z-index: 0;
 }
 
-.summary-blur-1 {
-   width: 60vw;
-   height: 60vw;
-   background: var(--color-md-primary);
-   top: 10%;
-   right: -10%;
-   animation: pulse-drift 8s ease-in-out infinite;
+.summary-map-container .trip-map {
+   height: 100% !important;
 }
 
-.summary-blur-2 {
-   width: 50vw;
-   height: 50vw;
-   background: var(--color-md-tertiary);
-   bottom: 10%;
-   left: -10%;
-   animation: pulse-drift 10s ease-in-out infinite reverse;
+/* ============================================================
+   CONFETTI ANIMATION
+   ============================================================ */
+.confetti-container {
+   position: absolute;
+   inset: 0;
+   pointer-events: none;
+   z-index: 5;
+   overflow: hidden;
 }
 
-.summary-blur-3 {
-   width: 40vw;
-   height: 40vw;
-   background: var(--color-md-secondary);
-   top: 40%;
-   left: 30%;
-   animation: pulse-drift 12s ease-in-out infinite;
+.confetti-piece {
+   position: absolute;
+   bottom: -20px;
+   width: 12px;
+   height: 12px;
+   border-radius: 50%;
+   opacity: 0.6;
+   animation: confetti-float linear forwards;
+}
+
+@keyframes confetti-float {
+   0% { transform: translateY(0) scale(0.8); opacity: 0.8; }
+   100% { transform: translateY(-120vh) scale(1.2); opacity: 0; }
 }
 
 /* ============================================================
@@ -78,28 +76,50 @@
 .summary-content-layer {
    position: relative;
    z-index: 10;
+   min-height: 100vh;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   padding: 24px;
+   pointer-events: none; /* Let map be clickable underneath */
+}
+
+/* ============================================================
+   THE GLASS RECEIPT CARD
+   ============================================================ */
+.summary-glass-card {
+   pointer-events: auto; /* Re-enable clicks */
+   width: 100%;
+   max-width: 440px;
+   background: rgba(255, 255, 255, 0.85);
+   backdrop-filter: blur(16px);
+   -webkit-backdrop-filter: blur(16px);
+   border-radius: var(--radius-2xl);
+   border: 1px solid rgba(0,0,0,0.1);
+   box-shadow: 0 16px 48px rgba(0,0,0,0.15);
+   padding: 40px 32px;
    display: flex;
    flex-direction: column;
    align-items: center;
    text-align: center;
-   max-width: 600px;
-   width: 100%;
+   animation: md3-fade-in var(--duration-spring) var(--ease-spring) both;
 }
 
 /* ============================================================
-   COMPLETION MARK (Tertiary Container Overshoot)
+   COMPLETION MARK (Mint Green Success)
    ============================================================ */
 .summary-completion-mark {
-   width: 80px;
-   height: 80px;
+   width: 72px;
+   height: 72px;
    border-radius: 50%;
-   background: var(--color-md-tertiary-container);
-   color: var(--color-md-on-tertiary-container);
+   background: #10B981; /* Emerald Green */
+   color: #ffffff;
    display: flex;
    align-items: center;
    justify-content: center;
    margin-bottom: 24px;
-   box-shadow: var(--shadow-elevation-2);
+   box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
    animation: mark-overshoot var(--duration-long) var(--ease-overshoot) both;
 }
 
@@ -113,6 +133,7 @@
    ============================================================ */
 .summary-title {
    font: var(--type-display-large);
+   font-weight: 510;
    color: var(--color-md-on-surface);
    margin-bottom: 8px;
 }
@@ -121,35 +142,6 @@
    font: var(--type-body-large);
    color: var(--color-md-on-surface-variant);
    margin-bottom: 48px;
-}
-
-/* ============================================================
-   STATS CARD
-   ============================================================ */
-.summary-stats-card {
-   background: var(--color-md-primary-container);
-   width: 100%;
-   margin-bottom: 48px;
-}
-
-.summary-stats-card .trip-card {
-   background: transparent;
-   box-shadow: none;
-   padding: 0;
-   color: var(--color-md-on-primary-container);
-}
-
-/* Ensure text inside the primary container is legible */
-.summary-stats-card .trip-distance,
-.summary-stats-card .trip-status,
-.summary-stats-card p,
-.summary-stats-card h3 {
-   color: var(--color-md-on-primary-container) !important;
-}
-
-.summary-stats-card .trip-status {
-   background: var(--color-md-on-primary-container);
-   color: var(--color-md-primary-container) !important;
 }
 
 /* ============================================================

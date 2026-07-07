@@ -34,6 +34,9 @@ export default function TripScreen() {
     }
   }
 
+  const isStarted = state.trip?.status === 'STARTED';
+  const driverLocation = useDriverLocation(state.trip?.id, isStarted);
+
   if (!state.trip) {
     return (
       <div className="trip-screen-loading">
@@ -46,8 +49,6 @@ export default function TripScreen() {
   const trip = state.trip;
   const me = (trip.passengers || []).find(p => p.userId === user?.id) || {};
   
-  const isStarted = trip.status === 'STARTED';
-  const driverLocation = useDriverLocation(trip.id, isStarted);
   
   const displayDistance = typeof me.distanceKm === 'number' && me.distanceKm > 0
     ? me.distanceKm
@@ -59,46 +60,62 @@ export default function TripScreen() {
 
   // Status chip styles based on M3 Expressive states
   let statusClass = "trip-status-chip--pending";
-  if (["RIDERS_MATCHED", "DRIVER_MATCHED", "STARTED"].includes(trip.status)) statusClass = "trip-status-chip--active";
-  if (trip.status === "COMPLETED") statusClass = "trip-status-chip--done";
+  const soloFare = displayDistance * 12; // Generic solo rate
+  const savings = soloFare - (me.fareShare || 0);
 
   return (
     <div className="trip-screen-expressive">
-      {/* Top 55% Full-Bleed Map */}
+      
+      {/* Map Panel (Full Bleed) */}
       <div className="trip-map-container">
         <TripMap stops={trip.stops} myRideRequestId={me.rideRequestId} driverLocation={driverLocation} />
       </div>
 
-      {/* Persistent Bottom Sheet */}
-      <div className="trip-bottom-sheet">
-        {/* Blur shape behind content */}
-        <div className="blur-shape trip-sheet-blur"></div>
-        
-        <div className="trip-sheet-content">
+      {/* Persistent Information Panel (Floating Glass Card) */}
+      <div className="trip-content-layer">
+        <div className="trip-sidebar-card">
+          
           <div className="trip-sheet-header">
             <div className={`trip-status-chip ${statusClass}`}>
               {trip.status}
             </div>
-            <h2 className="trip-headline">En route to destination</h2>
+            <h2 className="trip-headline">Your Shared Trip</h2>
           </div>
 
-          <div className="trip-eta-block">
-            <span className="trip-eta-value">{displayEtaMinutes}</span>
-            <span className="trip-eta-label">min</span>
+          {/* 1 & 2: Fare and ETA */}
+          <div className="trip-primary-stats">
+            <div>
+              <p style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.6, margin: 0, paddingBottom: '4px', color: 'var(--color-md-on-surface)' }}>Your Fare</p>
+              <h2 style={{ fontSize: '2.5rem', margin: 0, fontWeight: 800, lineHeight: 1, letterSpacing: '-1px', color: 'var(--color-md-on-surface)' }}>₹{me.fareShare?.toFixed(0) || '0'}</h2>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.6, margin: 0, paddingBottom: '4px', color: 'var(--color-md-on-surface)' }}>Est. Arrival</p>
+              <h2 style={{ fontSize: '1.75rem', margin: 0, fontWeight: 700, lineHeight: 1, color: 'var(--color-md-on-surface)' }}>{displayEtaMinutes}<span style={{ fontSize: '1rem', fontWeight: 500, marginLeft: '4px', opacity: 0.8 }}>min</span></h2>
+            </div>
           </div>
 
-          <div className="trip-driver-card glass-card">
-            <h3>Your Fare: ${me.fareShare?.toFixed(2)}</h3>
-            <p>Total Distance: {displayDistance?.toFixed(2)} km</p>
-          </div>
+          {/* 3: Value Confirmation (Mint Savings) */}
+          {savings > 0 && (
+             <div className="trip-savings-banner">
+                <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm-40-160h80v-80h-80v80Zm0-120h80v-360h-80v360Z"/></svg>
+                You saved ₹{savings.toFixed(0)} vs travelling alone!
+             </div>
+          )}
 
+          {/* 4: Co-riders */}
           <div className="trip-passengers">
-            <h3>Co-riders</h3>
             <PassengerList passengers={trip.passengers} currentUserId={user?.id} />
           </div>
 
+          {/* 5: Route Context */}
+          <div className="trip-route-context">
+             <h3 style={{ fontSize: '1rem', margin: '0 0 8px 0', fontWeight: 600, color: 'var(--color-md-on-surface)' }}>Route Summary</h3>
+             <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-md-on-surface-variant)' }}>Total Distance: {displayDistance?.toFixed(2)} km</p>
+             <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem', color: 'var(--color-md-on-surface-variant)' }}>Detour Ratio: ~{(displayDistance > 0 ? (trip.totalDistanceKm / displayDistance - 1) * 100 : 0).toFixed(0)}% added</p>
+          </div>
+
           <div className="trip-actions-row">
-            <button className="btn btn-danger" onClick={() => setShowCancelModal(true)}>Cancel</button>
+            <button className="btn btn-secondary" style={{ width: '100%', background: 'transparent', border: '1px solid var(--color-md-outline)', color: 'var(--color-md-on-surface)' }} onClick={() => setShowCancelModal(true)}>Cancel Trip</button>
           </div>
         </div>
       </div>

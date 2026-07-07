@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useMemo } from 'react';
 import { deriveUIState } from '../utils/stateUtils';
 
-const AppContext = createContext(null);
+export const AppContext = createContext(null);
 
 const initialState = {
   // Canonical source state
@@ -78,6 +78,10 @@ function reducer(state, action) {
           ...state,
           trip: null,
           uiState: 'PENDING',
+          notification: {
+            type: 'warning',
+            message: "A co-rider cancelled. You've been returned to the queue with your original search priority — you won't lose your place."
+          }
         };
       }
 

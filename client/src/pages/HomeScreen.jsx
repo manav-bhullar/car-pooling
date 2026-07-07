@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 import './HomeScreen.css';
 
 export default function HomeScreen() {
-  const { state } = useApp();
+  const { dispatch } = useApp();
   const { user } = useAuth();
   const [activeStop, setActiveStop] = useState([]);
   const [isExpanded, setIsExpanded] = useState(window.innerWidth >= 768);

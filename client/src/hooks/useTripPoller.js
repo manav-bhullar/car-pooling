@@ -26,6 +26,7 @@ export function useTripPoller() {
     if (uiState !== 'TRIP_ACTIVE') return;
 
     let mounted = true;
+    let hasError = false;
 
     async function poll() {
       try {
@@ -40,8 +41,18 @@ export function useTripPoller() {
         if (updatedTrip && JSON.stringify(updatedTrip) !== JSON.stringify(tripRef.current)) {
           dispatch({ type: 'SET_TRIP', payload: updatedTrip });
         }
+        
+        if (hasError) {
+          hasError = false;
+          dispatch({ type: 'CLEAR_NOTIFICATION' });
+        }
       } catch (err) {
         console.error('Trip poll failed:', err);
+        hasError = true;
+        dispatch({
+          type: 'SET_NOTIFICATION',
+          payload: { type: 'error', message: 'Connection interrupted — retrying...' }
+        });
       }
     }
 

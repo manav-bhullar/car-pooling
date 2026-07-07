@@ -54,6 +54,21 @@ export default function WaitingScreen() {
 
   const isMatched = state.uiState === 'MATCHED' || rideRequest.status === 'RIDERS_MATCHED';
 
+  const getPrimaryMessage = () => {
+    if (isMatched) return 'Match found!';
+    if (elapsed <= 10) return 'Setting up your ride request...';
+    if (elapsed <= 60) return 'Searching for compatible riders...';
+    if (elapsed <= 120) return 'Still searching — checked once so far';
+    return "We're still looking. This can take a few minutes.";
+  };
+
+  const getSecondaryMessage = () => {
+    if (isMatched) return 'Loading your trip details...';
+    if (elapsed > 10 && elapsed <= 60) return 'Matching runs every 60 seconds';
+    if (elapsed > 60 && elapsed <= 120) return '60-second cycles continue automatically';
+    return null;
+  };
+
   return (
     <div className={`waiting-screen-expressive ${isMatched ? 'is-matched' : ''}`}>
 
@@ -81,9 +96,9 @@ export default function WaitingScreen() {
           </div>
 
           <h1 className="waiting-primary-msg">
-            {isMatched ? 'Match found!' : 'Finding your ride...'}
+            {getPrimaryMessage()}
           </h1>
-          {isMatched && <p className="waiting-secondary-msg">Loading your trip details...</p>}
+          {getSecondaryMessage() && <p className="waiting-secondary-msg">{getSecondaryMessage()}</p>}
 
           <div className="waiting-status-block" onClick={() => !isExpanded && setIsExpanded(true)} style={{ cursor: !isExpanded ? 'pointer' : 'default' }}>
             <p className="waiting-timer">Waiting for {formatElapsed(elapsed)}</p>

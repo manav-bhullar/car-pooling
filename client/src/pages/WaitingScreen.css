@@ -91,6 +91,7 @@
    ============================================================ */
 .waiting-primary-msg {
    font: var(--type-display-large);
+   font-weight: 510;
    color: var(--color-md-on-surface);
    margin-bottom: 12px;
    transition: color 200ms var(--ease-standard);
