@@ -1,5 +1,5 @@
-import { createContext, useContext, useReducer, useMemo } from 'react';
-import { deriveUIState } from '../utils/stateUtils';
+import { createContext, useContext, useReducer, useMemo } from "react";
+import { deriveUIState } from "../utils/stateUtils";
 
 export const AppContext = createContext(null);
 
@@ -9,7 +9,7 @@ const initialState = {
   trip: null,
 
   // Derived (kept for backward compatibility until next pass)
-  uiState: 'IDLE',
+  uiState: "IDLE",
 
   // Loading / error buckets required by canonical shape
   loading: {
@@ -31,7 +31,7 @@ function init(initial) {
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'INIT_COMPLETE': {
+    case "INIT_COMPLETE": {
       const { rideRequest, trip } = action.payload;
 
       return {
@@ -44,7 +44,7 @@ function reducer(state, action) {
       };
     }
 
-    case 'SET_RIDE_REQUEST': {
+    case "SET_RIDE_REQUEST": {
       const rideRequest = action.payload;
 
       if (state.isInitializing) {
@@ -61,7 +61,7 @@ function reducer(state, action) {
       };
     }
 
-    case 'SET_TRIP': {
+    case "SET_TRIP": {
       const rideRequest = state.rideRequest;
       const trip = action.payload;
       const derived = deriveUIState(rideRequest, trip);
@@ -73,15 +73,16 @@ function reducer(state, action) {
         };
       }
 
-      if (derived === 'REQUEUED') {
+      if (derived === "REQUEUED") {
         return {
           ...state,
           trip: null,
-          uiState: 'PENDING',
+          uiState: "PENDING",
           notification: {
-            type: 'warning',
-            message: "A co-rider cancelled. You've been returned to the queue with your original search priority — you won't lose your place."
-          }
+            type: "warning",
+            message:
+              "A co-rider cancelled. You've been returned to the queue with your original search priority — you won't lose your place.",
+          },
         };
       }
 
@@ -92,21 +93,21 @@ function reducer(state, action) {
       };
     }
 
-    case 'SET_NOTIFICATION': {
+    case "SET_NOTIFICATION": {
       return {
         ...state,
         notification: action.payload,
       };
     }
 
-    case 'CLEAR_NOTIFICATION': {
+    case "CLEAR_NOTIFICATION": {
       return {
         ...state,
         notification: null,
       };
     }
 
-    case 'RESET': {
+    case "RESET": {
       return {
         ...initialState,
         loading: { ...initialState.loading, init: false },
@@ -124,11 +125,7 @@ export function AppProvider({ children }) {
 
   const value = useMemo(() => ({ state, dispatch }), [state]);
 
-  return (
-    <AppContext.Provider value={value}>
-      {children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -136,7 +133,7 @@ export function useApp() {
   const ctx = useContext(AppContext);
 
   if (!ctx) {
-    throw new Error('useApp must be used inside AppProvider');
+    throw new Error("useApp must be used inside AppProvider");
   }
 
   return ctx;

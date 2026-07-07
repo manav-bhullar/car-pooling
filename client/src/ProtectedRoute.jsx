@@ -1,7 +1,11 @@
-import { Navigate, useLocation } from 'react-router-dom';
-import { useApp } from './context/AppContext';
-import { useAuth } from './context/AuthContext';
-import { getRouteForUiState, isRouteValidForUiState, ROUTES } from './utils/routeUtils';
+import { Navigate, useLocation } from "react-router-dom";
+import { useApp } from "./context/AppContext";
+import { useAuth } from "./context/AuthContext";
+import {
+  getRouteForUiState,
+  isRouteValidForUiState,
+  ROUTES,
+} from "./utils/routeUtils";
 
 export default function ProtectedRoute({ children }) {
   const { state } = useApp();
@@ -29,5 +33,7 @@ export default function ProtectedRoute({ children }) {
     return children;
   }
 
-  return <Navigate to={getRouteForUiState(state.uiState, state.trip?.id)} replace />;
+  return (
+    <Navigate to={getRouteForUiState(state.uiState, state.trip?.id)} replace />
+  );
 }

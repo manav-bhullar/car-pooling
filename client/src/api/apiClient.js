@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5050/api";
 
 class ApiClient {
   constructor() {
@@ -17,11 +17,11 @@ class ApiClient {
 
   async fetch(url, options = {}) {
     const defaultHeaders = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
 
     if (this.accessToken) {
-      defaultHeaders['Authorization'] = `Bearer ${this.accessToken}`;
+      defaultHeaders["Authorization"] = `Bearer ${this.accessToken}`;
     }
 
     const config = {
@@ -30,18 +30,22 @@ class ApiClient {
         ...defaultHeaders,
         ...options.headers,
       },
-      credentials: 'include', // Important for sending/receiving refresh token cookies
+      credentials: "include", // Important for sending/receiving refresh token cookies
     };
 
     let response = await window.fetch(`${BASE_URL}${url}`, config);
 
     // If 401 Unauthorized, try to refresh token
-    if (response.status === 401 && !url.includes('/auth/login') && !url.includes('/auth/refresh-token')) {
+    if (
+      response.status === 401 &&
+      !url.includes("/auth/login") &&
+      !url.includes("/auth/refresh-token")
+    ) {
       try {
         const newAccessToken = await this.refreshToken();
         if (newAccessToken) {
           // Retry original request with new token
-          config.headers['Authorization'] = `Bearer ${newAccessToken}`;
+          config.headers["Authorization"] = `Bearer ${newAccessToken}`;
           response = await window.fetch(`${BASE_URL}${url}`, config);
         }
       } catch (err) {
@@ -63,12 +67,12 @@ class ApiClient {
 
     this.refreshPromise = (async () => {
       try {
-        const storedRefreshToken = localStorage.getItem('refreshToken');
+        const storedRefreshToken = localStorage.getItem("refreshToken");
         const res = await window.fetch(`${BASE_URL}/auth/refresh-token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken: storedRefreshToken }),
-          credentials: 'include',
+          credentials: "include",
         });
 
         const json = await res.json();
@@ -76,10 +80,10 @@ class ApiClient {
           this.setAccessToken(json.data.accessToken);
           return {
             accessToken: json.data.accessToken,
-            refreshToken: json.data.refreshToken
+            refreshToken: json.data.refreshToken,
           };
         }
-        throw new Error('Refresh failed');
+        throw new Error("Refresh failed");
       } finally {
         this.refreshPromise = null;
       }

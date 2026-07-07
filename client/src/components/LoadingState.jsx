@@ -1,4 +1,4 @@
-export default function LoadingState({ message = 'Loading...' }) {
+export default function LoadingState({ message = "Loading..." }) {
   return (
     <div className="loading-state">
       <div className="loading-spinner" />

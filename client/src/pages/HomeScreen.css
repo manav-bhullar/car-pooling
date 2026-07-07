@@ -1,114 +1,121 @@
 .home-screen-expressive {
-   position: relative;
-   min-height: 100vh;
-   width: 100vw;
-   overflow: hidden;
+  position: relative;
+  min-height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
 /* Map as Wallpaper */
 .home-map-layer {
-   position: absolute;
-   inset: 0;
-   z-index: 0;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
 /* Atmospheric Blur Shapes */
 .home-blur-1 {
-   width: 50vw;
-   height: 50vw;
-   background: var(--color-md-primary);
-   opacity: 0.15;
-   top: -10%;
-   right: -10%;
-   animation: drift 20s ease-in-out infinite alternate;
+  width: 50vw;
+  height: 50vw;
+  background: var(--color-md-primary);
+  opacity: 0.15;
+  top: -10%;
+  right: -10%;
+  animation: drift 20s ease-in-out infinite alternate;
 }
 
 .home-blur-2 {
-   width: 40vw;
-   height: 40vw;
-   background: var(--color-md-tertiary);
-   opacity: 0.15;
-   bottom: -10%;
-   left: 20%;
-   animation: drift 25s ease-in-out infinite alternate-reverse;
+  width: 40vw;
+  height: 40vw;
+  background: var(--color-md-tertiary);
+  opacity: 0.15;
+  bottom: -10%;
+  left: 20%;
+  animation: drift 25s ease-in-out infinite alternate-reverse;
 }
 
 /* Foreground Content */
 .home-content-layer {
-   position: relative;
-   z-index: 10;
-   min-height: 100vh;
-   display: flex;
-   flex-direction: column;
-   justify-content: flex-end; /* Anchored to bottom */
-   padding: 0;
-   pointer-events: none; /* Let map be interactive where exposed */
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Anchored to bottom */
+  padding: 0;
+  pointer-events: none; /* Let map be interactive where exposed */
 }
 
 /* Re-enable pointer events for the form area */
 .home-glass-card {
-   pointer-events: auto;
-   width: calc(100% - 32px);
-   max-width: 500px;
-   margin: 0 16px 24px 16px;
-   border-radius: var(--radius-2xl);
-   padding: 24px;
-   box-shadow: var(--shadow-elevation-3);
-   animation: md3-fade-in var(--duration-spring) var(--ease-spring) both;
-   transition: height 0.3s ease-in-out, padding 0.3s ease-in-out;
+  pointer-events: auto;
+  width: calc(100% - 32px);
+  max-width: 500px;
+  margin: 0 16px 24px 16px;
+  border-radius: var(--radius-2xl);
+  padding: 24px;
+  box-shadow: var(--shadow-elevation-3);
+  animation: md3-fade-in var(--duration-spring) var(--ease-spring) both;
+  transition:
+    height 0.3s ease-in-out,
+    padding 0.3s ease-in-out;
 }
 
 .home-headline {
-   font: var(--type-display-large);
-   font-weight: 510;
-   color: var(--color-md-on-surface);
-   margin-bottom: 24px;
-   transition: font-size 0.3s ease;
+  font: var(--type-display-large);
+  font-weight: 510;
+  color: var(--color-md-on-surface);
+  margin-bottom: 24px;
+  transition: font-size 0.3s ease;
 }
 
 .home-content-layer.collapsed .home-headline {
-   font-size: 2rem; /* slightly smaller headline when collapsed */
-   margin-bottom: 16px;
+  font-size: 2rem; /* slightly smaller headline when collapsed */
+  margin-bottom: 16px;
 }
 
 .collapsed-mock-input {
-   display: flex;
-   align-items: center;
-   justify-content: space-between;
-   width: 100%;
-   height: 56px;
-   padding: 0 16px;
-   background: var(--color-md-surface-container-low);
-   border-radius: 12px;
-   cursor: pointer;
-   color: var(--color-md-on-surface-variant);
-   transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 56px;
+  padding: 0 16px;
+  background: var(--color-md-surface-container-low);
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--color-md-on-surface-variant);
+  transition: background 0.2s;
 }
 
 .collapsed-mock-input:hover {
-   background: var(--color-md-surface-container);
+  background: var(--color-md-surface-container);
 }
 
 .collapsed-mock-input .mock-icon {
-   color: var(--color-md-primary);
+  color: var(--color-md-primary);
 }
 
 /* Overriding form elements to fit the Glass Card better */
 .home-glass-card .ride-request-form .form-title {
-   display: none; /* Hide the default form title, using home-headline instead */
+  display: none; /* Hide the default form title, using home-headline instead */
 }
 
 @media (min-width: 768px) {
-   .home-content-layer {
-      justify-content: center;
-      padding: 24px;
-      padding-left: 10vw; /* Anchor left on desktop */
-   }
-   .home-glass-card {
-      width: 100%;
-      margin: 0;
-      padding: 32px;
-      max-width: 500px;
-      border-radius: var(--radius-2xl);
-   }
+  .home-content-layer {
+    justify-content: center;
+    padding: 24px;
+    padding-left: 10vw; /* Anchor left on desktop */
+  }
+  .home-glass-card {
+    width: 100%;
+    margin: 0;
+    padding: 32px;
+    max-width: 500px;
+    border-radius: var(--radius-2xl);
+  }
+}
+
+.collapsed-mock-input:focus-visible {
+  outline: 2px solid var(--color-md-primary);
+  outline-offset: 2px;
 }

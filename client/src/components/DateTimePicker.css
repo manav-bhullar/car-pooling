@@ -70,7 +70,9 @@
   font: var(--type-body-large);
   color: var(--color-md-on-surface);
   margin: 0 auto;
-  transition: background var(--duration-short), color var(--duration-short);
+  transition:
+    background var(--duration-short),
+    color var(--duration-short);
 }
 
 .calendar-day:not(.empty):hover {

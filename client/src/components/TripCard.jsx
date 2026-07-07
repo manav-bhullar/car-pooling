@@ -1,22 +1,26 @@
-import PassengerList from './PassengerList';
-import StopList from './StopList';
-import FareBadge from './FareBadge';
-import { formatETA } from '../utils/time';
+import PassengerList from "./PassengerList";
+import StopList from "./StopList";
+import FareBadge from "./FareBadge";
+import { formatETA } from "../utils/time";
 
 export default function TripCard({ trip, currentUserId }) {
-  const me = (trip.passengers || []).find(p => p.userId === currentUserId) || {};
+  const me =
+    (trip.passengers || []).find((p) => p.userId === currentUserId) || {};
 
-  const displayDistance = typeof me.distanceKm === 'number' && me.distanceKm > 0
-    ? `${me.distanceKm.toFixed(2)} km`
-    : trip.totalDistanceKm?.toFixed(2) ? `${trip.totalDistanceKm.toFixed(2)} km` : '--';
+  const displayDistance =
+    typeof me.distanceKm === "number" && me.distanceKm > 0
+      ? `${me.distanceKm.toFixed(2)} km`
+      : trip.totalDistanceKm?.toFixed(2)
+        ? `${trip.totalDistanceKm.toFixed(2)} km`
+        : "--";
 
-  const displayEtaMinutes = typeof me.etaMinutes === 'number' && me.etaMinutes >= 0
-    ? me.etaMinutes
-    : trip.estimatedEtaMinutes;
+  const displayEtaMinutes =
+    typeof me.etaMinutes === "number" && me.etaMinutes >= 0
+      ? me.etaMinutes
+      : trip.estimatedEtaMinutes;
 
   return (
     <div className="trip-card">
-
       <div className="trip-card-header">
         <span className="trip-status">{trip.status}</span>
         <span className="trip-distance">{displayDistance}</span>
@@ -35,7 +39,6 @@ export default function TripCard({ trip, currentUserId }) {
       />
 
       <StopList stops={trip.stops} />
-
     </div>
   );
 }

@@ -1,13 +1,13 @@
-import { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { 
-  loginUser, 
-  registerUser, 
-  logoutUser, 
-  getMe, 
-  verifyEmail, 
-  resendOtp 
-} from '../api/auth';
-import { apiClient } from '../api/apiClient';
+import { createContext, useContext, useEffect, useState, useMemo } from "react";
+import {
+  loginUser,
+  registerUser,
+  logoutUser,
+  getMe,
+  verifyEmail,
+  resendOtp,
+} from "../api/auth";
+import { apiClient } from "../api/apiClient";
 
 export const AuthContext = createContext(null);
 
@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
     setIsAuthenticated(true);
     setIsVerified(userData.isVerified);
     apiClient.setAccessToken(accessToken);
-    if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+    if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
   };
 
   const clearAuthData = () => {
@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
     setIsAuthenticated(false);
     setIsVerified(false);
     apiClient.setAccessToken(null);
-    localStorage.removeItem('refreshToken');
+    localStorage.removeItem("refreshToken");
   };
 
   // Set up API client error handler to log out user automatically if refresh fails
@@ -92,36 +92,35 @@ export function AuthProvider({ children }) {
     try {
       await logoutUser();
     } catch (err) {
-      console.error('Logout failed on backend:', err);
+      console.error("Logout failed on backend:", err);
     } finally {
       clearAuthData();
     }
   };
 
-  const value = useMemo(() => ({
-    user,
-    isAuthenticated,
-    isVerified,
-    loading,
-    login,
-    register,
-    verify,
-    resendVerification,
-    logout,
-  }), [user, isAuthenticated, isVerified, loading]);
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({
+      user,
+      isAuthenticated,
+      isVerified,
+      loading,
+      login,
+      register,
+      verify,
+      resendVerification,
+      logout,
+    }),
+    [user, isAuthenticated, isVerified, loading],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
