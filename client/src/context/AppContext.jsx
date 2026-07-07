@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useMemo } from 'react';
 import { deriveUIState } from '../utils/stateUtils';
 
-const AppContext = createContext(null);
+export const AppContext = createContext(null);
 
 const initialState = {
   // Canonical source state

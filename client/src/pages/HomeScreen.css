@@ -60,6 +60,7 @@
 
 .home-headline {
    font: var(--type-display-large);
+   font-weight: 510;
    color: var(--color-md-on-surface);
    margin-bottom: 24px;
    transition: font-size 0.3s ease;

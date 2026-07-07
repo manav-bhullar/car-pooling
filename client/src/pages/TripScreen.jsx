@@ -34,6 +34,9 @@ export default function TripScreen() {
     }
   }
 
+  const isStarted = state.trip?.status === 'STARTED';
+  const driverLocation = useDriverLocation(state.trip?.id, isStarted);
+
   if (!state.trip) {
     return (
       <div className="trip-screen-loading">
@@ -46,8 +49,6 @@ export default function TripScreen() {
   const trip = state.trip;
   const me = (trip.passengers || []).find(p => p.userId === user?.id) || {};
   
-  const isStarted = trip.status === 'STARTED';
-  const driverLocation = useDriverLocation(trip.id, isStarted);
   
   const displayDistance = typeof me.distanceKm === 'number' && me.distanceKm > 0
     ? me.distanceKm
@@ -64,11 +65,16 @@ export default function TripScreen() {
 
   return (
     <div className="trip-screen-expressive">
-      {/* Persistent Information Panel (Bottom Sheet on mobile, Left Panel on desktop) */}
-      <div className="trip-bottom-sheet">
-        <div className="blur-shape trip-sheet-blur"></div>
-        
-        <div className="trip-sheet-content">
+      
+      {/* Map Panel (Full Bleed) */}
+      <div className="trip-map-container">
+        <TripMap stops={trip.stops} myRideRequestId={me.rideRequestId} driverLocation={driverLocation} />
+      </div>
+
+      {/* Persistent Information Panel (Floating Glass Card) */}
+      <div className="trip-content-layer">
+        <div className="trip-sidebar-card">
+          
           <div className="trip-sheet-header">
             <div className={`trip-status-chip ${statusClass}`}>
               {trip.status}
@@ -76,21 +82,21 @@ export default function TripScreen() {
             <h2 className="trip-headline">Your Shared Trip</h2>
           </div>
 
-          {/* 1 & 2: Fare and ETA (Most Prominent) */}
-          <div className="trip-primary-stats glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '24px', background: 'var(--color-md-primary-container)', color: 'var(--color-md-on-primary-container)', borderRadius: '16px' }}>
+          {/* 1 & 2: Fare and ETA */}
+          <div className="trip-primary-stats">
             <div>
-              <p style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.8, margin: 0, paddingBottom: '4px' }}>Your Fare</p>
-              <h2 style={{ fontSize: '2.5rem', margin: 0, fontWeight: 700, lineHeight: 1 }}>₹{me.fareShare?.toFixed(0) || '0'}</h2>
+              <p style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.6, margin: 0, paddingBottom: '4px', color: 'var(--color-md-on-surface)' }}>Your Fare</p>
+              <h2 style={{ fontSize: '2.5rem', margin: 0, fontWeight: 800, lineHeight: 1, letterSpacing: '-1px', color: 'var(--color-md-on-surface)' }}>₹{me.fareShare?.toFixed(0) || '0'}</h2>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.8, margin: 0, paddingBottom: '4px' }}>Est. Arrival</p>
-              <h2 style={{ fontSize: '1.75rem', margin: 0, fontWeight: 700, lineHeight: 1 }}>{displayEtaMinutes}<span style={{ fontSize: '1rem', fontWeight: 500, marginLeft: '4px' }}>min</span></h2>
+              <p style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.6, margin: 0, paddingBottom: '4px', color: 'var(--color-md-on-surface)' }}>Est. Arrival</p>
+              <h2 style={{ fontSize: '1.75rem', margin: 0, fontWeight: 700, lineHeight: 1, color: 'var(--color-md-on-surface)' }}>{displayEtaMinutes}<span style={{ fontSize: '1rem', fontWeight: 500, marginLeft: '4px', opacity: 0.8 }}>min</span></h2>
             </div>
           </div>
 
-          {/* 3: Value Confirmation (Savings) */}
+          {/* 3: Value Confirmation (Mint Savings) */}
           {savings > 0 && (
-             <div className="trip-savings-banner" style={{ background: 'var(--color-md-tertiary-container)', color: 'var(--color-md-on-tertiary-container)', padding: '12px 16px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+             <div className="trip-savings-banner">
                 <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm-40-160h80v-80h-80v80Zm0-120h80v-360h-80v360Z"/></svg>
                 You saved ₹{savings.toFixed(0)} vs travelling alone!
              </div>
@@ -102,21 +108,16 @@ export default function TripScreen() {
           </div>
 
           {/* 5: Route Context */}
-          <div className="trip-route-context glass-card" style={{ padding: '16px', borderRadius: '16px', background: 'var(--color-md-surface-container)' }}>
-             <h3 style={{ fontSize: '1rem', margin: '0 0 12px 0' }}>Route Summary</h3>
-             <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-muted)' }}>Total Distance: {displayDistance?.toFixed(2)} km</p>
-             <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem', color: 'var(--text-muted)' }}>Detour Ratio: ~{(displayDistance > 0 ? (trip.totalDistanceKm / displayDistance - 1) * 100 : 0).toFixed(0)}% added</p>
+          <div className="trip-route-context">
+             <h3 style={{ fontSize: '1rem', margin: '0 0 8px 0', fontWeight: 600, color: 'var(--color-md-on-surface)' }}>Route Summary</h3>
+             <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-md-on-surface-variant)' }}>Total Distance: {displayDistance?.toFixed(2)} km</p>
+             <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem', color: 'var(--color-md-on-surface-variant)' }}>Detour Ratio: ~{(displayDistance > 0 ? (trip.totalDistanceKm / displayDistance - 1) * 100 : 0).toFixed(0)}% added</p>
           </div>
 
           <div className="trip-actions-row">
-            <button className="btn btn-cancel" style={{ width: '100%' }} onClick={() => setShowCancelModal(true)}>Cancel Trip</button>
+            <button className="btn btn-secondary" style={{ width: '100%', background: 'transparent', border: '1px solid var(--color-md-outline)', color: 'var(--color-md-on-surface)' }} onClick={() => setShowCancelModal(true)}>Cancel Trip</button>
           </div>
         </div>
-      </div>
-
-      {/* Map Panel */}
-      <div className="trip-map-container">
-        <TripMap stops={trip.stops} myRideRequestId={me.rideRequestId} driverLocation={driverLocation} />
       </div>
 
       <CancelModal isOpen={showCancelModal} onClose={() => setShowCancelModal(false)} onConfirm={confirmCancel} />

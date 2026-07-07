@@ -11,20 +11,16 @@
 .trip-screen-expressive {
    position: relative;
    min-height: 100vh;
-   display: flex;
-   flex-direction: column;
-   background: var(--color-md-surface);
+   width: 100vw;
+   overflow: hidden;
 }
 
 /* ============================================================
-   MAP CONTAINER (Top 55%)
+   MAP CONTAINER (Full Bleed Wallpaper)
    ============================================================ */
 .trip-map-container {
-   height: 55vh;
-   width: 100%;
-   position: fixed;
-   top: 0;
-   left: 0;
+   position: absolute;
+   inset: 0;
    z-index: 0;
 }
 
@@ -33,62 +29,54 @@
 }
 
 /* ============================================================
-   BOTTOM SHEET
+   FLOATING CONTENT LAYER
    ============================================================ */
-.trip-bottom-sheet {
+.trip-content-layer {
    position: relative;
    z-index: 10;
-   margin-top: 50vh; /* Overlaps map slightly */
-   min-height: 50vh;
-   background: var(--color-md-surface);
-   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-   box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
+   min-height: 100vh;
+   display: flex;
+   flex-direction: column;
+   justify-content: flex-end; /* Mobile: Anchor to bottom */
+   padding: 0;
+   pointer-events: none; /* Map clickable underneath */
+}
+
+/* ============================================================
+   THE GLASS CARD (Sidebar on Desktop, Sheet on Mobile)
+   ============================================================ */
+.trip-sidebar-card {
+   pointer-events: auto; /* Re-enable clicks */
+   width: 100%;
+   background: rgba(255, 255, 255, 0.85); /* Premium white frosted glass */
+   backdrop-filter: blur(16px);
+   -webkit-backdrop-filter: blur(16px);
+   border-top: 1px solid rgba(0,0,0,0.1);
+   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+   box-shadow: 0 -8px 32px rgba(0,0,0,0.1);
    padding: 32px 24px;
-   overflow-x: hidden;
-}
-
-@media (min-width: 900px) {
-  .trip-screen-expressive {
-    flex-direction: row;
-  }
-  .trip-map-container {
-    position: relative;
-    height: 100vh;
-    flex: 1;
-    top: auto;
-    left: auto;
-  }
-  .trip-bottom-sheet {
-    width: 400px;
-    min-width: 400px;
-    margin-top: 0;
-    height: 100vh;
-    border-radius: 0;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.1);
-    overflow-y: auto;
-    z-index: 10;
-  }
-}
-
-/* Blur shape behind sheet content */
-.trip-sheet-blur {
-   width: 60vw;
-   height: 60vw;
-   background: var(--color-md-primary);
-   opacity: 0.12;
-   top: -10%;
-   right: -20%;
-   animation: drift 20s ease-in-out infinite alternate;
-}
-
-.trip-sheet-content {
-   position: relative;
-   z-index: 20;
+   max-height: 85vh;
+   overflow-y: auto;
    display: flex;
    flex-direction: column;
    gap: 24px;
-   max-width: 800px;
-   margin: 0 auto;
+   animation: md3-fade-in var(--duration-spring) var(--ease-spring) both;
+}
+
+@media (min-width: 900px) {
+  .trip-content-layer {
+     justify-content: center;
+     padding: 24px;
+     padding-left: 24px;
+  }
+  .trip-sidebar-card {
+     width: 400px;
+     max-height: calc(100vh - 120px);
+     margin-top: 64px; /* Give space for TopNav */
+     border-radius: var(--radius-2xl);
+     border: 1px solid rgba(0,0,0,0.1);
+     box-shadow: var(--shadow-elevation-3);
+  }
 }
 
 /* ============================================================
@@ -102,7 +90,8 @@
 }
 
 .trip-headline {
-   font: var(--type-headline-large);
+   font: var(--type-display-large);
+   font-weight: 510;
    color: var(--color-md-on-surface);
 }
 
