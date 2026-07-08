@@ -66,35 +66,22 @@ function generateValidSequences(users) {
  * Every user must overlap with at least one other user in the ride
  */
 function isConnectedGroup(users, sequence) {
-  const ranges = users.map(u => {
-    const pickupIdx = sequence.findIndex(
-      s => s.userId === u.id && s.type === "pickup"
-    );
+  let active = 0;
+  for (let i = 0; i < sequence.length; i++) {
+    if (sequence[i].type === 'pickup') {
+      active++;
+    } else {
+      active--;
+    }
 
-    const dropIdx = sequence.findIndex(
-      s => s.userId === u.id && s.type === "drop"
-    );
-
-    return {
-      userId: u.id,
-      pickupIdx,
-      dropIdx,
-    };
-  });
-
-  for (const user of ranges) {
-    const hasOverlap = ranges.some(other => {
-      if (other.userId === user.userId) return false;
-
-      return (
-        user.pickupIdx < other.dropIdx &&
-        other.pickupIdx < user.dropIdx
-      );
-    });
-
-    if (!hasOverlap) return false;
+    // If a pickup is immediately followed by a drop of the SAME user,
+    // AND they are the only one in the car
+    if (sequence[i].type === 'pickup' && i + 1 < sequence.length && sequence[i+1].type === 'drop') {
+      if (sequence[i].userId === sequence[i+1].userId && active === 1) {
+        return false;
+      }
+    }
   }
-
   return true;
 }
 
