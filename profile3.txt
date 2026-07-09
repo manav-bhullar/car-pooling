@@ -1,0 +1,175 @@
+Statistical profiling result from isolate-0x88fe000-21252-v8.log, (14558 ticks, 39 unaccounted, 0 excluded).
+
+ [Shared libraries]:
+   ticks  total  nonlib   name
+   3816   26.2%          /home/jules/.nvm/versions/node/v22.22.1/bin/node
+    208    1.4%          /usr/lib/x86_64-linux-gnu/libc.so.6
+      1    0.0%          /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33
+
+ [JavaScript]:
+   ticks  total  nonlib   name
+   7361   50.6%   69.9%  JS: *optimizeRoute /app/server/src/modules/matching/route.js:205:23
+   1639   11.3%   15.6%  JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    490    3.4%    4.7%  Builtin: StringEqual
+    357    2.5%    3.4%  Builtin: ArrayPrototypePush
+    160    1.1%    1.5%  Builtin: CallFunction_ReceiverIsNullOrUndefined
+    159    1.1%    1.5%  Builtin: CloneFastJSArrayFillingHoles
+     90    0.6%    0.9%  Builtin: IterableToListWithSymbolLookup
+     17    0.1%    0.2%  Builtin: Call_ReceiverIsNullOrUndefined
+     16    0.1%    0.2%  JS: ~generateValidSequences /app/server/src/modules/matching/route.js:16:32
+     14    0.1%    0.1%  JS: *isConnectedGroup /app/server/src/modules/matching/route.js:68:26
+      7    0.0%    0.1%  JS: *computePerUserDetour /app/server/src/modules/matching/route.js:137:30
+      7    0.0%    0.1%  Builtin: InterpreterEntryTrampoline
+      5    0.0%    0.0%  JS: ~<anonymous> /app/profile3.js:1:1
+      5    0.0%    0.0%  JS: *calculateDistance /app/server/src/modules/matching/route.js:104:27
+      5    0.0%    0.0%  Builtin: LoadIC
+      5    0.0%    0.0%  Builtin: KeyedStoreIC_Megamorphic
+      4    0.0%    0.0%  JS: ^backtrack /app/server/src/modules/matching/route.js:33:21
+      3    0.0%    0.0%  JS: ~calculateDistance /app/server/src/modules/matching/route.js:104:27
+      3    0.0%    0.0%  JS: *<anonymous> /app/server/src/modules/matching/route.js:69:28
+      3    0.0%    0.0%  JS: *<anonymous> /app/server/src/modules/matching/route.js:18:31
+      3    0.0%    0.0%  Builtin: Call_ReceiverIsAny
+      2    0.0%    0.0%  Builtin: KeyedLoadIC_Megamorphic
+      2    0.0%    0.0%  Builtin: KeyedLoadIC
+      2    0.0%    0.0%  Builtin: Increment_Baseline
+      2    0.0%    0.0%  Builtin: FastNewClosure
+      2    0.0%    0.0%  Builtin: CallFunction_ReceiverIsNotNullOrUndefined
+      2    0.0%    0.0%  Builtin: ArrayMap
+      1    0.0%    0.0%  JS: ~backtrack /app/server/src/modules/matching/route.js:33:21
+      1    0.0%    0.0%  JS: ^isConnectedGroup /app/server/src/modules/matching/route.js:68:26
+      1    0.0%    0.0%  JS: ^computePerUserDetour /app/server/src/modules/matching/route.js:137:30
+      1    0.0%    0.0%  JS: *haversine /app/server/src/modules/matching/utils.js:8:19
+      1    0.0%    0.0%  JS: *<anonymous> /app/server/src/modules/matching/route.js:71:7
+      1    0.0%    0.0%  Builtin: LessThan_Baseline
+      1    0.0%    0.0%  Builtin: DivideSmi_Baseline
+      1    0.0%    0.0%  Builtin: Call_ReceiverIsNotNullOrUndefined
+      1    0.0%    0.0%  Builtin: CallIteratorWithFeedback
+      1    0.0%    0.0%  Builtin: CallFunction_ReceiverIsAny
+      1    0.0%    0.0%  Builtin: BaselineOutOfLinePrologue
+      1    0.0%    0.0%  Builtin: ArrayPrototypeValues
+      1    0.0%    0.0%  Builtin: ArrayPrototypeFill
+      1    0.0%    0.0%  Builtin: ArrayIteratorPrototypeNext
+      1    0.0%    0.0%  Builtin: ArrayConstructorImpl
+      1    0.0%    0.0%  Builtin: AllocateInYoungGeneration
+
+ [C++]:
+   ticks  total  nonlib   name
+     48    0.3%    0.5%  pthread_cond_signal@@GLIBC_2.3.2
+     17    0.1%    0.2%  __write@@GLIBC_2.2.5
+      9    0.1%    0.1%  _IO_fwrite@@GLIBC_2.2.5
+      6    0.0%    0.1%  std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long)@@GLIBCXX_3.4.9
+      6    0.0%    0.1%  __libc_malloc@@GLIBC_2.2.5
+      3    0.0%    0.0%  isprint@@GLIBC_2.2.5
+      3    0.0%    0.0%  __pthread_rwlock_unlock@GLIBC_2.2.5
+      3    0.0%    0.0%  __getpid@@GLIBC_2.2.5
+      2    0.0%    0.0%  __pthread_rwlock_wrlock@GLIBC_2.2.5
+      2    0.0%    0.0%  __libc_free@@GLIBC_2.2.5
+      2    0.0%    0.0%  _IO_file_xsputn@@GLIBC_2.2.5
+      1    0.0%    0.0%  std::ostream::sentry::sentry(std::ostream&)@@GLIBCXX_3.4
+      1    0.0%    0.0%  std::_Rb_tree_insert_and_rebalance(bool, std::_Rb_tree_node_base*, std::_Rb_tree_node_base*, std::_Rb_tree_node_base&)@@GLIBCXX_3.4
+      1    0.0%    0.0%  std::_Rb_tree_decrement(std::_Rb_tree_node_base*)@@GLIBCXX_3.4
+      1    0.0%    0.0%  pthread_condattr_init@@GLIBC_2.2.5
+      1    0.0%    0.0%  pthread_cond_destroy@@GLIBC_2.3.2
+      1    0.0%    0.0%  pthread_cond_broadcast@@GLIBC_2.3.2
+      1    0.0%    0.0%  epoll_pwait@@GLIBC_2.6
+      1    0.0%    0.0%  __pthread_mutex_unlock@GLIBC_2.2.5
+      1    0.0%    0.0%  __pthread_mutex_lock@GLIBC_2.2.5
+      1    0.0%    0.0%  __munmap@@GLIBC_PRIVATE
+      1    0.0%    0.0%  __mprotect@@GLIBC_PRIVATE
+      1    0.0%    0.0%  __mmap@@GLIBC_PRIVATE
+
+ [Summary]:
+   ticks  total  nonlib   name
+  10381   71.3%   98.6%  JavaScript
+    113    0.8%    1.1%  C++
+    523    3.6%    5.0%  GC
+   4025   27.6%          Shared libraries
+     39    0.3%          Unaccounted
+
+ [C++ entry points]:
+   ticks    cpp   total   name
+      9   30.0%    0.1%  _IO_fwrite@@GLIBC_2.2.5
+      8   26.7%    0.1%  __write@@GLIBC_2.2.5
+      6   20.0%    0.0%  std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long)@@GLIBCXX_3.4.9
+      3   10.0%    0.0%  isprint@@GLIBC_2.2.5
+      2    6.7%    0.0%  _IO_file_xsputn@@GLIBC_2.2.5
+      1    3.3%    0.0%  std::ostream::sentry::sentry(std::ostream&)@@GLIBCXX_3.4
+      1    3.3%    0.0%  std::_Rb_tree_insert_and_rebalance(bool, std::_Rb_tree_node_base*, std::_Rb_tree_node_base*, std::_Rb_tree_node_base&)@@GLIBCXX_3.4
+
+ [Bottom up (heavy) profile]:
+  Note: percentage shows a share of a particular caller in the total
+  amount of its parent calls.
+  Callers occupying less than 1.0% are not shown.
+
+   ticks parent  name
+   7361   50.6%  JS: *optimizeRoute /app/server/src/modules/matching/route.js:205:23
+   7322   99.5%    JS: ~<anonymous> /app/profile3.js:1:1
+   7322  100.0%      JS: ~<anonymous> node:internal/main/run_main_module:1:1
+
+   3816   26.2%  /home/jules/.nvm/versions/node/v22.22.1/bin/node
+   3434   90.0%    JS: *optimizeRoute /app/server/src/modules/matching/route.js:205:23
+   3434  100.0%      JS: ~<anonymous> /app/profile3.js:1:1
+   3434  100.0%        JS: ~<anonymous> node:internal/main/run_main_module:1:1
+
+   1639   11.3%  JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+   1638   99.9%    JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+   1636   99.9%      JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+   1621   99.1%        JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+   1588   98.0%          JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+   1487   93.6%            JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    101    6.4%            JS: ~generateValidSequences /app/server/src/modules/matching/route.js:16:32
+     33    2.0%          JS: ~generateValidSequences /app/server/src/modules/matching/route.js:16:32
+     33  100.0%            JS: *optimizeRoute /app/server/src/modules/matching/route.js:205:23
+
+    490    3.4%  Builtin: StringEqual
+    487   99.4%    JS: ~<anonymous> /app/profile3.js:1:1
+    487  100.0%      JS: ~<anonymous> node:internal/main/run_main_module:1:1
+
+    357    2.5%  Builtin: ArrayPrototypePush
+    357  100.0%    JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    355   99.4%      JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    352   99.2%        JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    352  100.0%          JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    341   96.9%            JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+     11    3.1%            JS: ~generateValidSequences /app/server/src/modules/matching/route.js:16:32
+
+    208    1.4%  /usr/lib/x86_64-linux-gnu/libc.so.6
+     47   22.6%    JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+     47  100.0%      JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+     47  100.0%        JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+     47  100.0%          JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+     47  100.0%            JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+      9    4.3%    /home/jules/.nvm/versions/node/v22.22.1/bin/node
+      3   33.3%      JS: *optimizeRoute /app/server/src/modules/matching/route.js:205:23
+      3  100.0%        JS: ~<anonymous> /app/profile3.js:1:1
+      3  100.0%          JS: ~<anonymous> node:internal/main/run_main_module:1:1
+      2   22.2%      JS: ~<anonymous> node:internal/main/run_main_module:1:1
+      2   22.2%      JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+      2  100.0%        JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+      2  100.0%          JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+      2  100.0%            JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+      1   11.1%      JS: *calculateDistance /app/server/src/modules/matching/route.js:104:27
+      1  100.0%        JS: ^optimizeRoute /app/server/src/modules/matching/route.js:205:23
+      1  100.0%          JS: ~<anonymous> /app/profile3.js:1:1
+      1  100.0%            JS: ~<anonymous> node:internal/main/run_main_module:1:1
+      1   11.1%      Builtin: ArrayIteratorPrototypeNext
+      1  100.0%        JS: ^optimizeRoute /app/server/src/modules/matching/route.js:205:23
+      1  100.0%          JS: ~<anonymous> /app/profile3.js:1:1
+      1  100.0%            JS: ~<anonymous> node:internal/main/run_main_module:1:1
+
+    160    1.1%  Builtin: CallFunction_ReceiverIsNullOrUndefined
+    159   99.4%    JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    159  100.0%      JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    159  100.0%        JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    153   96.2%          JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    141   92.2%            JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+     12    7.8%            JS: ~generateValidSequences /app/server/src/modules/matching/route.js:16:32
+      6    3.8%          JS: ~generateValidSequences /app/server/src/modules/matching/route.js:16:32
+      6  100.0%            JS: *optimizeRoute /app/server/src/modules/matching/route.js:205:23
+
+    159    1.1%  Builtin: CloneFastJSArrayFillingHoles
+    158   99.4%    JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    158  100.0%      JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    158  100.0%        JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    158  100.0%          JS: *backtrack /app/server/src/modules/matching/route.js:33:21
+    158  100.0%            JS: *backtrack /app/server/src/modules/matching/route.js:33:21
