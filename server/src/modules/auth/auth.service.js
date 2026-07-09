@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const prisma = require('../../prisma/client');
 const { generateOtp, isOtpExpired } = require('../../utils/otp');
@@ -198,7 +199,8 @@ exports.refreshToken = async (token) => {
     }
 
     // Verify token hash
-    const isValid = await bcrypt.compare(token, tokenRecord.token);
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const isValid = (hashedToken === tokenRecord.token);
     if (!isValid) {
       throw new Error('Invalid refresh token');
     }
@@ -225,17 +227,8 @@ exports.logout = async (userId, token) => {
     // We could parse the token to get the user ID, but since it's hashed in the DB,
     // we need to find it by comparing, or simply delete all for user if we want
     // "logout everywhere", but let's just delete the specific one
-    const userTokens = await prisma.refreshToken.findMany({
-      where: { userId }
-    });
-
-    for (const record of userTokens) {
-      const isMatch = await bcrypt.compare(token, record.token);
-      if (isMatch) {
-        await prisma.refreshToken.delete({ where: { id: record.id } });
-        break;
-      }
-    }
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    await prisma.refreshToken.deleteMany({ where: { userId, token: hashedToken } });
   } catch (err) {
     console.error('Logout error:', err);
   }
@@ -259,7 +252,7 @@ async function createTokensForUser(user, existingTokenId = null) {
   const refreshToken = generateRefreshToken(user.id);
   
   // Hash refresh token for DB storage
-  const hashedRefreshToken = await bcrypt.hash(refreshToken, SALT_ROUNDS);
+  const hashedRefreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex');
   
   // Refresh token expiry (7 days)
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
