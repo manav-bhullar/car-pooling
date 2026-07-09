@@ -1,0 +1,3 @@
+const { optimizeRoute } = require('./server/src/modules/matching/route');
+
+// Test logic...
