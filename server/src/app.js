@@ -28,7 +28,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 
 app.use('/api/ride-requests', authenticate, rideRequestRoutes);
-app.use('/api/admin', authenticate, adminRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/trips', authenticate, tripRoutes);
 app.use('/api/driver', driverRoutes); // auth is handled inside driverRoutes
 
