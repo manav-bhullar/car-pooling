@@ -189,20 +189,18 @@ exports.refreshToken = async (token) => {
   try {
     const decoded = verifyRefreshToken(token);
 
-    // Find refresh token in DB
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find the exact refresh token in DB
     const tokenRecord = await prisma.refreshToken.findFirst({
-      where: { userId: decoded.id },
+      where: { 
+        userId: decoded.id,
+        token: hashedToken 
+      },
     });
 
     if (!tokenRecord) {
-      throw new Error('Refresh token not found or invalidated');
-    }
-
-    // Verify token hash
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-    const isValid = (hashedToken === tokenRecord.token);
-    if (!isValid) {
-      throw new Error('Invalid refresh token');
+      throw new Error('Refresh token not found, invalidated, or invalid');
     }
 
     if (new Date() > tokenRecord.expiresAt) {
