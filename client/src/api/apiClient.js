@@ -78,6 +78,9 @@ class ApiClient {
         const json = await res.json();
         if (json.success && json.data.accessToken) {
           this.setAccessToken(json.data.accessToken);
+          if (json.data.refreshToken) {
+            localStorage.setItem("refreshToken", json.data.refreshToken);
+          }
           return {
             accessToken: json.data.accessToken,
             refreshToken: json.data.refreshToken,
