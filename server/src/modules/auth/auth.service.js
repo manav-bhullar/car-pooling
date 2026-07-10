@@ -145,8 +145,8 @@ exports.resendOtp = async ({ email }) => {
 
   // Check rate limiting - don't allow if an OTP was generated in the last 60 seconds
   const recentOtp = await prisma.otp.findFirst({
-    where: { 
-      userId: user.id, 
+    where: {
+      userId: user.id,
       type: 'EMAIL_VERIFY',
       createdAt: { gte: new Date(Date.now() - 60000) }
     },
@@ -188,7 +188,7 @@ exports.resendOtp = async ({ email }) => {
 exports.refreshToken = async (token) => {
   try {
     const decoded = verifyRefreshToken(token);
-    
+
     // Find refresh token in DB
     const tokenRecord = await prisma.refreshToken.findFirst({
       where: { userId: decoded.id },
@@ -212,15 +212,7 @@ exports.refreshToken = async (token) => {
     const user = await prisma.user.findUnique({ where: { id: decoded.id } });
     if (!user) throw new Error('User not found');
 
-    // Generate a new access token
-    const accessToken = generateAccessToken({ id: user.id, role: user.role, email: user.email });
-
-    // Do NOT rotate the refresh token to prevent multi-tab concurrency issues (Safari tab restoration)
-    return {
-      user: { id: user.id, name: user.name, email: user.email, isVerified: user.isVerified, role: user.role },
-      accessToken,
-      refreshToken: token
-    };
+    return await createTokensForUser(user, tokenRecord.id);
   } catch (err) {
     const error = new Error('Invalid or expired refresh token');
     error.status = 401;
@@ -258,10 +250,10 @@ exports.getMe = async (userId) => {
 async function createTokensForUser(user, existingTokenId = null) {
   const accessToken = generateAccessToken({ id: user.id, role: user.role, email: user.email });
   const refreshToken = generateRefreshToken(user.id);
-  
+
   // Hash refresh token for DB storage
   const hashedRefreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex');
-  
+
   // Refresh token expiry (7 days)
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 

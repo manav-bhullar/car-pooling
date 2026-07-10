@@ -45,7 +45,7 @@ class ApiClient {
         const newAccessToken = await this.refreshToken();
         if (newAccessToken) {
           // Retry original request with new token
-          config.headers["Authorization"] = `Bearer ${newAccessToken.accessToken}`;
+          config.headers["Authorization"] = `Bearer ${newAccessToken}`;
           response = await window.fetch(`${BASE_URL}${url}`, config);
         }
       } catch (err) {
@@ -78,9 +78,6 @@ class ApiClient {
         const json = await res.json();
         if (json.success && json.data.accessToken) {
           this.setAccessToken(json.data.accessToken);
-          if (json.data.refreshToken) {
-            localStorage.setItem("refreshToken", json.data.refreshToken);
-          }
           return {
             accessToken: json.data.accessToken,
             refreshToken: json.data.refreshToken,
@@ -94,6 +91,9 @@ class ApiClient {
 
     return this.refreshPromise;
   }
+}
+
+export const apiClient = new ApiClient();
 }
 
 export const apiClient = new ApiClient();
