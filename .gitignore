@@ -55,4 +55,4 @@ coverage/
 *.tmp
 *.swp
 
-.tests/
+server/tests/
