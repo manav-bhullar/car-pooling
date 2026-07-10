@@ -45,7 +45,7 @@ class ApiClient {
         const newAccessToken = await this.refreshToken();
         if (newAccessToken) {
           // Retry original request with new token
-          config.headers["Authorization"] = `Bearer ${newAccessToken}`;
+          config.headers["Authorization"] = `Bearer ${newAccessToken.accessToken}`;
           response = await window.fetch(`${BASE_URL}${url}`, config);
         }
       } catch (err) {

@@ -65,7 +65,7 @@ export default function StatusBanner() {
 
   return (
     <div className={`status-banner status-banner--${type}`}>
-      <div className="status-banner-icon">{renderIcon()}</div>
+      <div className="status-banner-icon"><Icon /></div>
       <p className="status-banner-message">{message}</p>
       <button
         className="status-banner-close"
