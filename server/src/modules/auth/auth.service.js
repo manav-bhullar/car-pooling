@@ -212,7 +212,15 @@ exports.refreshToken = async (token) => {
     const user = await prisma.user.findUnique({ where: { id: decoded.id } });
     if (!user) throw new Error('User not found');
 
-    return await createTokensForUser(user, tokenRecord.id);
+    // Generate a new access token
+    const accessToken = generateAccessToken({ id: user.id, role: user.role, email: user.email });
+
+    // Do NOT rotate the refresh token to prevent multi-tab concurrency issues (Safari tab restoration)
+    return {
+      user: { id: user.id, name: user.name, email: user.email, isVerified: user.isVerified, role: user.role },
+      accessToken,
+      refreshToken: token
+    };
   } catch (err) {
     const error = new Error('Invalid or expired refresh token');
     error.status = 401;
