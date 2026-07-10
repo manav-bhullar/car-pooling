@@ -167,9 +167,10 @@ export default function WaitingScreen() {
                         {cancelling ? "Cancelling..." : "Yes, cancel"}
                       </button>
                       <button
-                        className="btn btn-tonal"
+                        className="btn btn-primary"
                         onClick={() => setShowCancelConfirm(false)}
                         disabled={cancelling}
+                        autoFocus
                       >
                         Keep searching
                       </button>
