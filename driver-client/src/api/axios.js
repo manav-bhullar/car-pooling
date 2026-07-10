@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050/api',
-  withCredentials: true,
+  withCredentials: false,
 });
 
 api.interceptors.request.use((config) => {
@@ -24,7 +24,7 @@ api.interceptors.response.use(
         const { data } = await axios.post(
           `${api.defaults.baseURL}/auth/refresh-token`,
           { refreshToken: storedRefreshToken },
-          { withCredentials: true }
+          { withCredentials: false }
         );
         localStorage.setItem('accessToken', data.data.accessToken);
         if (data.data.refreshToken) {

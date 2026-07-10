@@ -51,7 +51,11 @@ export async function resendOtp(email) {
 }
 
 export async function logoutUser() {
-  const res = await apiClient.fetch("/auth/logout", { method: "POST" });
+  const storedRefreshToken = localStorage.getItem("refreshToken");
+  const res = await apiClient.fetch("/auth/logout", { 
+    method: "POST",
+    body: JSON.stringify({ refreshToken: storedRefreshToken })
+  });
   const json = await res.json();
   if (!json.success) throw { status: res.status, message: json.error?.message };
   return json.data;

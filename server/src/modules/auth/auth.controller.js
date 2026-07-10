@@ -93,7 +93,7 @@ exports.refreshToken = async (req, res) => {
 
 exports.logout = async (req, res) => {
   try {
-    const token = req.cookies.refreshToken;
+    const token = req.body.refreshToken || req.cookies.refreshToken;
     await authService.logout(req.userId, token);
     
     res.clearCookie('refreshToken');

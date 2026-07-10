@@ -30,7 +30,7 @@ class ApiClient {
         ...defaultHeaders,
         ...options.headers,
       },
-      credentials: "include", // Important for sending/receiving refresh token cookies
+      credentials: "omit", // Important for sending/receiving refresh token cookies
     };
 
     let response = await window.fetch(`${BASE_URL}${url}`, config);
@@ -72,7 +72,7 @@ class ApiClient {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken: storedRefreshToken }),
-          credentials: "include",
+          credentials: "omit",
         });
 
         const json = await res.json();
