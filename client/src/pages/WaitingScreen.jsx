@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
-import { useAuth } from "../context/AuthContext";
+
 import { cancelRideRequest } from "../api/rideRequests";
 import { getElapsedSeconds, formatElapsed } from "../utils/time";
 import DirectionMap from "../components/DirectionMap";
@@ -8,7 +8,6 @@ import "./WaitingScreen.css";
 
 export default function WaitingScreen() {
   const { state, dispatch } = useApp();
-  const { user } = useAuth();
   const [cancelling, setCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isExpanded, setIsExpanded] = useState(window.innerWidth >= 768);
@@ -37,7 +36,7 @@ export default function WaitingScreen() {
     if (!rideRequest) return;
     setCancelling(true);
     try {
-      await cancelRideRequest(user?.id, rideRequest.id);
+      await cancelRideRequest(rideRequest.id);
       dispatch({ type: "RESET" });
     } catch (err) {
       dispatch({
