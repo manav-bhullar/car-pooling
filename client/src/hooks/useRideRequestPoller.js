@@ -25,7 +25,7 @@ export function useRideRequestPoller() {
 
     async function poll() {
       try {
-        const updated = await getCurrentRideRequest(userId);
+        const updated = await getCurrentRideRequest();
         if (!mounted) return;
 
         if (!updated && state.rideRequest) {

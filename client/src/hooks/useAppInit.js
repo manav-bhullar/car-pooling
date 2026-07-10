@@ -33,7 +33,7 @@ export function useAppInit() {
         // Fetch only the current lifecycle state from backend
         // Note: userId is no longer needed in the request body/headers since it's in the JWT
         const [rideRequest, trip] = await Promise.all([
-          getCurrentRideRequest(user.id),
+          getCurrentRideRequest(),
           getCurrentTrip(user.id),
         ]);
 

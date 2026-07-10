@@ -1,9 +1,7 @@
 import { apiClient } from "./apiClient";
 
-// Note: userId is kept in the signature for backward compatibility with calling components,
-// but it is no longer used for headers. The backend extracts it from the JWT access token.
 
-export async function createRideRequest(userId, data) {
+export async function createRideRequest(data) {
   const res = await apiClient.fetch(`/ride-requests`, {
     method: "POST",
     body: JSON.stringify(data),
@@ -18,7 +16,7 @@ export async function createRideRequest(userId, data) {
   return json.data;
 }
 
-export async function getRideRequests(userId, status = null) {
+export async function getRideRequests(status = null) {
   const url = status ? `/ride-requests?status=${status}` : `/ride-requests`;
 
   const res = await apiClient.fetch(url);
@@ -32,7 +30,7 @@ export async function getRideRequests(userId, status = null) {
   return json.data;
 }
 
-export async function getCurrentRideRequest(userId) {
+export async function getCurrentRideRequest() {
   const res = await apiClient.fetch(`/ride-requests/current`);
 
   const json = await res.json();
@@ -44,7 +42,7 @@ export async function getCurrentRideRequest(userId) {
   return json.data;
 }
 
-export async function cancelRideRequest(userId, rideRequestId) {
+export async function cancelRideRequest(rideRequestId) {
   const res = await apiClient.fetch(`/ride-requests/${rideRequestId}/cancel`, {
     method: "POST",
   });

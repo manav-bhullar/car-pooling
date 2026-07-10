@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useApp } from "../context/AppContext";
-import { useAuth } from "../context/AuthContext";
+
 import { createRideRequest, getRideRequests } from "../api/rideRequests";
 import { searchLocation, reverseGeocode } from "../api/geocoding";
 import DateTimePickerModal from "./DateTimePickerModal";
@@ -234,7 +234,6 @@ function LocationInput({
 
 export default function RideRequestForm({ onLocationSelect }) {
   const { state, dispatch } = useApp();
-  const { user } = useAuth();
 
   const getDefaultTime = () => {
     const now = new Date();
@@ -306,7 +305,7 @@ export default function RideRequestForm({ onLocationSelect }) {
     setLoading(true);
 
     try {
-      const rideRequest = await createRideRequest(user?.id, {
+      const rideRequest = await createRideRequest({
         pickupLat: pickup.lat,
         pickupLng: pickup.lng,
         dropLat: drop.lat,
@@ -318,7 +317,7 @@ export default function RideRequestForm({ onLocationSelect }) {
       dispatch({ type: "SET_RIDE_REQUEST", payload: rideRequest });
     } catch (err) {
       if (err.status === 409) {
-        const requests = await getRideRequests(user?.id, "PENDING");
+        const requests = await getRideRequests("PENDING");
         if (requests.length > 0) {
           dispatch({ type: "SET_RIDE_REQUEST", payload: requests[0] });
           dispatch({

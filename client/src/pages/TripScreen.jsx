@@ -17,7 +17,6 @@ export default function TripScreen() {
   async function confirmCancel() {
     try {
       await cancelRideRequest(
-        user?.id,
         state.rideRequest?.id || state.trip?.rideRequestId,
       );
       dispatch({ type: "RESET" });
