@@ -1,127 +1,130 @@
 const prisma = require('../../prisma/client');
 const { getIo } = require('../../socket/socket');
 
-exports.createRideRequest = async(userId, data) => {
-    const existing = await prisma.rideRequest.findFirst({
-        where:{
-            userId,
-            status: "PENDING",
-        },
-    });
+exports.createRideRequest = async (userId, data) => {
+  const existing = await prisma.rideRequest.findFirst({
+    where: {
+      userId,
+      status: {
+        in: ["PENDING", "RIDERS_MATCHED", "DRIVER_MATCHED", "STARTED"]
+      },
 
-    if (existing) {
-      const err = new Error("User already has a pending ride request");
-      err.status = 409;
-      throw err;
-    }
+    },
+  });
 
-    const rideRequest = await prisma.rideRequest.create({
-        data: {
-            userId,
-            pickupLat : data.pickupLat,
-            pickupLng : data.pickupLng,
-            dropLat : data.dropLat,
-            dropLng : data.dropLng,
-            pickupAddress: data.pickupAddress ?? null,
-            dropAddress: data.dropAddress ?? null,
-            preferredTime : new Date(data.preferredTime),
-        },
-    });
-    return rideRequest;
+  if (existing) {
+    const err = new Error("User already has a pending ride request");
+    err.status = 409;
+    throw err;
+  }
+
+  const rideRequest = await prisma.rideRequest.create({
+    data: {
+      userId,
+      pickupLat: data.pickupLat,
+      pickupLng: data.pickupLng,
+      dropLat: data.dropLat,
+      dropLng: data.dropLng,
+      pickupAddress: data.pickupAddress ?? null,
+      dropAddress: data.dropAddress ?? null,
+      preferredTime: new Date(data.preferredTime),
+    },
+  });
+  return rideRequest;
 }
 
-exports.getRideRequests = async(userId, status) => {
-    const requests = await prisma.rideRequest.findMany({
-        where:{
-            userId,
-            ...(status && {status}),
-        },
-        orderBy:{
-            createdAt: 'desc',
-        },
-    });
+exports.getRideRequests = async (userId, status) => {
+  const requests = await prisma.rideRequest.findMany({
+    where: {
+      userId,
+      ...(status && { status }),
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
 
-    // ✅ Phase 1: Enrich PENDING requests with requeue metadata
-    // Detect: PENDING + TripUser exists + trip.status='CANCELLED' → requeued from cascade
-    if (requests.length === 0) {
-        return [];
+  // ✅ Phase 1: Enrich PENDING requests with requeue metadata
+  // Detect: PENDING + TripUser exists + trip.status='CANCELLED' → requeued from cascade
+  if (requests.length === 0) {
+    return [];
+  }
+
+  const pendingRequests = requests.filter(r => r.status === 'PENDING');
+  const tripUsers = pendingRequests.length > 0
+    ? await prisma.tripUser.findMany({
+      where: { rideRequestId: { in: pendingRequests.map(r => r.id) } },
+      include: { trip: { select: { id: true, status: true } } }
+    })
+    : [];
+
+  const tripUserMap = Object.fromEntries(
+    tripUsers.map(tu => [tu.rideRequestId, tu])
+  );
+
+  return requests.map(r => {
+    if (r.status === 'PENDING') {
+      const tripUser = tripUserMap[r.id];
+      const requeued = tripUser?.trip?.status === 'CANCELLED';
+      return {
+        ...r,
+        requeued,
+        requeueReason: requeued ? 'CO_RIDER_CANCELLED' : null
+      };
     }
-
-    const pendingRequests = requests.filter(r => r.status === 'PENDING');
-    const tripUsers = pendingRequests.length > 0
-        ? await prisma.tripUser.findMany({
-            where: { rideRequestId: { in: pendingRequests.map(r => r.id) } },
-            include: { trip: { select: { id: true, status: true } } }
-        })
-        : [];
-
-    const tripUserMap = Object.fromEntries(
-        tripUsers.map(tu => [tu.rideRequestId, tu])
-    );
-
-    return requests.map(r => {
-        if (r.status === 'PENDING') {
-            const tripUser = tripUserMap[r.id];
-            const requeued = tripUser?.trip?.status === 'CANCELLED';
-            return {
-                ...r,
-                requeued,
-                requeueReason: requeued ? 'CO_RIDER_CANCELLED' : null
-            };
-        }
-        // Non-PENDING requests should still be returned with consistent schema
-        return {
-            ...r,
-            requeued: false,
-            requeueReason: null
-        };
-    });
+    // Non-PENDING requests should still be returned with consistent schema
+    return {
+      ...r,
+      requeued: false,
+      requeueReason: null
+    };
+  });
 };
 
 exports.getCurrentRideRequest = async (userId) => {
-    const matchedRequest = await prisma.rideRequest.findFirst({
-        where: {
-            userId,
-            status: 'RIDERS_MATCHED',
-        },
-        orderBy: {
-            createdAt: 'desc',
-        },
-    });
+  const matchedRequest = await prisma.rideRequest.findFirst({
+    where: {
+      userId,
+      status: 'RIDERS_MATCHED',
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
 
-    if (matchedRequest) {
-        return {
-            ...matchedRequest,
-            requeued: false,
-            requeueReason: null,
-        };
-    }
-
-    const pendingRequest = await prisma.rideRequest.findFirst({
-        where: {
-            userId,
-            status: 'PENDING',
-        },
-        orderBy: {
-            createdAt: 'desc',
-        },
-    });
-
-    if (!pendingRequest) {
-        return null;
-    }
-
-    const tripUser = await prisma.tripUser.findFirst({
-        where: { rideRequestId: pendingRequest.id },
-        include: { trip: { select: { status: true } } },
-    });
-
-    const requeued = tripUser?.trip?.status === 'CANCELLED';
+  if (matchedRequest) {
     return {
-        ...pendingRequest,
-        requeued,
-        requeueReason: requeued ? 'CO_RIDER_CANCELLED' : null,
+      ...matchedRequest,
+      requeued: false,
+      requeueReason: null,
     };
+  }
+
+  const pendingRequest = await prisma.rideRequest.findFirst({
+    where: {
+      userId,
+      status: 'PENDING',
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  if (!pendingRequest) {
+    return null;
+  }
+
+  const tripUser = await prisma.tripUser.findFirst({
+    where: { rideRequestId: pendingRequest.id },
+    include: { trip: { select: { status: true } } },
+  });
+
+  const requeued = tripUser?.trip?.status === 'CANCELLED';
+  return {
+    ...pendingRequest,
+    requeued,
+    requeueReason: requeued ? 'CO_RIDER_CANCELLED' : null,
+  };
 };
 
 exports.cancelRideRequest = async (id, userId) => {
@@ -174,7 +177,7 @@ exports.cancelRideRequest = async (id, userId) => {
         throw new Error("Trip association not found");
       }
       const tripId = tripUser.tripId;
-      
+
       // 2. PHASE 2 FIX: Fetch trip to inspect actual status (not guess from updateMany count)
       const trip = await tx.trip.findUnique({
         where: { id: tripId },
@@ -189,7 +192,7 @@ exports.cancelRideRequest = async (id, userId) => {
         // Rider should not be MATCHED on a completed trip; this is an invalid state
         throw new Error("TRIP_ALREADY_COMPLETED: Cannot cancel request on completed trip");
       }
-      
+
       if (trip.status === 'STARTED') {
         // ❌ CRITICAL: Cannot cascade cancel a started trip
         // The driver is already driving, cancelling ruins it for everyone.
@@ -214,7 +217,7 @@ exports.cancelRideRequest = async (id, userId) => {
           where: { id: tripId, status: trip.status },
           data: { status: "CANCELLED" },
         });
-        
+
         if (updatedTripResult.count === 0) {
           throw new Error("Trip state changed concurrently, please try again");
         }
