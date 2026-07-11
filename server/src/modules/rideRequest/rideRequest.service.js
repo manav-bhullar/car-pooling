@@ -13,7 +13,7 @@ exports.createRideRequest = async (userId, data) => {
   });
 
   if (existing) {
-    const err = new Error("User already has a pending ride request");
+    const err = new Error("User already has an active ride request");
     err.status = 409;
     throw err;
   }
