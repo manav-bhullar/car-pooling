@@ -2,6 +2,15 @@
 
 A real-time ride-matching platform built for dynamic carpooling. 
 
+## UI Showcase
+<div align="center">
+  <img src="screenshots/login.png" alt="Login Screen" width="45%" />
+  <img src="screenshots/home.png" alt="Ride Request Screen" width="45%" />
+  <br />
+  <img src="screenshots/match.png" alt="Trip Screen" width="45%" />
+  <img src="screenshots/complete.png" alt="Summary Screen" width="45%" />
+</div>
+
 ## The Problem It Solves
 Traditional ride-hailing pairs one driver with one rider. Floq dynamically clusters multiple riders heading in the same general direction and optimizes their pickup/drop-off sequence. It ensures that no passenger experiences an unacceptable detour while maximizing driver earnings and vehicle capacity.
 
