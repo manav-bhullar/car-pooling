@@ -55,4 +55,8 @@ coverage/
 *.tmp
 *.swp
 
-server/tests/
+# -----------------------------
+# Excluded folders
+# -----------------------------
+frontend docx/
+postman/

@@ -1,5 +1,7 @@
 const prisma = require('../../prisma/client');
 const { getIo } = require('../../socket/socket');
+const { cacheGet, cacheSet, invalidateUserRideCaches,
+  CACHE_CURRENT_RIDE_KEY, TTL_CURRENT_RIDE } = require('../../utils/cache');
 
 exports.createRideRequest = async (userId, data) => {
   const existing = await prisma.rideRequest.findFirst({
@@ -30,6 +32,10 @@ exports.createRideRequest = async (userId, data) => {
       preferredTime: new Date(data.preferredTime),
     },
   });
+
+  // Invalidate rider's cached state — new request is now active
+  await invalidateUserRideCaches(userId);
+
   return rideRequest;
 }
 
@@ -82,6 +88,11 @@ exports.getRideRequests = async (userId, status) => {
 };
 
 exports.getCurrentRideRequest = async (userId) => {
+  // Cache-aside: most-polled rider endpoint
+  const cacheKey = CACHE_CURRENT_RIDE_KEY(userId);
+  const cached = await cacheGet(cacheKey);
+  if (cached !== null) return cached;
+
   const matchedRequest = await prisma.rideRequest.findFirst({
     where: {
       userId,
@@ -93,11 +104,13 @@ exports.getCurrentRideRequest = async (userId) => {
   });
 
   if (matchedRequest) {
-    return {
+    const result = {
       ...matchedRequest,
       requeued: false,
       requeueReason: null,
     };
+    await cacheSet(cacheKey, result, TTL_CURRENT_RIDE);
+    return result;
   }
 
   const pendingRequest = await prisma.rideRequest.findFirst({
@@ -111,6 +124,8 @@ exports.getCurrentRideRequest = async (userId) => {
   });
 
   if (!pendingRequest) {
+    // Cache null too (avoids repeated DB hits when no active request)
+    await cacheSet(cacheKey, null, TTL_CURRENT_RIDE);
     return null;
   }
 
@@ -120,11 +135,14 @@ exports.getCurrentRideRequest = async (userId) => {
   });
 
   const requeued = tripUser?.trip?.status === 'CANCELLED';
-  return {
+  const result = {
     ...pendingRequest,
     requeued,
     requeueReason: requeued ? 'CO_RIDER_CANCELLED' : null,
   };
+
+  await cacheSet(cacheKey, result, TTL_CURRENT_RIDE);
+  return result;
 };
 
 exports.cancelRideRequest = async (id, userId) => {
@@ -160,6 +178,8 @@ exports.cancelRideRequest = async (id, userId) => {
         where: { rideRequestId: id },
       });
 
+      // Invalidate rider's cache
+      await invalidateUserRideCaches(userId);
       return {
         id,
         status: "CANCELLED",
@@ -282,6 +302,7 @@ exports.cancelRideRequest = async (id, userId) => {
         }
 
         // 9. Notify co-riders via socket
+        let coRiderUserIds = [];
         try {
           const io = getIo();
           if (io) {
@@ -290,6 +311,7 @@ exports.cancelRideRequest = async (id, userId) => {
               where: { id: { in: coRiderIds } },
               select: { userId: true, id: true },
             });
+            coRiderUserIds = coRiderRequests.map(r => r.userId);
             for (const req of coRiderRequests) {
               io.to(req.userId).emit('ride_cancelled', {
                 rideRequestId: req.id,
@@ -299,6 +321,12 @@ exports.cancelRideRequest = async (id, userId) => {
           }
         } catch (_) {
           // Socket notification is best-effort
+        }
+
+        // Invalidate caches for cancelling rider + all co-riders
+        await invalidateUserRideCaches(userId);
+        for (const coRiderUserId of coRiderUserIds) {
+          await invalidateUserRideCaches(coRiderUserId);
         }
 
         return {

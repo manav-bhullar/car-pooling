@@ -1,8 +1,10 @@
-// ✅ FIX THIS
 const prisma = require("../../prisma/client");
 const { calculateFares } = require("./trip.fare");
 const { getRoadDistances, ROAD_DETOUR_THRESHOLD } = require("./osrm");
 const { haversine } = require("../matching/utils");
+const { cacheGet, cacheSet, invalidateTripCaches,
+  CACHE_TRIP_KEY, CACHE_CURRENT_TRIP_KEY, CACHE_AVAILABLE_TRIPS_KEY,
+  TTL_TRIP, TTL_CURRENT_TRIP, cacheDel } = require('../../utils/cache');
 
 const AVG_SPEED_KMH = 30;
 const LOCK_BEFORE_DEPARTURE_MS = 30 * 60 * 1000; // 30 minutes
@@ -119,10 +121,18 @@ async function createTripFromMatch(match, tx = null) {
   };
 
   if (isNestedTransaction) {
-    return await executeTransaction(tx);
+    const result = await executeTransaction(tx);
+    // Invalidate available trips list + all newly matched riders' caches
+    const userIds = users.map(u => u.userId);
+    await cacheDel(CACHE_AVAILABLE_TRIPS_KEY(), ...userIds.map(CACHE_CURRENT_TRIP_KEY));
+    return result;
   }
 
-  return await executor.$transaction(executeTransaction);
+  const result = await executor.$transaction(executeTransaction);
+  // Invalidate available trips list + all newly matched riders' caches
+  const userIds = users.map(u => u.userId);
+  await cacheDel(CACHE_AVAILABLE_TRIPS_KEY(), ...userIds.map(CACHE_CURRENT_TRIP_KEY));
+  return result;
 }
 
 function buildTripStopsWithRoadDistances(users, orderedIndices, legDistances) {
@@ -170,6 +180,16 @@ function buildTripStopsWithRoadDistances(users, orderedIndices, legDistances) {
 }
 
 async function getTripById(tripId, userId) {
+  // Cache-aside: serve from Redis if fresh
+  const cacheKey = CACHE_TRIP_KEY(tripId);
+  const cached = await cacheGet(cacheKey);
+  if (cached) {
+    // Still enforce auth even on cache hit
+    const isParticipant = cached.tripUsers.some((tu) => tu.userId === userId);
+    if (!isParticipant) throw { code: 403, message: 'Forbidden' };
+    return cached;
+  }
+
   const trip = await prisma.trip.findUnique({
     where: { id: tripId },
     include: {
@@ -198,10 +218,16 @@ async function getTripById(tripId, userId) {
     throw { code: 403, message: 'Forbidden' };
   }
 
+  await cacheSet(cacheKey, trip, TTL_TRIP);
   return trip;
 }
 
 async function getCurrentTrip(userId) {
+  // Cache-aside: serve from Redis if fresh
+  const cacheKey = CACHE_CURRENT_TRIP_KEY(userId);
+  const cached = await cacheGet(cacheKey);
+  if (cached) return cached;
+
   const activeTrip = await prisma.trip.findFirst({
     where: {
       status: { in: ['RIDERS_MATCHED', 'DRIVER_MATCHED', 'STARTED'] },
@@ -230,6 +256,7 @@ async function getCurrentTrip(userId) {
   });
 
   if (activeTrip) {
+    await cacheSet(cacheKey, activeTrip, TTL_CURRENT_TRIP);
     return activeTrip;
   }
 

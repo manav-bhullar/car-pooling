@@ -1,3 +1,0 @@
-$kind: collection
-name: Trips
-description: Endpoints for viewing and managing trips. All endpoints require authentication.

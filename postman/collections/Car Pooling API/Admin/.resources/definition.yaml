@@ -1,3 +1,0 @@
-$kind: collection
-name: Admin
-description: Admin endpoints for triggering matching cycles and monitoring system health. Requires authentication.

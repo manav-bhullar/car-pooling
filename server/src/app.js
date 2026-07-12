@@ -7,6 +7,7 @@ const tripRoutes = require('./modules/trip/trip.routes');
 const authRoutes = require('./modules/auth/auth.routes');
 const driverRoutes = require('./modules/driver/driver.routes');
 const { authenticate } = require('./middleware/auth.middleware');
+const { authLimiter, apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
@@ -25,11 +26,16 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// Auth routes: apply strict IP-based limiter to sensitive endpoints
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/resend-otp', authLimiter);
 app.use('/api/auth', authRoutes);
 
-app.use('/api/ride-requests', authenticate, rideRequestRoutes);
+// Authenticated API routes: apply per-user rate limiter
+app.use('/api/ride-requests', authenticate, apiLimiter, rideRequestRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/trips', authenticate, tripRoutes);
-app.use('/api/driver', driverRoutes); // auth is handled inside driverRoutes
+app.use('/api/trips', authenticate, apiLimiter, tripRoutes);
+app.use('/api/driver', apiLimiter, driverRoutes); // auth is handled inside driverRoutes
 
 module.exports = app;
