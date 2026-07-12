@@ -2,6 +2,9 @@ const prisma = require('../../prisma/client');
 const service = require('./trip.service');
 const { success, error } = require('../../utils/response');
 const { calculatePassengerMetrics } = require('./trip.utils');
+const { getRedis } = require('../../utils/redis');
+
+const DRIVER_LOCATION_KEY = (tripId) => `driver:location:${tripId}`;
 
 function serializeTrip(trip, userId) {
 	const myTripUser = trip.tripUsers.find((tu) => tu.userId === userId);
@@ -139,6 +142,36 @@ exports.getCurrent = async (req, res) => {
 	} catch (err) {
 		console.error('Get current trip error:', err);
 		return error(res, err.message || 'Failed to fetch current trip', 500);
+	}
+};
+
+/**
+ * GET /api/trips/:id/driver-location
+ * Returns the last known driver GPS location from Redis.
+ * REST fallback for riders who briefly lose their socket connection.
+ */
+exports.getDriverLocation = async (req, res) => {
+	try {
+		const userId = req.userId;
+		const { id: tripId } = req.params;
+
+		// Verify the requesting user is a participant of this trip
+		const tripUser = await prisma.tripUser.findFirst({
+			where: { tripId, userId },
+		});
+		if (!tripUser) {
+			return error(res, 'Forbidden: you are not a participant of this trip', 403);
+		}
+
+		const cached = await getRedis().get(DRIVER_LOCATION_KEY(tripId));
+		if (!cached) {
+			return error(res, 'No driver location available yet', 404);
+		}
+
+		return success(res, JSON.parse(cached));
+	} catch (err) {
+		console.error('Get driver location error:', err);
+		return error(res, err.message || 'Failed to fetch driver location', 500);
 	}
 };
 

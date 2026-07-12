@@ -1,6 +1,11 @@
 const { Server } = require('socket.io');
 const { verifyAccessToken } = require('../utils/jwt');
 const prisma = require('../prisma/client');
+const { getRedis } = require('../utils/redis');
+
+// Key: driver:location:{tripId}  TTL: 60s (auto-clears if driver disconnects)
+const DRIVER_LOCATION_KEY = (tripId) => `driver:location:${tripId}`;
+const DRIVER_LOCATION_TTL = 60; // seconds
 
 let io;
 
@@ -79,6 +84,19 @@ function initSocket(server) {
         console.log(`🚪 User ${socket.userId} joined room ${roomName} as ${isDriver ? 'driver' : 'rider'}`);
         
         socket.emit('tripJoined', { tripId });
+
+        // Replay last known driver location immediately to the joiner (riders only)
+        // This gives an instant position pin without waiting for the next GPS tick
+        if (!isDriver) {
+          try {
+            const cached = await getRedis().get(DRIVER_LOCATION_KEY(tripId));
+            if (cached) {
+              socket.emit('driverLocation', JSON.parse(cached));
+            }
+          } catch (_) {
+            // Best-effort, don't block the join
+          }
+        }
       } catch (err) {
         console.error('joinTrip error:', err);
         socket.emit('error', { message: 'Failed to join trip room' });
@@ -98,14 +116,22 @@ function initSocket(server) {
       }
       
       const roomName = `trip_${tripId}`;
-      
+      const locationPayload = { lat, lng, bearing, timestamp: Date.now() };
+
+      // Persist to Redis — survives brief socket disconnects & powers REST fallback
+      try {
+        await getRedis().set(
+          DRIVER_LOCATION_KEY(tripId),
+          JSON.stringify(locationPayload),
+          'EX',
+          DRIVER_LOCATION_TTL
+        );
+      } catch (_) {
+        // Best-effort, don't block the broadcast
+      }
+
       // Broadcast to everyone in the room EXCEPT the sender
-      socket.to(roomName).emit('driverLocation', {
-        lat,
-        lng,
-        bearing,
-        timestamp: Date.now()
-      });
+      socket.to(roomName).emit('driverLocation', locationPayload);
     });
 
     socket.on('disconnect', () => {
