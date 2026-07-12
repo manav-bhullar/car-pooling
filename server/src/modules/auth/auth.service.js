@@ -1,9 +1,14 @@
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const prisma = require('../../prisma/client');
-const { generateOtp, isOtpExpired } = require('../../utils/otp');
+const { generateOtp } = require('../../utils/otp');
 const { sendOtpEmail } = require('../../utils/email');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../../utils/jwt');
+const { getRedis } = require('../../utils/redis');
+
+// Redis key helpers for OTP
+const OTP_KEY = (userId, type = 'EMAIL_VERIFY') => `otp:${userId}:${type}`;
+const OTP_RATELIMIT_KEY = (userId) => `otp:ratelimit:${userId}`;
 
 const SALT_ROUNDS = 12;
 
@@ -37,15 +42,16 @@ exports.register = async ({ name, email, password, role, phone, vehicleType, lic
   });
 
   const otpCode = generateOtp();
-  const expiresAt = new Date(Date.now() + parseInt(process.env.OTP_EXPIRY_MINUTES || '10') * 60000);
+  const otpTtlSeconds = parseInt(process.env.OTP_EXPIRY_MINUTES || '10') * 60;
 
-  await prisma.otp.create({
-    data: {
-      userId: user.id,
-      code: otpCode,
-      expiresAt,
-    },
-  });
+  // Store OTP in Redis with auto-expiry (replaces prisma.otp.create)
+  const redis = getRedis();
+  await redis.set(
+    OTP_KEY(user.id),
+    JSON.stringify({ code: otpCode, createdAt: new Date().toISOString() }),
+    'EX',
+    otpTtlSeconds
+  );
 
   // Try to send email, but don't fail registration if it fails, let them resend
   try {
@@ -96,35 +102,28 @@ exports.verifyEmail = async ({ email, otp }) => {
     throw error;
   }
 
-  // Find the latest valid OTP
-  const latestOtp = await prisma.otp.findFirst({
-    where: { userId: user.id, type: 'EMAIL_VERIFY', used: false },
-    orderBy: { createdAt: 'desc' },
-  });
+  // Read OTP from Redis (replaces prisma.otp.findFirst)
+  const redis = getRedis();
+  const otpData = await redis.get(OTP_KEY(user.id));
 
-  if (!latestOtp) {
-    const error = new Error('No OTP found. Please request a new one.');
+  if (!otpData) {
+    // Key doesn't exist = either never created or auto-expired
+    const error = new Error('No OTP found or OTP expired. Please request a new one.');
     error.status = 400;
     throw error;
   }
 
-  if (isOtpExpired(latestOtp.expiresAt)) {
-    const error = new Error('OTP expired. Please request a new one.');
-    error.status = 400;
-    throw error;
-  }
+  const { code: storedCode } = JSON.parse(otpData);
 
-  if (latestOtp.code !== otp && otp !== '123456') {
+  if (storedCode !== otp && otp !== '123456') {
     const error = new Error('Invalid OTP');
     error.status = 400;
     throw error;
   }
 
-  // Mark OTP as used and user as verified
-  await prisma.$transaction([
-    prisma.otp.update({ where: { id: latestOtp.id }, data: { used: true } }),
-    prisma.user.update({ where: { id: user.id }, data: { isVerified: true } }),
-  ]);
+  // Delete OTP from Redis (mark as used) and verify user
+  await redis.del(OTP_KEY(user.id));
+  await prisma.user.update({ where: { id: user.id }, data: { isVerified: true } });
 
   return await createTokensForUser(user);
 };
@@ -143,37 +142,31 @@ exports.resendOtp = async ({ email }) => {
     throw error;
   }
 
-  // Check rate limiting - don't allow if an OTP was generated in the last 60 seconds
-  const recentOtp = await prisma.otp.findFirst({
-    where: {
-      userId: user.id,
-      type: 'EMAIL_VERIFY',
-      createdAt: { gte: new Date(Date.now() - 60000) }
-    },
-  });
+  // Check rate limiting via Redis (replaces DB query for recent OTP)
+  const redis = getRedis();
+  const rateLimitKey = OTP_RATELIMIT_KEY(user.id);
+  const recentlySent = await redis.exists(rateLimitKey);
 
-  if (recentOtp) {
-    const error = new Error('Please wait 60 seconds before requesting another OTP');
+  if (recentlySent) {
+    const ttl = await redis.ttl(rateLimitKey);
+    const error = new Error(`Please wait ${ttl} seconds before requesting another OTP`);
     error.status = 429;
     throw error;
   }
 
-  // Invalidate old unused OTPs
-  await prisma.otp.updateMany({
-    where: { userId: user.id, type: 'EMAIL_VERIFY', used: false },
-    data: { used: true },
-  });
-
   const otpCode = generateOtp();
-  const expiresAt = new Date(Date.now() + parseInt(process.env.OTP_EXPIRY_MINUTES || '10') * 60000);
+  const otpTtlSeconds = parseInt(process.env.OTP_EXPIRY_MINUTES || '10') * 60;
 
-  await prisma.otp.create({
-    data: {
-      userId: user.id,
-      code: otpCode,
-      expiresAt,
-    },
-  });
+  // Store new OTP in Redis (overwrites any previous OTP for this user)
+  await redis.set(
+    OTP_KEY(user.id),
+    JSON.stringify({ code: otpCode, createdAt: new Date().toISOString() }),
+    'EX',
+    otpTtlSeconds
+  );
+
+  // Set rate limit cooldown (60 seconds)
+  await redis.set(rateLimitKey, '1', 'EX', 60);
 
   try {
     await sendOtpEmail(email, otpCode, user.name);
