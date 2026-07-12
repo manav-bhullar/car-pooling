@@ -10,6 +10,16 @@ const { getRedis } = require('../../utils/redis');
 const OTP_KEY = (userId, type = 'EMAIL_VERIFY') => `otp:${userId}:${type}`;
 const OTP_RATELIMIT_KEY = (userId) => `otp:ratelimit:${userId}`;
 
+// Redis key helpers for refresh tokens
+const REFRESH_TOKEN_KEY = (hashedToken) => `refresh:${hashedToken}`;
+const REFRESH_USER_SET_KEY = (userId) => `refresh:user:${userId}`;
+const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60; // 7 days in seconds
+const MAX_REFRESH_TOKENS_PER_USER = 5;
+
+// Redis key helpers for user profile cache
+const USER_PROFILE_KEY = (userId) => `user:profile:${userId}`;
+const USER_PROFILE_TTL = 300; // 5 minutes
+
 const SALT_ROUNDS = 12;
 
 exports.register = async ({ name, email, password, role, phone, vehicleType, licensePlate }) => {
@@ -184,26 +194,23 @@ exports.refreshToken = async (token) => {
 
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    // Find the exact refresh token in DB
-    const tokenRecord = await prisma.refreshToken.findFirst({
-      where: { 
-        userId: decoded.id,
-        token: hashedToken 
-      },
-    });
+    // Find the refresh token in Redis (replaces prisma.refreshToken.findFirst)
+    const redis = getRedis();
+    const storedUserId = await redis.get(REFRESH_TOKEN_KEY(hashedToken));
 
-    if (!tokenRecord) {
-      throw new Error('Refresh token not found, invalidated, or invalid');
+    if (!storedUserId) {
+      throw new Error('Refresh token not found, invalidated, or expired');
     }
 
-    if (new Date() > tokenRecord.expiresAt) {
-      throw new Error('Refresh token expired');
+    if (storedUserId !== decoded.id) {
+      throw new Error('Token user mismatch');
     }
 
     const user = await prisma.user.findUnique({ where: { id: decoded.id } });
     if (!user) throw new Error('User not found');
 
-    return await createTokensForUser(user, tokenRecord.id);
+    // Rotate: delete old token, create new one
+    return await createTokensForUser(user, hashedToken);
   } catch (err) {
     const error = new Error('Invalid or expired refresh token');
     error.status = 401;
@@ -215,11 +222,14 @@ exports.logout = async (userId, token) => {
   if (!token) return { success: true };
 
   try {
-    // We could parse the token to get the user ID, but since it's hashed in the DB,
-    // we need to find it by comparing, or simply delete all for user if we want
-    // "logout everywhere", but let's just delete the specific one
+    const redis = getRedis();
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-    await prisma.refreshToken.deleteMany({ where: { userId, token: hashedToken } });
+
+    // Delete the specific token from Redis
+    await redis.del(REFRESH_TOKEN_KEY(hashedToken));
+
+    // Remove from user's token set
+    await redis.srem(REFRESH_USER_SET_KEY(userId), hashedToken);
   } catch (err) {
     console.error('Logout error:', err);
   }
@@ -228,52 +238,60 @@ exports.logout = async (userId, token) => {
 };
 
 exports.getMe = async (userId) => {
+  // Check Redis cache first
+  const redis = getRedis();
+  const cached = await redis.get(USER_PROFILE_KEY(userId));
+  if (cached) {
+    return JSON.parse(cached);
+  }
+
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
     const error = new Error('User not found');
     error.status = 404;
     throw error;
   }
-  return { id: user.id, name: user.name, email: user.email, isVerified: user.isVerified, role: user.role };
+
+  const profile = { id: user.id, name: user.name, email: user.email, isVerified: user.isVerified, role: user.role };
+
+  // Cache for 5 minutes
+  await redis.set(USER_PROFILE_KEY(userId), JSON.stringify(profile), 'EX', USER_PROFILE_TTL);
+
+  return profile;
 };
 
 // Helper function
-async function createTokensForUser(user, existingTokenId = null) {
+async function createTokensForUser(user, existingHashedToken = null) {
   const accessToken = generateAccessToken({ id: user.id, role: user.role, email: user.email });
   const refreshToken = generateRefreshToken(user.id);
 
-  // Hash refresh token for DB storage
+  // Hash refresh token for storage
   const hashedRefreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex');
 
-  // Refresh token expiry (7 days)
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const redis = getRedis();
+  const userSetKey = REFRESH_USER_SET_KEY(user.id);
 
-  if (existingTokenId) {
-    // Rotation: Replace existing token
-    await prisma.refreshToken.update({
-      where: { id: existingTokenId },
-      data: { token: hashedRefreshToken, expiresAt },
-    });
+  if (existingHashedToken) {
+    // Rotation: Delete old token key, remove from user set
+    await redis.del(REFRESH_TOKEN_KEY(existingHashedToken));
+    await redis.srem(userSetKey, existingHashedToken);
   } else {
-    // We'll limit to 5 active refresh tokens per user to prevent DB bloat
-    const tokenCount = await prisma.refreshToken.count({ where: { userId: user.id } });
-    if (tokenCount >= 5) {
-      // Delete oldest
-      const oldest = await prisma.refreshToken.findFirst({
-        where: { userId: user.id },
-        orderBy: { createdAt: 'asc' },
-      });
-      if (oldest) await prisma.refreshToken.delete({ where: { id: oldest.id } });
+    // Cap at MAX_REFRESH_TOKENS_PER_USER — evict oldest if at limit
+    const currentTokens = await redis.smembers(userSetKey);
+    if (currentTokens.length >= MAX_REFRESH_TOKENS_PER_USER) {
+      // Evict the first token in the set (approximate FIFO)
+      const oldest = currentTokens[0];
+      await redis.del(REFRESH_TOKEN_KEY(oldest));
+      await redis.srem(userSetKey, oldest);
     }
-
-    await prisma.refreshToken.create({
-      data: {
-        userId: user.id,
-        token: hashedRefreshToken,
-        expiresAt,
-      },
-    });
   }
+
+  // Store new refresh token in Redis with 7-day TTL
+  await redis.set(REFRESH_TOKEN_KEY(hashedRefreshToken), user.id, 'EX', REFRESH_TOKEN_TTL);
+
+  // Add to user's token set (for tracking/eviction)
+  await redis.sadd(userSetKey, hashedRefreshToken);
+  await redis.expire(userSetKey, REFRESH_TOKEN_TTL); // Reset TTL on the set
 
   return {
     user: { id: user.id, name: user.name, email: user.email, isVerified: user.isVerified, role: user.role },
