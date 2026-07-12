@@ -1,4 +1,4 @@
-# CarpoolTU / Carpooling System
+# Floq 
 
 A real-time ride-matching platform that groups riders dynamically and dispatches drivers with optimized routing.
 
