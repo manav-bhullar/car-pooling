@@ -25,7 +25,6 @@ import HomeScreen from "./pages/HomeScreen";
 import WaitingScreen from "./pages/WaitingScreen";
 import TripScreen from "./pages/TripScreen";
 import SummaryScreen from "./pages/SummaryScreen";
-import TestScreens from "./pages/TestScreens";
 
 import StatusBanner from "./components/StatusBanner";
 import LoadingState from "./components/LoadingState";
@@ -135,10 +134,11 @@ export default function App() {
           }
         />
 
-        <Route path="/test/*" element={<TestScreens />} />
-
         <Route path="*" element={<Navigate to={targetRoute} replace />} />
       </Routes>
+    </>
+  );
+}
     </>
   );
 }
