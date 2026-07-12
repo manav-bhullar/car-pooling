@@ -1,4 +1,7 @@
 const prisma = require('../../prisma/client');
+const { cacheGet, cacheSet, cacheDel, invalidateTripCaches,
+  CACHE_AVAILABLE_TRIPS_KEY, CACHE_CURRENT_TRIP_KEY,
+  TTL_AVAILABLE_TRIPS, TTL_CURRENT_TRIP } = require('../../utils/cache');
 
 /**
  * Grace period before a RIDERS_MATCHED trip is considered expired for the driver.
@@ -7,12 +10,15 @@ const prisma = require('../../prisma/client');
 const MATCHED_TRIP_EXPIRY_GRACE_MS = 10 * 60 * 1000; // 10 minutes
 
 exports.getAvailableTrips = async () => {
+  // Cache-aside: return cached list if fresh
+  const cached = await cacheGet(CACHE_AVAILABLE_TRIPS_KEY());
+  if (cached) return cached;
+
   const graceCutoff = new Date(Date.now() - MATCHED_TRIP_EXPIRY_GRACE_MS);
 
-  return await prisma.trip.findMany({
+  const trips = await prisma.trip.findMany({
     where: {
       status: 'RIDERS_MATCHED',
-      // Only show trips where at least one rider's preferredTime is still within the grace window
       tripUsers: {
         some: {
           rideRequest: {
@@ -46,6 +52,9 @@ exports.getAvailableTrips = async () => {
     },
     orderBy: { createdAt: 'desc' },
   });
+
+  await cacheSet(CACHE_AVAILABLE_TRIPS_KEY(), trips, TTL_AVAILABLE_TRIPS);
+  return trips;
 };
 
 exports.acceptTrip = async (userId, tripId) => {
@@ -127,6 +136,10 @@ exports.acceptTrip = async (userId, tripId) => {
       console.warn('Socket notification failed:', err.message);
     }
 
+    // Invalidate available_trips cache + per-rider caches
+    const riderUserIds = trip.tripUsers.map(tu => tu.userId);
+    await invalidateTripCaches(tripId, riderUserIds);
+
     return driverTrip;
   });
 };
@@ -159,6 +172,12 @@ exports.startTrip = async (userId, tripId) => {
     });
     if (tripUpdateResult.count === 0) {
       throw { code: 400, message: 'Trip was concurrently modified' };
+    }
+
+    // Invalidate trip caches on start
+    const startedTrip = await tx.trip.findUnique({ where: { id: tripId }, include: { tripUsers: true } });
+    if (startedTrip) {
+      await invalidateTripCaches(tripId, startedTrip.tripUsers.map(tu => tu.userId));
     }
 
     return { ...driverTrip, status: 'STARTED', startedAt: new Date() };
@@ -210,17 +229,24 @@ exports.completeTrip = async (userId, tripId) => {
       },
     });
 
+    // Invalidate caches on completion
+    await invalidateTripCaches(tripId, trip.tripUsers.map(tu => tu.userId));
+
     return { ...driverTrip, status: 'COMPLETED', completedAt: now };
   });
 };
 
 exports.getCurrentTrip = async (userId) => {
+  // Cache-aside for driver's active trip
+  const cached = await cacheGet(CACHE_CURRENT_TRIP_KEY(userId));
+  if (cached) return cached;
+
   const driverProfile = await prisma.driverProfile.findUnique({
     where: { userId },
   });
   if (!driverProfile) return null;
 
-  return await prisma.trip.findFirst({
+  const trip = await prisma.trip.findFirst({
     where: {
       status: { in: ['DRIVER_MATCHED', 'STARTED'] },
       driverTrip: {
@@ -245,4 +271,9 @@ exports.getCurrentTrip = async (userId) => {
       driverTrip: true,
     },
   });
+
+  if (trip) {
+    await cacheSet(CACHE_CURRENT_TRIP_KEY(userId), trip, TTL_CURRENT_TRIP);
+  }
+  return trip;
 };

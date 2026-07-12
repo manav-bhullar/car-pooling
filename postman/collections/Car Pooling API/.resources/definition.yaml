@@ -1,3 +1,0 @@
-$kind: collection
-name: Car Pooling API
-description: API collection for the Car Pooling application. Server runs on port 5050 by default.
