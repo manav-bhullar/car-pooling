@@ -8,7 +8,7 @@ const prisma = require('../../prisma/client');
 exports.runMatching = async (req, res) => {
   try {
     console.log(`\n🔧 [ADMIN] Triggering matching cycle...`);
-    
+
     const result = await runMatchingCycle('ADMIN');
 
     return success(res, {
